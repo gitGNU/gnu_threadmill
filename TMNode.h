@@ -8,6 +8,9 @@
 	NSDictionary *_exports;
 }
 
+- (NSString *) name;
+- (NSArray *) importNames;
+- (NSArray *) exportNames;
 - (void) setImport:(TMPort *)aPort
 	   forName:(NSString *)aName;
 - (void) setExport:(TMPort *)aPort

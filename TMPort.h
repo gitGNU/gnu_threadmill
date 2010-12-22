@@ -4,7 +4,7 @@
 
 @interface TMPort : NSObject
 {
-	TMNode *__owner;
+	TMNode *__node;
 	TMPort *__pair;
 }
 

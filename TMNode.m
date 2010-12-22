@@ -3,8 +3,8 @@
 @implementation TMNode
 - (id) init
 {
-	_imports = [[NSMutableDictionary alloc] alloc];
-	_exports = [[NSMutableDictionary alloc] alloc];
+	_imports = [[NSMutableDictionary alloc] init];
+	_exports = [[NSMutableDictionary alloc] init];
 
 	return self;
 }
@@ -17,12 +17,27 @@
 	[super dealloc];
 }
 
+- (NSString *) name
+{
+	return [self description];
+}
+
+- (NSArray *) importNames
+{
+	return [_imports allKeys];
+}
+
+- (NSArray *) exportNames
+{
+	return [_exports allKeys];
+}
+
 - (void) setImport:(TMPort *)aPort
 	   forName:(NSString *)aName
 {
 	if (aName == nil)
 	{
-		ASSIGN(aName, [aPort description]);
+		aName = [NSString stringWithFormat:@"import:%x", aPort];
 	}
 
 	[_imports setObject:aPort
@@ -34,7 +49,7 @@
 {
 	if (aName == nil)
 	{
-		ASSIGN(aName, [aPort description]);
+		aName = [NSString stringWithFormat:@"export:%x", aPort];
 	}
 
 	[_exports setObject:aPort

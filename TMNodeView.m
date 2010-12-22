@@ -39,5 +39,23 @@
 	[[NSColor redColor] set];
 	NSRectFill(r);
 }
+
+- (void) setContentView:(NSView *)aView
+{
+	if (aView == nil)
+		[self removeSubview:_contentView];
+	else if (_contentView == nil)
+		[self addSubview:aView];
+	else [self replaceSubview:_contentView with:aView];
+
+	_contentView = aView;
+}
+
+- (void) mouseDown:(NSEvent *)anEvent
+{
+	NSPoint p = [self convertPointFromBase:[anEvent locationInWindow]];
+
+}
+
 @end
 

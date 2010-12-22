@@ -9,3 +9,7 @@
 
 - (void) addNode:(TMNode *)aNode;
 @end
+
+@interface TMView (Toy)
+- (void) addTestNode:(id)sender;
+@end

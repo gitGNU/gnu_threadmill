@@ -16,7 +16,11 @@
 
 - (id) initWithNode:(TMNode *)aNode
 {
-	__owner = aNode;
+	[self init];
+
+	__node = aNode;
+
+	return self;
 }
 
 - (void) dealloc

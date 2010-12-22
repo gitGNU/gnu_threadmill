@@ -10,6 +10,7 @@ TestMill_OBJC_FILES = main.m \
 		TMNode.m \
 		TMPort.m \
 		TMView.m \
+		TMNodeView.m \
 
 
 
