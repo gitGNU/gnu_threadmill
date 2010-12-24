@@ -4,9 +4,12 @@
 #import "TMNode.h"
 #import "TMPort.h"
 
+#import <TimeUI/TimeUI.h>
+
 @implementation TMView (Toy)
 - (void) addTestNode:(id)sender
 {
+	static CGFloat size = 60;
 
 	TMNode *newNode;
 	newNode = AUTORELEASE([[TMNode alloc] init]);
@@ -31,7 +34,9 @@
 
 	[self addSubview:newNodeView];
 
-	
+/* FIXME make node to create control view */
+	[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
+	size += 20;
 }
 @end
 
@@ -49,6 +54,13 @@
 	DESTROY(_nodes);
 	[super dealloc];
 }
+
+- (void) drawRect:(NSRect)r
+{
+	[[NSColor whiteColor] set];
+	NSRectFill(r);
+}
+
 
 - (void) addNode:(TMNode *)aNode
 {

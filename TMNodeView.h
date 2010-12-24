@@ -7,6 +7,7 @@
 {
 	TMNode *_node;
 	id _contentView;
+	id _titleCell;
 }
 
 - (id) initWithNode:(TMNode *)aNode;
