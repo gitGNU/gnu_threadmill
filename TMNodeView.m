@@ -1,8 +1,12 @@
 #import "TMNodeView.h"
+#import "TMPortCell.h"
+#import "TMNode.h"
 
-#define TITLE_HEIGHT 20
-#define BORDER_SIZE 3
-#define PORT_SIZE 15
+#define MININUM_TITLE_HEIGHT 20
+#define MININUM_PORT_HEIGHT 15
+#define BORDER_SIZE 30
+#define BORDER_LINE_SIZE 3
+#define PORT_BORDER 5
 
 NSDate * __distFuture;
 
@@ -14,27 +18,63 @@ NSDate * __distFuture;
 @implementation TMNodeView (Private)
 - (void) _recalculateFrame
 {
-	if (_contentView == nil)
+
+	/* calculate new title size */
+	NSRect contentRect = __contentView != nil && [__contentView isHidden] ? NSZeroRect : [__contentView frame];
+
 	{
-		return;
-		//FIXME
+		NSSize titleSize = [_titleCell cellSize];
+
+		_titleHeight = titleSize.height;
+		_titleHeight = MAX(_titleHeight, MININUM_TITLE_HEIGHT);
+		_areaWidth = MAX(titleSize.width + _titleHeight, NSWidth(contentRect)); /* + _titleHeight for the button area */
 	}
 
-	NSRect contentRect = [_contentView frame];
+	/* expand for port name as necessary */
+	_portHeight = 0;
+	NSEnumerator *en = [_portCells objectEnumerator];
+	TMPortCell *port;
+	while ((port = [en nextObject]))
+	{
+		NSSize portSize = [port cellSize];
+		_areaWidth = MAX(_areaWidth, portSize.width);
+		_portHeight += MAX(portSize.height, MININUM_PORT_HEIGHT) + PORT_BORDER * 2;
+	}
 
+
+	/* calculate new frame size */
 	NSRect oldFrame = [self frame];
 	NSRect newFrame;
-	newFrame.size.height = 2 * BORDER_SIZE + TITLE_HEIGHT + NSHeight(contentRect); // + port sizes
-	newFrame.size.width = 2 * BORDER_SIZE + NSWidth(contentRect); // FIXME, consider title and port names' string sizes
+
+	newFrame.size.height = 2 * BORDER_SIZE + _titleHeight + NSHeight(contentRect) + _portHeight - BORDER_LINE_SIZE;
+	newFrame.size.width = 2 * BORDER_SIZE + _areaWidth;
 	newFrame.origin.x = NSMinX(oldFrame);
 	newFrame.origin.y = NSMaxY(oldFrame) - NSHeight(newFrame);
 
 	[self setFrame:newFrame];
 
+	/* adjust content location */
 	NSRect bounds = [self bounds];
-	contentRect.origin = NSMakePoint(BORDER_SIZE, NSMaxY(bounds) - TITLE_HEIGHT - BORDER_SIZE - NSHeight(contentRect));
+	contentRect.origin = NSMakePoint(BORDER_SIZE + (_areaWidth / 2) - (NSWidth(contentRect) / 2), NSMaxY(bounds) - _titleHeight - BORDER_SIZE - NSHeight(contentRect));
 
-	[_contentView setFrameOrigin:contentRect.origin];
+	if (__contentView == nil)
+	{
+		[__contentButton setHidden:YES];
+	}
+	else [__contentButton setHidden:NO];
+
+	if (__contentView != nil && [__contentView isHidden])
+	{
+		[__contentButton setImage:[NSImage imageNamed:@"common_ArrowDown.tiff"]];
+	}
+	else
+	{
+		[__contentButton setImage:[NSImage imageNamed:@"common_ArrowUp.tiff"]];
+	}
+
+	[__contentView setFrameOrigin:contentRect.origin];
+	[__contentButton setFrame:NSMakeRect(BORDER_SIZE, NSHeight(newFrame) - BORDER_SIZE - _titleHeight , _titleHeight, _titleHeight)];
+
 	[self setNeedsDisplay:YES];
 }
 
@@ -59,14 +99,46 @@ NSDate * __distFuture;
 - (id) initWithNode:(TMNode *)aNode
 {
 	ASSIGN(_titleCell, [[NSCell alloc] initTextCell:@"Node"]);
+
+	[self initWithFrame:NSMakeRect(0, 0, 200, 300)]; //FIXME
+
+	__contentButton = AUTORELEASE([NSButton new]);
+	[__contentButton setTarget:self];
+	[__contentButton setAction:@selector(toggleContent:)];
+	[self addSubview:__contentButton];
+
 	[self _setNode:aNode];
 
-	return [self initWithFrame:NSMakeRect(0,0,200,300)]; //FIXME
+	_portCells = [[NSMutableArray alloc] init];
+
+	/* imports */
+
+	NSEnumerator *en;
+	NSString *aName;
+	en = [[[_node importNames] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator]; // FIXME, considering exposing TMPort, what could be so bad about that?
+	while ((aName = [en nextObject]))
+	{
+		[_portCells addObject:AUTORELEASE([[TMImportCell alloc] initWithName:aName])];
+	}
+
+	/* exports */
+
+	en = [[[_node exportNames] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator]; // FIXME, considering exposing TMPort, what could be so bad about that?
+	while ((aName = [en nextObject]))
+	{
+		[_portCells addObject:AUTORELEASE([[TMExportCell alloc] initWithName:aName])];
+	}
+
+
+
+	return self;
 }
 
 - (void) dealloc
 {
 	DESTROY(_node);
+	DESTROY(_titleCell);
+	DESTROY(_portCells);
 	[super dealloc];
 }
 
@@ -76,34 +148,54 @@ NSDate * __distFuture;
 
 	/* fill body */
 	[[NSColor blackColor] set];
-	NSRectFill(r);
+	NSRectFill(NSInsetRect(bounds, BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE));
 
 	[[NSColor grayColor] set];
-	NSRectFill(NSInsetRect(bounds,BORDER_SIZE,BORDER_SIZE));
+	NSRectFill(NSInsetRect(bounds, BORDER_SIZE, BORDER_SIZE));
 
 	/* draw title */
-	NSRect titleRect = NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - TITLE_HEIGHT - BORDER_SIZE, NSWidth(bounds) - 2 * BORDER_SIZE, TITLE_HEIGHT);
+	NSRect textRect;
+	textRect.origin = NSMakePoint(BORDER_SIZE + _titleHeight, NSMaxY(bounds) - _titleHeight - BORDER_SIZE);
+       	textRect.size = NSMakeSize(_areaWidth - _titleHeight, _titleHeight);
 	[[NSColor whiteColor] set];
-	NSRectFill(titleRect);
-	[_titleCell drawWithFrame:titleRect inView: self];
+	NSRectFill(textRect);
+	[_titleCell drawWithFrame:textRect inView:self];
 
 
+	textRect.origin = NSMakePoint(BORDER_SIZE, BORDER_SIZE - BORDER_LINE_SIZE + PORT_BORDER);
+	NSEnumerator *en = [_portCells reverseObjectEnumerator];
+	TMPortCell *port;
+	while ((port = [en nextObject]))
+	{
+		textRect.size = [port cellSize];
+		textRect.size.height = MAX(NSHeight(textRect), MININUM_PORT_HEIGHT);
+		textRect.size.width = MAX(NSWidth(textRect), _areaWidth);
+
+		[port drawWithFrame:NSInsetRect(textRect, -PORT_BORDER * 3, -PORT_BORDER) inView:self];
+		textRect.origin.y += NSHeight(textRect) + PORT_BORDER * 2;
+	}
 }
 
 - (void) setContentView:(NSView *)aView
 {
-	NSRect contentRect;
-
 
 	if (aView == nil)
-		[self removeSubview:_contentView];
-	else if (_contentView == nil)
+		[self removeSubview:__contentView];
+	else if (__contentView == nil)
 		[self addSubview:aView];
-	else [self replaceSubview:_contentView with:aView];
+	else [self replaceSubview:__contentView with:aView];
 
-	_contentView = aView;
+	__contentView = aView;
 
 	[self _recalculateFrame];
+}
+
+- (void) toggleContent:(id)sender
+{
+	[__contentView setHidden:![__contentView isHidden]];
+
+	[self _recalculateFrame];
+
 }
 
 - (void) mouseDown:(NSEvent *)anEvent
@@ -116,16 +208,16 @@ NSDate * __distFuture;
 	/* display mouse down here */
 
 	/* track frame movement */
-	if (NSPointInRect([self convertPointFromBase:[anEvent locationInWindow]],NSMakeRect(0, NSMaxY(bounds) - TITLE_HEIGHT - BORDER_SIZE, NSWidth(bounds), TITLE_HEIGHT)))
+	if (NSPointInRect([self convertPointFromBase:[anEvent locationInWindow]], NSMakeRect(0, NSMaxY(bounds) - _titleHeight - BORDER_SIZE, NSWidth(bounds), _titleHeight)))
 	while (YES)
 	{
 		anEvent = [NSApp nextEventMatchingMask:
 					NSLeftMouseUpMask |
 					NSLeftMouseDraggedMask |
 					NSMouseMovedMask
-				untilDate: __distFuture
-				inMode: NSEventTrackingRunLoopMode
-				dequeue: YES];
+				untilDate:__distFuture
+				inMode:NSEventTrackingRunLoopMode
+				dequeue:YES];
 
 		NSEventType eventType = [anEvent type];
 
@@ -142,7 +234,7 @@ NSDate * __distFuture;
 		[self setFrameOrigin:p];
 
 		[self setNeedsDisplay:YES];
-		[[self superview] setNeedsDisplayInRect:NSInsetRect(oldFrame,-20,-20)];
+		[[self superview] setNeedsDisplayInRect:NSInsetRect(oldFrame, -20, -20)];
 
 	}
 

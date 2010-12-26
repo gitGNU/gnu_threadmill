@@ -13,3 +13,9 @@
 - (void) disconnect;
 @end
 
+
+@interface TMImport : TMPort
+@end
+
+@interface TMExport : TMPort
+@end

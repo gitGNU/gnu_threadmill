@@ -19,11 +19,11 @@
 	[newNode setImport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
 		   forName:@"test import 1"];
 	[newNode setImport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
-		   forName:@"test import 2"];
+		   forName:@"TEST \n   import 2"];
 	[newNode setImport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
 		   forName:@"test import 3"];
 
-	[newNode setImport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
+	[newNode setExport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
 		   forName:@"test export 1"];
 	[newNode setExport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
 		   forName:@"test export 2"];
@@ -35,7 +35,7 @@
 	[self addSubview:newNodeView];
 
 /* FIXME make node to create control view */
-	[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
+	[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0, 0, size, size)]];
 	size += 20;
 }
 @end

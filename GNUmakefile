@@ -14,6 +14,7 @@ TestMill_OBJC_FILES = main.m \
 		TMPort.m \
 		TMView.m \
 		TMNodeView.m \
+		TMPortCell.m \
 
 
 ADDITIONAL_OBJC_LIBS = -lTimeUI

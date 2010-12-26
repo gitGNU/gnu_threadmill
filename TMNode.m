@@ -19,7 +19,7 @@
 
 - (NSString *) name
 {
-	return [NSString stringWithFormat:@"Simple Node (%x)",self];
+	return [NSString stringWithFormat:@"Simple Node (%x)", self];
 }
 
 - (NSArray *) importNames
