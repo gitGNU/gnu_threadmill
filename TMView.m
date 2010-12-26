@@ -62,6 +62,7 @@
 {
 	[[NSColor whiteColor] set];
 	NSRectFill(r);
+
 }
 
 

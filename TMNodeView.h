@@ -17,10 +17,16 @@
 
 	id __contentView;
 	id __contentButton;
+
+	NSColor *_borderColor;
+	BOOL _drawHilight;
 }
 
 - (id) initWithNode:(TMNode *)aNode;
 - (void) setContentView:(NSView *)aView;
 - (void) toggleContent:(id)sender;
+
+//FIXME 
+- (void) drawDropShadow;
 @end
 
