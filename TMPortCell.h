@@ -1,6 +1,6 @@
 #import <AppKit/AppKit.h>
 
-@interface TMPortCell : NSButtonCell
+@interface TMPortCell : NSActionCell
 {
 	NSView *_cellContent;
 }

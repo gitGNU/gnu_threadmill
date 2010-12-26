@@ -33,6 +33,9 @@
 	newNodeView = AUTORELEASE([[TMNodeView alloc] initWithNode:newNode]);
 
 	[self addSubview:newNodeView];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+		selector:@selector(viewChanged:)
+		name:NSViewFrameDidChangeNotification object:newNodeView];
 
 /* FIXME make node to create control view */
 	[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0, 0, size, size)]];
@@ -74,6 +77,10 @@
 	*/
 	NSLog(@"NYI");
 	exit(0);
+}
+
+- (void) viewChanged:(NSNotification *)aNotification
+{
 }
 
 @end

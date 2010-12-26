@@ -6,7 +6,6 @@
 #define MININUM_PORT_HEIGHT 15
 #define BORDER_SIZE 30
 #define BORDER_LINE_SIZE 3
-#define PORT_BORDER 5
 
 NSDate * __distFuture;
 
@@ -38,7 +37,7 @@ NSDate * __distFuture;
 	{
 		NSSize portSize = [port cellSize];
 		_areaWidth = MAX(_areaWidth, portSize.width);
-		_portHeight += MAX(portSize.height, MININUM_PORT_HEIGHT) + PORT_BORDER * 2;
+		_portHeight += MAX(portSize.height, MININUM_PORT_HEIGHT);
 	}
 
 
@@ -150,7 +149,7 @@ NSDate * __distFuture;
 	[[NSColor blackColor] set];
 	NSRectFill(NSInsetRect(bounds, BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE));
 
-	[[NSColor grayColor] set];
+	[[NSColor windowBackgroundColor] set];
 	NSRectFill(NSInsetRect(bounds, BORDER_SIZE, BORDER_SIZE));
 
 	/* draw title */
@@ -162,7 +161,7 @@ NSDate * __distFuture;
 	[_titleCell drawWithFrame:textRect inView:self];
 
 
-	textRect.origin = NSMakePoint(BORDER_SIZE, BORDER_SIZE - BORDER_LINE_SIZE + PORT_BORDER);
+	textRect.origin = NSMakePoint(BORDER_SIZE, BORDER_SIZE - BORDER_LINE_SIZE);
 	NSEnumerator *en = [_portCells reverseObjectEnumerator];
 	TMPortCell *port;
 	while ((port = [en nextObject]))
@@ -171,8 +170,9 @@ NSDate * __distFuture;
 		textRect.size.height = MAX(NSHeight(textRect), MININUM_PORT_HEIGHT);
 		textRect.size.width = MAX(NSWidth(textRect), _areaWidth);
 
-		[port drawWithFrame:NSInsetRect(textRect, -PORT_BORDER * 3, -PORT_BORDER) inView:self];
-		textRect.origin.y += NSHeight(textRect) + PORT_BORDER * 2;
+
+		[port drawWithFrame:textRect inView:self];
+		textRect.origin.y += NSHeight(textRect);
 	}
 }
 
@@ -221,10 +221,8 @@ NSDate * __distFuture;
 
 		NSEventType eventType = [anEvent type];
 
-
 		if (eventType == NSLeftMouseUp)
 			break;
-
 
 		NSPoint p = [[self superview] convertPointFromBase:[anEvent locationInWindow]];
 		p.x = NSMinX(originFrame) + p.x - origin.x;
@@ -234,7 +232,7 @@ NSDate * __distFuture;
 		[self setFrameOrigin:p];
 
 		[self setNeedsDisplay:YES];
-		[[self superview] setNeedsDisplayInRect:NSInsetRect(oldFrame, -20, -20)];
+		[[self superview] setNeedsDisplayInRect:oldFrame];
 
 	}
 
