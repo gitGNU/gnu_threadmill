@@ -4,8 +4,6 @@ PACKAGE_NAME = TestMill
 VERSION = 0.0.1
 APP_NAME = TestMill
 
-FRAMEWORKS = TimeUI
-
 TestMill_MAIN_MODEL_FILE=TestMill.gorm
 TestMill_APPLICATION_ICON=Threadmill.tiff
 
@@ -17,7 +15,6 @@ TestMill_OBJC_FILES = main.m \
 		TMPortCell.m \
 
 
-ADDITIONAL_OBJC_LIBS = -lTimeUI
-TestMill_RESOURCE_FILES = TestMill.gorm Threadmill.tiff
+TestMill_RESOURCE_FILES = TestMill.gorm Threadmill.tiff Threadmill-Logo.tiff Plug.tiff
 
 include $(GNUSTEP_MAKEFILES)/application.make

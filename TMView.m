@@ -1,10 +1,23 @@
+/*
+	do What The Fuck you want to Public License
+
+	Version 1.1, March 2010
+	Copyright (C) 2010 Banlu Kemiyatorn.
+	136 Nives 7 Jangwattana 14 Laksi Bangkok
+	Everyone is permitted to copy and distribute verbatim copies
+	of this license document, but changing it is not allowed.
+
+	Ok, the purpose of this license is simple
+	and you just
+
+	DO WHAT THE FUCK YOU WANT TO.
+*/
+
 #import "TMView.h"
 #import "TMNodeView.h"
 
 #import "TMNode.h"
 #import "TMPort.h"
-
-#import <TimeUI/TimeUI.h>
 
 @implementation TMView (Toy)
 - (void) addTestNode:(id)sender
@@ -38,8 +51,11 @@
 		name:NSViewFrameDidChangeNotification object:newNodeView];
 
 /* FIXME make node to create control view */
-	[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0, 0, size, size)]];
-	size += 20;
+	NSImageView *imageView = AUTORELEASE([[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, size, size)]);
+	[imageView setImage:[NSImage imageNamed:@"Threadmill-Logo.tiff"]];
+	[imageView setImageScaling:NSScaleToFit];
+	[newNodeView setContentView:imageView];
+	size *= 2;
 }
 @end
 

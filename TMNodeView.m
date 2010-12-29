@@ -1,14 +1,38 @@
+/*
+	do What The Fuck you want to Public License
+
+	Version 1.1, March 2010
+	Copyright (C) 2010 Banlu Kemiyatorn.
+	136 Nives 7 Jangwattana 14 Laksi Bangkok
+	Everyone is permitted to copy and distribute verbatim copies
+	of this license document, but changing it is not allowed.
+
+	Ok, the purpose of this license is simple
+	and you just
+
+	DO WHAT THE FUCK YOU WANT TO.
+*/
+
 #import "TMNodeView.h"
 #import "TMPortCell.h"
 #import "TMNode.h"
 #import "TMDefs.h"
 
 NSDate * __distFuture;
-NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
+NSString * TMPasteboardTypeImportLink = @"TMPasteboardTypeImportLink";
+NSString * TMPasteboardTypeExportLink = @"TMPasteboardTypeExportLink";
+
+void __port_set_frame(TMPortCell *port, NSRect *aFrame)
+{
+	TMAxisRange range = [port range];
+	aFrame->origin.y = range.location;
+	aFrame->size.height = range.length;
+}
 
 @interface TMNodeView (Private)
 - (void) _recalculateFrame;
 - (void) _setNode:(TMNode *)aNode;
+- (TMPortCell *) _portAtPoint:(NSPoint)p;
 @end
 
 @implementation TMNodeView (Private)
@@ -22,21 +46,25 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	{
 		NSSize titleSize = [_titleCell cellSize];
 
-		_titleHeight = titleSize.height;
-		_titleHeight = MAX(_titleHeight, MININUM_TITLE_HEIGHT);
-		_areaWidth = MAX(titleSize.width + _titleHeight, NSWidth(contentRect)); /* + _titleHeight for the button area */
+		_titleHeight = MAX(titleSize.height, MIN_TITLE_HEIGHT);
+		_areaWidth = MAX(titleSize.width + _titleHeight + TEXT_OFFSET * 2, NSWidth(contentRect)); /* + _titleHeight for the button area */
 	}
 
 	/* expand for port name as necessary */
-	_portHeight = 0;
-	NSEnumerator *en = [_portCells objectEnumerator];
+	CGFloat origin = BORDER_SIZE + BORDER_LINE_SIZE/2;
+	NSEnumerator *en = [_portCells reverseObjectEnumerator];
 	TMPortCell *port;
 	while ((port = [en nextObject]))
 	{
 		NSSize portSize = [port cellSize];
-		_areaWidth = MAX(_areaWidth, portSize.width);
-		_portHeight += MAX(portSize.height, MININUM_PORT_HEIGHT);
+		TMAxisRange portRange = TMMakeAxisRange(origin,
+			       	MAX(portSize.height, MIN_PORT_HEIGHT));
+		[port setRange:portRange];
+		_areaWidth = MAX(_areaWidth, portSize.width + TEXT_OFFSET * 2);
+
+		origin += portRange.length;
 	}
+	_portHeight = origin - BORDER_SIZE + BORDER_LINE_SIZE/2;
 
 
 	/* calculate new frame size */
@@ -44,10 +72,10 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	NSRect newFrame;
 
 	newFrame.size.height = 2 * BORDER_SIZE + _titleHeight + _portHeight;
-	if (contentHidden)
-		newFrame.size.height -= BORDER_LINE_SIZE;
-	else
-		newFrame.size.height += NSHeight(contentRect);
+	if (!contentHidden)
+	{
+		newFrame.size.height += NSHeight(contentRect) + BORDER_LINE_SIZE;
+	}
 	newFrame.size.width = 2 * BORDER_SIZE + _areaWidth;
 	newFrame.origin.x = NSMinX(oldFrame);
 	newFrame.origin.y = NSMaxY(oldFrame) - NSHeight(newFrame);
@@ -82,6 +110,36 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	}
 
 	[self setNeedsDisplay:YES];
+}
+
+- (TMPortCell *) _portAtPoint:(NSPoint)p
+{
+	NSRect portRect;
+	TMPortCell *hitPort = [_portCells objectAtIndex:__hitSearchIndex];
+
+	portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
+	portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE/2;
+	__port_set_frame(hitPort, &portRect);
+
+	if (NSPointInRect(p, portRect))
+	{
+		return hitPort;
+	}
+
+	NSEnumerator *en = [_portCells reverseObjectEnumerator];
+	TMPortCell *port;
+	while ((port = [en nextObject]))
+	{
+		if (hitPort == port) continue;
+
+		__port_set_frame(port, &portRect);
+		if (NSPointInRect(p, portRect))
+		{
+			__hitSearchIndex = [_portCells indexOfObject:port];
+			return port;
+		}
+	}
+	return nil;
 }
 
 - (void) _setNode:(TMNode*)aNode
@@ -137,7 +195,7 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	}
 
 	/* register */
-	[self registerForDraggedTypes:[NSArray arrayWithObject:TMPasteboardTypeLink]];
+	[self registerForDraggedTypes:[NSArray arrayWithObjects:TMPasteboardTypeImportLink,TMPasteboardTypeExportLink,nil]];
 
 	return self;
 }
@@ -174,14 +232,78 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	}
 }
 
+- (void) drawTitleInRect:(NSRect)r
+{
+	NSDictionary* blackattr;
+	NSDictionary* lgrayattr;
+	NSDictionary* dgrayattr;
+	NSString *nodeName = [_titleCell title];
+	NSFont * font = [_titleCell font];
+
+	NSRect tf = r;
+	NSSize ts = [_titleCell cellSize];
+	tf.origin.x += TEXT_OFFSET;
+	tf.origin.y = NSMidY(r) - ts.height/2; 
+	tf.size.height = ts.height;
+
+	if (_drawHilight)
+	{
+		[[NSColor whiteColor] set];
+		NSFrameRect(NSOffsetRect(NSInsetRect(r,1,1),1,1));
+		[[NSColor darkGrayColor] set];
+		NSFrameRect(NSOffsetRect(NSInsetRect(r,1,1),-1,-1));
+		[[NSColor grayColor] set];
+		NSRectFill(NSInsetRect(r,1,1));
+
+
+		blackattr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+			NSFontAttributeName, [NSColor blackColor],
+			NSForegroundColorAttributeName, nil];
+		lgrayattr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+			NSFontAttributeName, [NSColor lightGrayColor],
+			NSForegroundColorAttributeName, nil];
+		dgrayattr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+			NSFontAttributeName, [NSColor darkGrayColor],
+			NSForegroundColorAttributeName, nil];
+
+	}
+	else 
+	{
+		[[NSColor blackColor] set];
+		NSFrameRect(NSOffsetRect(NSInsetRect(r,1,1),-1,-1));
+		[[NSColor lightGrayColor] set];
+		NSFrameRect(NSOffsetRect(NSInsetRect(r,1,1),1,1));
+		[[NSColor darkGrayColor] set];
+		NSRectFill(NSInsetRect(r,1,1));
+
+		blackattr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+			NSFontAttributeName, [NSColor blackColor],
+			NSForegroundColorAttributeName, nil];
+		lgrayattr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+			NSFontAttributeName, [NSColor lightGrayColor],
+			NSForegroundColorAttributeName, nil];
+		dgrayattr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+			NSFontAttributeName, [NSColor darkGrayColor],
+			NSForegroundColorAttributeName, nil];
+	}
+
+	[nodeName drawInRect:NSOffsetRect(tf,-1,1)
+		withAttributes:dgrayattr];
+	[nodeName drawInRect:NSOffsetRect(tf,1,-1)
+		withAttributes:lgrayattr];
+	[nodeName drawInRect:tf
+		withAttributes:blackattr];
+}
+
 - (void) drawRect:(NSRect)r
 {
 	NSRect bounds = [self bounds];
 
-	[self drawDropShadow];
+	[self drawDropShadow]; //FIXME temporary
 
 	/* fill body */
 	[_borderColor set];
+
 	NSRectFill(NSMakeRect(BORDER_SIZE - BORDER_LINE_SIZE, 
 				BORDER_SIZE - BORDER_LINE_SIZE + _portHeight,
 				NSWidth(bounds) - BORDER_SIZE * 2 + BORDER_LINE_SIZE * 2,
@@ -198,30 +320,37 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	NSRect textRect;
 	textRect.origin = NSMakePoint(BORDER_SIZE + _titleHeight, NSMaxY(bounds) - _titleHeight - BORDER_SIZE);
        	textRect.size = NSMakeSize(_areaWidth - _titleHeight, _titleHeight);
-	[[NSColor whiteColor] set];
-	NSRectFill(textRect);
-	[_titleCell drawWithFrame:textRect inView:self];
 
+	[self drawTitleInRect:textRect];
+	
+//	[_titleCell drawWithFrame:textRect inView:self];
+
+	/* line under title bar */
 	[_borderColor set];
 	NSRectFill(NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE - BORDER_LINE_SIZE,
 				_areaWidth, BORDER_LINE_SIZE
 				));
 
-
-	textRect.origin = NSMakePoint(BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE*1.5);
+	/* draw ports */
+	NSRect portRect;
+	portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
+	portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE/2;
 	NSEnumerator *en = [_portCells reverseObjectEnumerator];
 	TMPortCell *port;
 	while ((port = [en nextObject]))
 	{
-		textRect.size = [port cellSize];
-		textRect.size.height = MAX(NSHeight(textRect), MININUM_PORT_HEIGHT);
-		textRect.size.width = MAX(NSWidth(textRect), _areaWidth) + 1.5 * BORDER_LINE_SIZE;
-
+		__port_set_frame(port, &portRect);
 		[port setBorderColor:_borderColor];
-		[port drawWithFrame:textRect inView:self];
-
-		textRect.origin.y += NSHeight(textRect);
+		[port drawWithFrame:portRect inView:self];
 	}
+
+	/* for debugging
+	[[NSColor redColor] set];
+	NSRectFill(NSInsetRect([__contentView frame],-2,-2));
+	[_borderColor set];
+	NSFrameRect(NSMakeRect(0,0,BORDER_SIZE, BORDER_SIZE));
+	NSFrameRect(bounds);
+	*/
 }
 
 - (NSView*) hitTest: (NSPoint)aPoint
@@ -230,26 +359,17 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 
 	if (retView == self)
 	{
-		aPoint = [self convertPoint:aPoint fromView:[self superview]];
-
-		NSRect portRect;
-		portRect.origin = NSMakePoint(BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE*1.5);
-		NSEnumerator *en = [_portCells reverseObjectEnumerator];
-		TMPortCell *port;
-		//FIXME this should be cached
-		while ((port = [en nextObject]))
+		/* TODO Do we need any rotation just to be supercool? */
+		if (!NSPointInRect(aPoint, NSInsetRect([self frame], BORDER_SIZE, BORDER_SIZE)))
 		{
-			portRect.size = [port cellSize];
-			portRect.size.height = MAX(NSHeight(portRect), MININUM_PORT_HEIGHT);
-			portRect.size.width = MAX(NSWidth(portRect), _areaWidth) + 1.5 * BORDER_LINE_SIZE;
-
-			if (NSPointInRect(aPoint, portRect))
-			{
-				return self;
-			}
-
-			portRect.origin.y += NSHeight(portRect);
+			return nil;
 		}
+
+		if ([self _portAtPoint:[self convertPoint:aPoint fromView:[self superview]]] != nil)
+		{
+			return self;
+		}
+
 	}
 
 	return retView;
@@ -370,68 +490,56 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 		NSRect portRect;
 		portRect.origin = NSMakePoint(BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE*1.5);
 		NSEnumerator *en = [_portCells reverseObjectEnumerator];
-		TMPortCell *port;
-		//FIXME this should be cached
-		while ((port = [en nextObject]))
+		TMPortCell *port = [self _portAtPoint:mouseDownPoint];
+
+		if (port != nil)
 		{
-			portRect.size = [port cellSize];
-			portRect.size.height = MAX(NSHeight(portRect), MININUM_PORT_HEIGHT);
-			portRect.size.width = MAX(NSWidth(portRect), _areaWidth) + 1.5 * BORDER_LINE_SIZE;
-
-			[port drawWithFrame:portRect inView:self];
-			if (NSPointInRect(mouseDownPoint, portRect))
+			while (YES)
 			{
-				while (YES)
+				anEvent = [NSApp nextEventMatchingMask:
+					NSLeftMouseUpMask |
+					NSLeftMouseDraggedMask |
+					NSMouseMovedMask
+					untilDate:__distFuture
+					inMode:NSEventTrackingRunLoopMode
+					dequeue:YES];
+
+				NSEventType eventType = [anEvent type];
+
+				if (eventType == NSLeftMouseUp)
+					break;
+
+				NSPasteboard *pb;
+				pb = [NSPasteboard pasteboardWithName:NSDragPboard];
+
+				id type;
+
+
+				if ([port isKindOfClass:[TMImportCell class]])
 				{
-					anEvent = [NSApp nextEventMatchingMask:
-						NSLeftMouseUpMask |
-						NSLeftMouseDraggedMask |
-						NSMouseMovedMask
-						untilDate:__distFuture
-						inMode:NSEventTrackingRunLoopMode
-						dequeue:YES];
-
-					NSEventType eventType = [anEvent type];
-
-					if (eventType == NSLeftMouseUp)
-						break;
-
-					/*
-					NSPoint p = [[self superview] convertPointFromBase:[anEvent locationInWindow]];
-					p.x = NSMinX(originFrame) + p.x - frameDragOrigin.x;
-					p.y = NSMinY(originFrame) + p.y - frameDragOrigin.y;
-
-					NSRect oldFrame = [self frame];
-					[self setFrameOrigin:p];
-
-					[self setNeedsDisplay:YES];
-					[[self superview] setNeedsDisplayInRect:oldFrame];
-					*/
-
-					 NSPasteboard *pb;
-					 pb = [NSPasteboard pasteboardWithName:NSDragPboard];
-					 [pb declareTypes:[NSArray arrayWithObject:TMPasteboardTypeLink]
-						 owner:self];
-					 [pb setString:@"stringing" forType:TMPasteboardTypeLink];
-
-					 NSImage *im = [NSImage imageNamed:@"common_ArrowRight.tiff"];
-
-					 [super dragImage:im
-						 at:mouseDownPoint
-						 offset:NSZeroSize
-						 event:anEvent
-						 pasteboard:pb
-						 source:self
-						 slideBack:YES];
-
-					 break;
-
+					type = TMPasteboardTypeImportLink;
+				}
+				else
+				{
+					type = TMPasteboardTypeExportLink;
 				}
 
-				break;
-			}
+				[pb declareTypes:[NSArray arrayWithObject:type] owner:self];
+				[pb setString:[port title] forType:type];
 
-			portRect.origin.y += NSHeight(portRect);
+				[port setHighlight:YES];
+				__portDragOut = port;
+				[super dragImage:[NSImage imageNamed:@"Plug.tiff"]
+					at:mouseDownPoint
+					offset:NSZeroSize
+					event:anEvent
+					pasteboard:pb
+					source:self
+					slideBack:YES];
+
+				break;
+
+			}
 		}
 	}
 }
@@ -441,47 +549,72 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	NSLog(@"begin");
 }
 
+- (void) setNeedsDisplayPortCells
+{
+//	[self setNeedsDisplayInRect: NYI
+}
+
+- (void)draggingExited:(id < NSDraggingInfo >)sender
+{
+	[__portInLight setHighlight:NO];
+	__portInLight = nil;
+	[self setNeedsDisplay:YES]; //FIXME only need to update the port frame
+	NSLog(@"exit");
+}
 
 - (void)draggedImage:(NSImage *)draggedImage movedTo:(NSPoint)screenPoint
 {
 	NSLog(@"move %@",NSStringFromPoint(screenPoint));
 }
 
+- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
+{
+	[__portDragOut setHighlight:NO];
+	__portDragOut = nil;
+	[self setNeedsDisplay:YES]; //FIXME only need to update the port frame
+}
+
 - (unsigned) draggingUpdated: (id<NSDraggingInfo>)sender
 {
-	NSPoint p = [self convertPointFromBase:[sender draggingLocation]];
 
-	NSRect portRect;
-	portRect.origin = NSMakePoint(BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE*1.5);
-	NSEnumerator *en = [_portCells reverseObjectEnumerator];
-	TMPortCell *port;
-	//FIXME this should be cached
+	NSPasteboard *pb = [sender draggingPasteboard];
+	NSArray *types = [pb types];
 
-	while ((port = [en nextObject]))
+	TMPortCell *port = [self _portAtPoint:[self convertPointFromBase:[sender draggingLocation]]];
+
+	if (__portInLight != port)
 	{
-		[port setHighlight:NO];
+		[__portInLight setHighlight:NO];
+		__portInLight = nil;
+		[self setNeedsDisplay:YES];
 	}
 
-	en = [_portCells reverseObjectEnumerator];
-	while ((port = [en nextObject]))
+	if (port != nil)
 	{
-		portRect.size = [port cellSize];
-		portRect.size.height = MAX(NSHeight(portRect), MININUM_PORT_HEIGHT);
-		portRect.size.width = MAX(NSWidth(portRect), _areaWidth) + 1.5 * BORDER_LINE_SIZE;
-
-
-		if (NSPointInRect(p, portRect))
+		if ([port isKindOfClass:[TMImportCell class]])
 		{
-			[port setHighlight:YES];
-			[self setNeedsDisplay:YES];
-			return NSDragOperationLink;
+			if ([types containsObject:TMPasteboardTypeExportLink])
+			{
+				[port setHighlight:YES];
+				__portInLight = port;
+				[self setNeedsDisplay:YES];
+				return NSDragOperationLink;
+			}
 		}
-		portRect.origin.y += NSHeight(portRect);
+		else //TMExportCell
+		{
+			if ([types containsObject:TMPasteboardTypeImportLink])
+			{
+				[port setHighlight:YES];
+				__portInLight = port;
+				[self setNeedsDisplay:YES];
+				return NSDragOperationLink;
+			}
+		}
+
 	}
 
-	[self setNeedsDisplay:YES];
 	return NSDragOperationNone;
-
 }
 
 - (unsigned int) draggingSourceOperationMaskForLocal:(BOOL)isLocal
@@ -496,6 +629,31 @@ NSString * TMPasteboardTypeLink = @"TMPasteboardTypeLink";
 	}
 }
 
+- (BOOL) performDragOperation:(id <NSDraggingInfo>)sender
+{
+
+	NSPasteboard *pb = [sender draggingPasteboard];
+	NSDragOperation opMask = [sender draggingSourceOperationMask];
+	NSArray *types = [pb types];
+
+
+	if ([types containsObject:TMPasteboardTypeImportLink])
+	{
+
+		NSLog(@"%@ -> %@", [__portInLight title], [pb stringForType:TMPasteboardTypeImportLink]);
+	}
+	else if ([types containsObject:TMPasteboardTypeExportLink])
+	{
+		NSLog(@"%@ <- %@", [__portInLight title], [pb stringForType:TMPasteboardTypeExportLink]);
+	}
+
+	[__portInLight setHighlight:NO];
+	__portInLight = nil;
+	[self setNeedsDisplay:YES];
+
+	return YES;
+
+}
 
 @end
 
