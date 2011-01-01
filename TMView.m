@@ -13,11 +13,18 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#import "TMDefs.h"
 #import "TMView.h"
 #import "TMNodeView.h"
+#import "TMPortCellInternal.h"
 
-#import "TMNode.h"
-#import "TMPort.h"
+#import "TMNode.h" //Toy only
+@interface TMView (Private)
+- (void) drawWiresForNodeView:(TMNodeView *)nodeView;
+@end
+
+@class TMImportCell;
+@class TMExportCell;
 
 @implementation TMView (Toy)
 - (void) addTestNode:(id)sender
@@ -29,23 +36,28 @@
 
 
 /* create some ports */
-	[newNode setImport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
-		   forName:@"test import 1"];
-	[newNode setImport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
-		   forName:@"TEST \n   import 2"];
-	[newNode setImport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
-		   forName:@"test import 3"];
+	[newNode createImportWithName:@"test import 1"];
+	[newNode createImportWithName:@"TEST \n   import 2"];
+	[newNode createImportWithName:@"test import 3"];
 
-	[newNode setExport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
-		   forName:@"test export 1"];
-	[newNode setExport:AUTORELEASE([[TMPort alloc] initWithNode:newNode])
-		   forName:@"test export 2"];
+	[newNode createExportWithName:@"test export 1"];
+	[newNode createExportWithName:@"test export 2"];
+	[newNode createExportWithName:@"test \noh yeh\n my export 3"];
 
 /* create node view */
 	TMNodeView *newNodeView;
 	newNodeView = AUTORELEASE([[TMNodeView alloc] initWithNode:newNode]);
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36 green:0.54 blue:0.66 alpha:1.0]
+		forExport:@"test export 1"];
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.55 green:0.71 blue:0.00 alpha:1.0]
+		forExport:@"test \noh yeh\n my export 3"];
+
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.82 green:0.10 blue:0.26 alpha:1.0]
+		forExport:@"test export 2"];
 
 	[self addSubview:newNodeView];
+//	[_nodes addObject:newNodeView];
+
 	[[NSNotificationCenter defaultCenter] addObserver:self
 		selector:@selector(viewChanged:)
 		name:NSViewFrameDidChangeNotification object:newNodeView];
@@ -57,6 +69,84 @@
 	[newNodeView setContentView:imageView];
 	size *= 2;
 }
+
+- (void) drawWiresForNodeView:(TMNodeView *)nodeView
+{
+	NSPoint a,b;
+
+	NSEnumerator *en = [[nodeView portCells] objectEnumerator];
+	TMExportCell *exportCell;
+	int counter = 0;
+	while ((exportCell = [en nextObject]))
+	{
+		if ([exportCell isKindOfClass:[TMExportCell class]])
+		{
+			NSRect exportFrame = [nodeView convertPortCellFrame:exportCell toView:self];
+
+			NSGraphicsContext *ctxt=GSCurrentContext();
+
+			NSEnumerator *en = [[exportCell pairs] objectEnumerator];
+			TMImportCell *importCell;
+			[[exportCell backgroundColor] set];
+
+			while ((importCell = [en nextObject]))
+			{
+				counter ++;
+
+				TMNodeView *importView = [importCell representedObject];
+				NSRect importFrame = [importView convertPortCellFrame:importCell toView:self];
+
+
+				CGFloat dist = 
+					fabs(NSMaxX(exportFrame) - NSMinX(importFrame)) +
+					fabs(NSMaxY(exportFrame) - NSMaxY(importFrame))
+				       
+					;
+				dist /= 3;
+
+				DPSsetlinewidth(ctxt, 3);
+
+				DPSmoveto(ctxt, NSMaxX(exportFrame), NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
+				DPSlineto(ctxt, NSMaxX(exportFrame) + BORDER_SIZE/2, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
+				DPScurveto(ctxt,
+						NSMaxX(exportFrame) + BORDER_SIZE/2 + dist, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2,
+					       	NSMinX(importFrame) - BORDER_SIZE/2 - dist, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2,
+					       	NSMinX(importFrame) - BORDER_SIZE/2, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
+				DPSlineto(ctxt, NSMinX(importFrame), NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
+
+				DPSgsave(ctxt); {
+					[[NSColor blackColor] set];
+					DPSsetlinewidth(ctxt, 5);
+					DPSstroke(ctxt);
+				} DPSgrestore(ctxt);
+
+				DPSstroke(ctxt);
+
+				DPSgsave(ctxt); {
+					[[NSColor whiteColor] set];
+					DPStranslate(ctxt, 0, 1);
+					DPSsetlinewidth(ctxt, 1);
+
+					DPSmoveto(ctxt, NSMaxX(exportFrame), NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
+					DPSlineto(ctxt, NSMaxX(exportFrame) + BORDER_SIZE/2, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
+					DPScurveto(ctxt,
+							NSMaxX(exportFrame) + BORDER_SIZE/2 + dist, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2,
+							NSMinX(importFrame) - BORDER_SIZE/2 - dist, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2,
+							NSMinX(importFrame) - BORDER_SIZE/2, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
+					DPSlineto(ctxt, NSMinX(importFrame), NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
+
+					DPSstroke(ctxt);
+				} DPSgrestore(ctxt);
+
+			}
+
+		}
+	}
+	NSLog(@"%d", counter);
+
+
+}
+
 @end
 
 @implementation TMView
@@ -79,6 +169,16 @@
 	[[NSColor whiteColor] set];
 	NSRectFill(r);
 
+	NSEnumerator *en = [[self subviews] objectEnumerator];
+	TMNodeView *view;
+
+	while ((view = [en nextObject]))
+	{
+		[self drawWiresForNodeView:view];
+	}
+
+	
+
 }
 
 
@@ -98,6 +198,7 @@
 
 - (void) viewChanged:(NSNotification *)aNotification
 {
+	[self setNeedsDisplay:YES];
 }
 
 @end

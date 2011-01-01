@@ -13,6 +13,7 @@ TestMill_OBJC_FILES = main.m \
 		TMView.m \
 		TMNodeView.m \
 		TMPortCell.m \
+		externs.m \
 
 
 TestMill_RESOURCE_FILES = TestMill.gorm Threadmill.tiff Threadmill-Logo.tiff Plug.tiff

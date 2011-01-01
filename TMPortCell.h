@@ -22,6 +22,7 @@ typedef struct _TMAxisRange
 } TMAxisRange;
 
 TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length);
+TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
 
 @interface TMPortCell : NSCell
 {
@@ -29,17 +30,24 @@ TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length);
 	NSColor *_backgroundColor;
 	NSColor *_hilightColor;
 	BOOL _drawHilight;
+	BOOL _handleMode;
 	TMAxisRange _range;
+
+	NSMutableArray *_pairCells;
 	
 //	NSView *_cellContent;
 }
 - (id) initWithName:(NSString *)aName;
 - (void) setHighlight:(BOOL)drawHi;
+- (NSColor *) backgroundColor;
 - (void) setBackgroundColor:(NSColor *)aColor;
 - (void) setHighlightColor:(NSColor *)aColor;
 - (void) setBorderColor:(NSColor *)aColor;
-- (TMAxisRange) range;
-- (void) setRange:(TMAxisRange)aRange;
+
+- (void) setHandleMode:(BOOL)mode;
+
+
+- (NSArray *) pairs;
 @end
 
 

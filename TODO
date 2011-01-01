@@ -1,2 +1,3 @@
 == TODO ==
 * TMNode should not be retained by a TMNodeView but by a non-GUI manager retained by TMView so the mill can works in non-GUI mode.
+* Make view register drag types by cell

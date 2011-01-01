@@ -14,6 +14,7 @@
 */
 
 #import <AppKit/AppKit.h>
+#import "TMPortCell.h"
 
 @class TMNode;
 @class TMView;
@@ -24,6 +25,7 @@
 	TMNode *_node;
 
 	id _titleCell;
+	id _contentButtonCell;
 	NSMutableArray *_portCells;
 
 	CGFloat _areaWidth;
@@ -31,7 +33,6 @@
 	CGFloat _portHeight;
 
 	id __contentView;
-	id __contentButton;
 	id __portInLight;
 	id __portDragOut;
 	NSUInteger __hitSearchIndex;
@@ -47,5 +48,16 @@
 
 //FIXME 
 - (void) drawDropShadow;
+
+/*
+- (NSSet *) importsName;
+- (NSSet *) exportsName;
+- (NSRect) frameForPortCellOfClass:(Class)class
+	withName:(NSString *)aName;
+	*/
+- (NSArray *) portCells;
+- (TMPortCell *) portCellAtPoint:(NSPoint)p;
+- (NSRect) convertPortCellFrame:(TMPortCell *)aCell
+			toView:(NSView *)aView;
 @end
 

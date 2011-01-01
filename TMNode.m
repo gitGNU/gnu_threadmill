@@ -13,16 +13,63 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import "TMNode.h"
+#import "TMNodeInternal.h"
 
-@interface TMNode (Private)
-- (void) setImport:(TMPort *)aPort
-	   forName:(NSString *)aName;
-- (void) setExport:(TMPort *)aPort
-	   forName:(NSString *)aName;
-@end
+@implementation TMNode (Internal)
 
-@implementation TMNode (Private)
+- (NSSet *) importsForName:(NSString *)aName
+{
+	NSSet *ports = [_imports allKeysForObject:aName];
+	if ([ports anyObject] == nil)
+	{
+		[_imports setObject:aName forKey:[TMPort portWithNode:self]];
+		return [_imports allKeys];
+	}
+	return ports;
+}
+
+- (NSSet *) exportsForName:(NSString *)aName
+{
+	NSSet *ports = [_exports allKeysForObject:aName];
+	if ([ports anyObject] == nil)
+	{
+		[_exports setObject:aName forKey:[TMPort portWithNode:self]];
+		return [_exports allKeys];
+	}
+	return ports;
+}
+
+/* Only invoke by setExportName:toNode:forImportName: which check if the current connection was already existed */
+- (BOOL) setExport:(TMExport *)anExport
+	forImportName:(NSString *)importName
+{
+	NSEnumerator *en = [[_imports allKeysForObject:importName] objectEnumerator];
+	TMImport *import;
+
+	/* check if the connection is already existed */
+	while ((import = [en nextObject]))
+	{
+		if (import->__pair == nil)
+		{
+			break;
+		}
+	}
+
+	if (import == nil)
+	{
+		import = [TMImport portWithNode:self];
+	}
+	
+	if (anExport != nil)
+		[import connect:anExport];
+	[_imports setObject:importName forKey:@"bobo"];
+	[_imports setObject:importName forKey:import];
+
+	return YES;
+}
+
+
+	/*
 - (void) setImport:(TMPort *)aPort
 	   forName:(NSString *)aName
 {
@@ -46,8 +93,10 @@
 	[_exports setObject:aPort
 		forKey:aName];
 }
+*/
 
 @end
+
 
 @implementation TMNode
 - (id) init
@@ -71,15 +120,67 @@
 	return [NSString stringWithFormat:@"Simple Node (%x)", self];
 }
 
-- (NSArray *) importNames
+- (NSSet *) importNames
 {
-	return [_imports allKeys];
+	return [NSSet setWithArray:[_imports allValues]];
 }
 
-- (NSArray *) exportNames
+- (NSSet *) exportNames
 {
-	return [_exports allKeys];
+	return [NSSet setWithArray:[_exports allValues]];
 }
 
+- (BOOL) setExportName:(NSString *)exportName
+	toNode:(TMNode *)aNode
+	forImportName:(NSString *)importName
+{
+	TMExport *freeExportSlot = nil;
+
+	if (exportName != nil)
+	{
+		NSEnumerator *en = [[_exports allKeysForObject:exportName] objectEnumerator];
+		TMExport *export;
+
+		/* check if the connection is already existed */
+		while ((export = [en nextObject]))
+		{
+			if (export->__pair == nil)
+			{
+				freeExportSlot = export;
+				if (importName == nil) break;
+			}
+			else if (export->__pair->__node == aNode && [importName isEqualToString:[export->__pair name]])
+			{
+				/* port existed */
+				return YES;
+			}
+		}
+
+		if (freeExportSlot == nil)
+		{
+			freeExportSlot = [TMExport portWithNode:self];
+		}
+		[_exports setObject:exportName forKey:freeExportSlot];
+
+	}
+
+	return [aNode setExport:freeExportSlot forImportName:importName];
+
+}
+
+- (BOOL) createImportWithName:(NSString *)importName
+{
+	return [self setExportName:nil
+		toNode:self
+		forImportName:importName];
+}
+
+- (BOOL) createExportWithName:(NSString *)exportName
+{
+	return [self setExportName:exportName
+		toNode:nil
+		forImportName:nil];
+}
 @end
+
 

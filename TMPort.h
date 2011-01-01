@@ -19,16 +19,20 @@
 @class TMImport;
 @class TMExport;
 
-@interface TMPort : NSObject
+@interface TMPort : NSObject <NSCopying>
 {
-	TMNode *__node;
+	@public
 	TMPort *__pair;
+	TMNode *__node;
 }
 
++ (id) portWithNode:(TMNode *)aNode;
 - (id) initWithNode:(TMNode *)aNode;
 - (void) connect:(TMPort *)aPair;
 - (void) disconnect;
-- (NSEnumerator *) objectEnumerator;
+- (TMPort *) pair;
+- (NSString *) name;
+
 @end
 
 @interface TMImport : TMPort

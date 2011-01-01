@@ -14,13 +14,11 @@
 */
 
 #import "TMNodeView.h"
-#import "TMPortCell.h"
+#import "TMPortCellInternal.h"
 #import "TMNode.h"
 #import "TMDefs.h"
 
 NSDate * __distFuture;
-NSString * TMPasteboardTypeImportLink = @"TMPasteboardTypeImportLink";
-NSString * TMPasteboardTypeExportLink = @"TMPasteboardTypeExportLink";
 
 void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 {
@@ -29,13 +27,49 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	aFrame->size.height = range.length;
 }
 
-@interface TMNodeView (Private)
-- (void) _recalculateFrame;
-- (void) _setNode:(TMNode *)aNode;
-- (TMPortCell *) _portAtPoint:(NSPoint)p;
+@interface TMTitleButtonCell : NSButtonCell
+{
+	BOOL mode;
+}
+- (void) toggle;
 @end
 
-@implementation TMNodeView (Private)
+@implementation TMTitleButtonCell
+- (void) toggle
+{
+	mode = !mode;
+}
+
+- (void) drawInteriorWithFrame:(NSRect)cf
+                        inView:(NSView *)controlView
+{
+	NSGraphicsContext *ctxt=GSCurrentContext();
+//	NSRect cf = [self drawingRectForBounds: cf];
+
+	DPSgsave(ctxt); {
+		DPStranslate(ctxt, NSMinX(cf), NSMinY(cf));
+
+		if ([self isHighlighted])
+			[[NSColor cyanColor] set];
+		else
+			[[NSColor blackColor] set];
+
+		DPSmoveto(ctxt, NSWidth(cf)/2, NSHeight(cf) * (mode?1:4)/5.);
+		DPSlineto(ctxt, NSWidth(cf)/2 + NSWidth(cf) * 4/15., NSHeight(cf) * (mode?3:1)/4.);
+		DPSlineto(ctxt, NSWidth(cf)/2 - NSWidth(cf) * 4/15., NSHeight(cf) * (mode?3:1)/4.);
+
+		DPSclosepath(ctxt);
+		DPSfill(ctxt);
+	} DPSgrestore(ctxt);
+}
+@end
+
+@interface TMNodeView (Internal)
+- (void) _recalculateFrame;
+- (void) _setNode:(TMNode *)aNode;
+@end
+
+@implementation TMNodeView (Internal)
 - (void) _recalculateFrame
 {
 	BOOL contentHidden = __contentView == nil ? YES : [__contentView isHidden];
@@ -86,22 +120,16 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRect bounds = [self bounds];
 
 	/* set folding button */
-	if (__contentView == nil)
-	{
-		[__contentButton setHidden:YES];
-	}
-	else [__contentButton setHidden:NO];
-
+	/*
 	if (__contentView != nil && contentHidden)
 	{
-		[__contentButton setImage:[NSImage imageNamed:@"common_ArrowDown.tiff"]];
+		[_contentButtonCell setImage:[NSImage imageNamed:@"common_ArrowDown.tiff"]];
 	}
 	else
 	{
-		[__contentButton setImage:[NSImage imageNamed:@"common_ArrowUp.tiff"]];
+		[_contentButtonCell setImage:[NSImage imageNamed:@"common_ArrowUp.tiff"]];
 	}
-	[__contentButton setFrame:NSMakeRect(BORDER_SIZE, NSHeight(newFrame) - BORDER_SIZE - _titleHeight , _titleHeight, _titleHeight)];
-
+	*/
 
 	if (!contentHidden)
 	{
@@ -110,36 +138,6 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	}
 
 	[self setNeedsDisplay:YES];
-}
-
-- (TMPortCell *) _portAtPoint:(NSPoint)p
-{
-	NSRect portRect;
-	TMPortCell *hitPort = [_portCells objectAtIndex:__hitSearchIndex];
-
-	portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
-	portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE/2;
-	__port_set_frame(hitPort, &portRect);
-
-	if (NSPointInRect(p, portRect))
-	{
-		return hitPort;
-	}
-
-	NSEnumerator *en = [_portCells reverseObjectEnumerator];
-	TMPortCell *port;
-	while ((port = [en nextObject]))
-	{
-		if (hitPort == port) continue;
-
-		__port_set_frame(port, &portRect);
-		if (NSPointInRect(p, portRect))
-		{
-			__hitSearchIndex = [_portCells indexOfObject:port];
-			return port;
-		}
-	}
-	return nil;
 }
 
 - (void) _setNode:(TMNode*)aNode
@@ -162,15 +160,16 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 - (id) initWithNode:(TMNode *)aNode
 {
-	ASSIGN(_titleCell, [[NSCell alloc] initTextCell:@"Node"]);
+	ASSIGN(_titleCell, [[NSButtonCell alloc] initTextCell:@"Node"]);
 	ASSIGN(_borderColor, [NSColor blackColor]);
+	[_titleCell setBezelStyle:NSDisclosureBezelStyle];
 
 	[self initWithFrame:NSMakeRect(0, 0, 200, 300)]; //FIXME
 
-	__contentButton = AUTORELEASE([NSButton new]);
-	[__contentButton setTarget:self];
-	[__contentButton setAction:@selector(toggleContent:)];
-	[self addSubview:__contentButton];
+	_contentButtonCell = [TMTitleButtonCell new];
+	[_contentButtonCell setTarget:self];
+	[_contentButtonCell setAction:@selector(toggleContent:)];
+	[_contentButtonCell setBezelStyle:NSDisclosureBezelStyle];
 
 	[self _setNode:aNode];
 
@@ -180,22 +179,30 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	NSEnumerator *en;
 	NSString *aName;
-	en = [[[_node importNames] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator]; // FIXME, considering exposing TMPort, what could be so bad about that?
+/*
+	NSArray * sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:nil ascending:YES]];
+*/
+
+	id cell;
+	en = [[[[_node importNames] allObjects] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
-		[_portCells addObject:AUTORELEASE([[TMImportCell alloc] initWithName:aName])];
+		cell = AUTORELEASE([[TMImportCell alloc] initWithName:aName]);
+		[cell setRepresentedObject:self];
+		[_portCells addObject:cell];
 	}
 
 	/* exports */
 
-	en = [[[_node exportNames] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator]; // FIXME, considering exposing TMPort, what could be so bad about that?
+	en = [[[[_node exportNames] allObjects] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
-		[_portCells addObject:AUTORELEASE([[TMExportCell alloc] initWithName:aName])];
+		cell = AUTORELEASE([[TMExportCell alloc] initWithName:aName]);
+		[cell setRepresentedObject:self];
+		[_portCells addObject:cell];
 	}
 
-	/* register */
-	[self registerForDraggedTypes:[NSArray arrayWithObjects:TMPasteboardTypeImportLink,TMPasteboardTypeExportLink,nil]];
+	[self registerForDraggedTypes:[NSArray arrayWithObjects:TMPasteboardTypeImportLink, TMPasteboardTypeExportLink, nil]];
 
 	return self;
 }
@@ -234,6 +241,16 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 - (void) drawTitleInRect:(NSRect)r
 {
+	[[NSColor lightGrayColor] set];
+	NSRectFill(r);
+
+	NSRect textTitleRect;
+	textTitleRect.origin.x = NSMinX(r) + _titleHeight;
+	textTitleRect.origin.y = NSMinY(r);
+	textTitleRect.size.width = NSWidth(r) - _titleHeight;
+	textTitleRect.size.height = NSHeight(r);
+	[_titleCell drawWithFrame:textTitleRect inView:self];
+#if 0
 	NSDictionary* blackattr;
 	NSDictionary* lgrayattr;
 	NSDictionary* dgrayattr;
@@ -242,7 +259,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	NSRect tf = r;
 	NSSize ts = [_titleCell cellSize];
-	tf.origin.x += TEXT_OFFSET;
+	tf.origin.x += TEXT_OFFSET + _titleHeight;
 	tf.origin.y = NSMidY(r) - ts.height/2; 
 	tf.size.height = ts.height;
 
@@ -293,6 +310,11 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		withAttributes:lgrayattr];
 	[nodeName drawInRect:tf
 		withAttributes:blackattr];
+#endif
+
+	r.size.width = r.size.height;
+	
+	[_contentButtonCell drawWithFrame:r inView:self];
 }
 
 - (void) drawRect:(NSRect)r
@@ -317,13 +339,8 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 				NSHeight(bounds) - _portHeight - 2 * BORDER_SIZE + BORDER_LINE_SIZE));
 
 	/* draw title */
-	NSRect textRect;
-	textRect.origin = NSMakePoint(BORDER_SIZE + _titleHeight, NSMaxY(bounds) - _titleHeight - BORDER_SIZE);
-       	textRect.size = NSMakeSize(_areaWidth - _titleHeight, _titleHeight);
-
-	[self drawTitleInRect:textRect];
+	[self drawTitleInRect:NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE,_areaWidth, _titleHeight)];
 	
-//	[_titleCell drawWithFrame:textRect inView:self];
 
 	/* line under title bar */
 	[_borderColor set];
@@ -339,9 +356,16 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	TMPortCell *port;
 	while ((port = [en nextObject]))
 	{
+		if (port == __portInLight) continue;
 		__port_set_frame(port, &portRect);
 		[port setBorderColor:_borderColor];
 		[port drawWithFrame:portRect inView:self];
+	}
+	if (__portInLight != nil)
+	{
+		__port_set_frame(__portInLight, &portRect);
+		[__portInLight setBorderColor:_borderColor];
+		[__portInLight drawWithFrame:portRect inView:self];
 	}
 
 	/* for debugging
@@ -365,7 +389,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 			return nil;
 		}
 
-		if ([self _portAtPoint:[self convertPoint:aPoint fromView:[self superview]]] != nil)
+		if ([self portCellAtPoint:[self convertPoint:aPoint fromView:[self superview]]] != nil)
 		{
 			return self;
 		}
@@ -392,6 +416,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 - (void) toggleContent:(id)sender
 {
 	[__contentView setHidden:![__contentView isHidden]];
+	[_contentButtonCell toggle];
 
 	[self _recalculateFrame];
 
@@ -442,8 +467,40 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	AUTORELEASE(oldBorderColor);
 
 
+	/* FIXME track cells somewhere else */
+	NSRect buttonRect = NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE,_titleHeight, _titleHeight);
+	if (NSPointInRect(mouseDownPoint, buttonRect))
+	{
+		while (YES)
+		{
+			//FIXME set hilight
+			[_contentButtonCell setHighlighted:YES];
+			[self setNeedsDisplay:YES];
+			BOOL cond = [_contentButtonCell trackMouse:anEvent
+				inRect:buttonRect
+				ofView:self    
+				untilMouseUp:NO];
+			[_contentButtonCell setHighlighted:NO];
+			[self setNeedsDisplay:YES];
+
+			if (cond == YES) break;
+
+			anEvent = [NSApp nextEventMatchingMask:
+				NSLeftMouseUpMask |
+				NSLeftMouseDraggedMask |
+				NSMouseMovedMask
+				untilDate:__distFuture
+				inMode:NSEventTrackingRunLoopMode
+				dequeue:YES];
+
+			NSEventType eventType = [anEvent type];
+
+			if (eventType == NSLeftMouseUp)
+				break;
+		}
+	}
 	/* track frame movement */
-	if (NSPointInRect(mouseDownPoint, NSMakeRect(0,
+	else if (NSPointInRect(mouseDownPoint, NSMakeRect(0,
 					NSMaxY(bounds) - _titleHeight - BORDER_SIZE,
 					NSWidth(bounds),
 					_titleHeight)))
@@ -490,11 +547,91 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		NSRect portRect;
 		portRect.origin = NSMakePoint(BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE*1.5);
 		NSEnumerator *en = [_portCells reverseObjectEnumerator];
-		TMPortCell *port = [self _portAtPoint:mouseDownPoint];
+		TMPortCell *port = [self portCellAtPoint:mouseDownPoint];
 
 		if (port != nil)
 		{
-			while (YES)
+			__portInLight = port;
+			[__portInLight setHighlight:YES];
+			[self setNeedsDisplay:YES];
+
+			/* track sorting handle */
+			if (mouseDownPoint.x - BORDER_SIZE < 7 || mouseDownPoint.x - BORDER_SIZE - _areaWidth > -7)
+			{
+				[__portInLight setHandleMode:YES];
+				[self setNeedsDisplay:YES];
+				TMAxisRange r = [__portInLight range];
+				CGFloat draggedLocation;
+
+				while (YES)
+				{
+					anEvent = [NSApp nextEventMatchingMask:
+						NSLeftMouseUpMask |
+						NSLeftMouseDraggedMask |
+						NSMouseMovedMask
+						untilDate:__distFuture
+						inMode:NSEventTrackingRunLoopMode
+						dequeue:YES];
+
+					NSEventType eventType = [anEvent type];
+					if (eventType == NSLeftMouseUp)
+						break;
+
+					NSPoint p = [self convertPointFromBase:[anEvent locationInWindow]];
+					p.y = p.y - mouseDownPoint.y;
+
+					TMAxisRange dragRange = TMMakeAxisRange(r.location + p.y,r.length);
+					CGFloat origin = BORDER_SIZE + BORDER_LINE_SIZE/2;
+					if (dragRange.location < origin)
+						dragRange.location = origin;
+					else if (dragRange.location > origin - BORDER_LINE_SIZE + _portHeight - dragRange.length) 
+					{
+						draggedLocation = origin - BORDER_LINE_SIZE + _portHeight - dragRange.length;
+						dragRange.location = draggedLocation;
+					}
+
+
+					[__portInLight setRange:dragRange];
+
+					NSEnumerator *en;
+					TMPortCell *portCell;
+					[_portCells sortUsingSelector:@selector(compareHeight:)];
+					en = [_portCells objectEnumerator];
+					while ((portCell = [en nextObject]))
+					{
+						if (portCell == __portInLight)
+						{
+							continue;
+						}
+
+						TMAxisRange portRange = [portCell range];
+						portRange.location = origin;
+
+						if (TMIntersectionAxisRange(portRange, dragRange).length > 0)
+						{
+							draggedLocation = origin;
+							portRange.location += dragRange.length;
+							origin += dragRange.length;
+						}
+
+						[portCell setRange:portRange];
+						origin += portRange.length;
+					}
+
+					//FIXME optimize display
+					[[self superview] setNeedsDisplay:YES];
+
+				}
+				[__portInLight setHandleMode:NO];
+				r.location = draggedLocation;
+				[__portInLight setRange:r];
+				//FIXME optimize display
+				[[self superview] setNeedsDisplay:YES];
+
+
+			}
+			/* track linking */
+			else while (YES)
 			{
 				anEvent = [NSApp nextEventMatchingMask:
 					NSLeftMouseUpMask |
@@ -527,27 +664,40 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 				[pb declareTypes:[NSArray arrayWithObject:type] owner:self];
 				[pb setString:[port title] forType:type];
 
-				[port setHighlight:YES];
 				__portDragOut = port;
+
 				[super dragImage:[NSImage imageNamed:@"Plug.tiff"]
 					at:mouseDownPoint
 					offset:NSZeroSize
 					event:anEvent
 					pasteboard:pb
-					source:self
+					source:__portDragOut
 					slideBack:YES];
 
 				break;
 
 			}
+
+			[__portInLight setHighlight:NO];
+			__portInLight = nil;
+			[__portInLight setHandleMode:NO];
+			[self setNeedsDisplay:YES];
 		}
 	}
 }
 
+/* FIXME source changed to cell
 - (void)draggedImage:(NSImage *)anImage beganAt:(NSPoint)aPoint
 {
 	NSLog(@"begin");
 }
+
+- (void)draggedImage:(NSImage *)draggedImage movedTo:(NSPoint)screenPoint
+{
+	NSLog(@"move %@",NSStringFromPoint(screenPoint));
+}
+
+*/
 
 - (void) setNeedsDisplayPortCells
 {
@@ -559,19 +709,6 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	[__portInLight setHighlight:NO];
 	__portInLight = nil;
 	[self setNeedsDisplay:YES]; //FIXME only need to update the port frame
-	NSLog(@"exit");
-}
-
-- (void)draggedImage:(NSImage *)draggedImage movedTo:(NSPoint)screenPoint
-{
-	NSLog(@"move %@",NSStringFromPoint(screenPoint));
-}
-
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
-{
-	[__portDragOut setHighlight:NO];
-	__portDragOut = nil;
-	[self setNeedsDisplay:YES]; //FIXME only need to update the port frame
 }
 
 - (unsigned) draggingUpdated: (id<NSDraggingInfo>)sender
@@ -580,7 +717,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSPasteboard *pb = [sender draggingPasteboard];
 	NSArray *types = [pb types];
 
-	TMPortCell *port = [self _portAtPoint:[self convertPointFromBase:[sender draggingLocation]]];
+	TMPortCell *port = [self portCellAtPoint:[self convertPointFromBase:[sender draggingLocation]]];
 
 	if (__portInLight != port)
 	{
@@ -617,18 +754,6 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	return NSDragOperationNone;
 }
 
-- (unsigned int) draggingSourceOperationMaskForLocal:(BOOL)isLocal
-{
-	if (isLocal)
-	{
-		return NSDragOperationLink;
-	}
-	else
-	{
-		return NSDragOperationNone;
-	}
-}
-
 - (BOOL) performDragOperation:(id <NSDraggingInfo>)sender
 {
 
@@ -636,16 +761,30 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSDragOperation opMask = [sender draggingSourceOperationMask];
 	NSArray *types = [pb types];
 
+	TMPortCell *sourcePort = [sender draggingSource];
+	TMPortCell *targetPort = __portInLight;
+
+	TMNodeView *sourceView = [sourcePort representedObject];
+
+
+NSLog(@"connect %@ %@ %@",sourcePort,targetPort,sourceView);
 
 	if ([types containsObject:TMPasteboardTypeImportLink])
 	{
-
-		NSLog(@"%@ -> %@", [__portInLight title], [pb stringForType:TMPasteboardTypeImportLink]);
+		[_node setExportName:[targetPort title]
+			toNode:sourceView->_node
+			forImportName:[pb stringForType:TMPasteboardTypeImportLink]];
 	}
 	else if ([types containsObject:TMPasteboardTypeExportLink])
 	{
-		NSLog(@"%@ <- %@", [__portInLight title], [pb stringForType:TMPasteboardTypeExportLink]);
+		[sourceView->_node setExportName:[pb stringForType:TMPasteboardTypeImportLink]
+			toNode:_node
+			forImportName:[targetPort title]];
 	}
+
+
+	[sourcePort addConnection:targetPort];
+	[targetPort addConnection:sourcePort];
 
 	[__portInLight setHighlight:NO];
 	__portInLight = nil;
@@ -653,6 +792,103 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	return YES;
 
+}
+
+- (NSSet *) importNames
+{
+	return [_node importNames];
+}
+
+- (NSSet *) exportNames
+{
+	return [_node exportNames];
+}
+
+- (NSRect) frameForPortCellOfClass:(Class)class
+	withName:(NSString *)aName
+{
+	NSEnumerator *en;
+	en = [_portCells objectEnumerator];
+	TMPortCell *port;
+	while ((port = [en nextObject]))
+	{
+		if ([port isKindOfClass:class])
+		{
+			if ([[port title] isEqualToString:aName])
+			{
+				NSRect portRect;
+				portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
+				portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE/2;
+				__port_set_frame(port, &portRect);
+
+				return portRect;
+			}
+		}
+	}
+
+	return NSZeroRect;
+
+}
+
+- (NSArray *) portCells
+{
+	return _portCells;
+}
+
+- (NSRect) convertPortCellFrame:(TMPortCell *)aCell
+			toView:(NSView *)aView
+{
+	NSRect portRect;
+	portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
+	portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE/2;
+	__port_set_frame(aCell, &portRect);
+	return [self convertRect:portRect toView:aView];
+}
+
+- (TMPortCell *) portCellAtPoint:(NSPoint)p
+{
+	NSRect portRect;
+	TMPortCell *hitPort = [_portCells objectAtIndex:__hitSearchIndex];
+
+	portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
+	portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE/2;
+	__port_set_frame(hitPort, &portRect);
+
+	if (NSPointInRect(p, portRect))
+	{
+		return hitPort;
+	}
+
+	NSEnumerator *en = [_portCells reverseObjectEnumerator];
+	TMPortCell *port;
+	while ((port = [en nextObject]))
+	{
+		if (hitPort == port) continue;
+
+		__port_set_frame(port, &portRect);
+		if (NSPointInRect(p, portRect))
+		{
+			__hitSearchIndex = [_portCells indexOfObject:port];
+			return port;
+		}
+	}
+	return nil;
+}
+
+- (void) setBackgroundColor:(NSColor *)aColor
+	forExport:(NSString *)exportName
+{
+	NSEnumerator *en = [_portCells reverseObjectEnumerator];
+	TMPortCell *port;
+	while ((port = [en nextObject]))
+	{
+		if ([[port title] isEqualToString:exportName])
+		{
+			[port setBackgroundColor:aColor];
+			[self setNeedsDisplay:YES];
+			return;
+		}
+	}
 }
 
 @end

@@ -14,6 +14,7 @@
 */
 
 #import "TMPort.h"
+#import "TMNodeInternal.h"
 
 @interface TMPort (Protected)
 - (void) __setConnection:(TMPort *)aPair;
@@ -28,10 +29,14 @@
 @end
 
 @implementation TMPort
-
-- (NSEnumerator *) objectEnumerator
++ (id) portWithNode:(TMNode *)aNode
 {
-	return [NSArray arrayWithObject:self];
+	return AUTORELEASE([[self alloc] initWithNode:aNode]);
+}
+
+- (id) copyWithZone:(NSZone *)zone
+{
+	return RETAIN(self);
 }
 
 - (id) initWithNode:(TMNode *)aNode
@@ -41,6 +46,11 @@
 	__node = aNode;
 
 	return self;
+}
+
+- (NSString *) name
+{
+	return [__node nameForPort:self];
 }
 
 - (void) dealloc
