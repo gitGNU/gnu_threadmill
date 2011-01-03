@@ -367,13 +367,13 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		DPSlineto(ctxt, NSMaxX(r), NSMaxY(r));
 		DPSlineto(ctxt, NSMaxX(r), NSMinY(r));
 		[[NSColor whiteColor] set];
-		DPSsetalpha(ctxt,0.5);
+		DPSsetalpha(ctxt,0.3);
 		DPSstroke(ctxt);
 		DPSmoveto(ctxt, NSMinX(r), NSMaxY(r));
 		DPSlineto(ctxt, NSMinX(r), NSMinY(r));
 		DPSlineto(ctxt, NSMaxX(r), NSMinY(r));
 		[[NSColor blackColor] set];
-		DPSsetalpha(ctxt,0.5);
+		DPSsetalpha(ctxt,0.3);
 		DPSstroke(ctxt);
 	} DPSgrestore(ctxt);
 #endif
