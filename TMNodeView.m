@@ -46,17 +46,19 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSGraphicsContext *ctxt=GSCurrentContext();
 //	NSRect cf = [self drawingRectForBounds: cf];
 
+	/* just draw arrow */
 	DPSgsave(ctxt); {
 		DPStranslate(ctxt, NSMinX(cf), NSMinY(cf));
 
 		if ([self isHighlighted])
+			//FIXME define highlight color
 			[[NSColor cyanColor] set];
 		else
-			[[NSColor blackColor] set];
+			[[NSColor whiteColor] set];
 
-		DPSmoveto(ctxt, NSWidth(cf)/2, NSHeight(cf) * (mode?1:4)/5.);
-		DPSlineto(ctxt, NSWidth(cf)/2 + NSWidth(cf) * 4/15., NSHeight(cf) * (mode?3:1)/4.);
-		DPSlineto(ctxt, NSWidth(cf)/2 - NSWidth(cf) * 4/15., NSHeight(cf) * (mode?3:1)/4.);
+		DPSmoveto(ctxt, NSWidth(cf)/2, NSHeight(cf) * (mode?1:2)/3.);
+		DPSlineto(ctxt, NSWidth(cf)/2 + NSWidth(cf) * 3/15., NSHeight(cf) * (mode?2:1)/3.);
+		DPSlineto(ctxt, NSWidth(cf)/2 - NSWidth(cf) * 3/15., NSHeight(cf) * (mode?2:1)/3.);
 
 		DPSclosepath(ctxt);
 		DPSfill(ctxt);
@@ -67,6 +69,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 @interface TMNodeView (Internal)
 - (void) _recalculateFrame;
 - (void) _setNode:(TMNode *)aNode;
+- (void) _handlePortSorting:(NSPoint)mouseDownPoint;
 @end
 
 @implementation TMNodeView (Internal)
@@ -144,10 +147,117 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 {
 	ASSIGN(_node, aNode);
 	[_titleCell setTitle:[_node name]];
+
+	NSDictionary* whiteAttr;
+	whiteAttr = [NSDictionary dictionaryWithObjectsAndKeys:[NSFont boldSystemFontOfSize:[[_titleCell font] pointSize]],
+		  NSFontAttributeName, [NSColor whiteColor],
+		  NSForegroundColorAttributeName, nil];
+	NSAttributedString *attrStr = [[NSAttributedString alloc] initWithString:[_node name] attributes:whiteAttr];
+
+	[_titleCell setAttributedTitle:attrStr];
+	AUTORELEASE(attrStr);
 	[self _recalculateFrame];
 
 	[self setNeedsDisplay:YES];
 }
+
+- (void) _handlePortSorting:(NSPoint)mouseDownPoint
+{
+	NSEvent *anEvent;
+
+	[__portInLight setHandleMode:YES];
+	[self setNeedsDisplay:YES];
+	TMAxisRange r = [__portInLight range];
+	CGFloat draggedLocation = r.location;
+
+	while (YES)
+	{
+		anEvent = [NSApp nextEventMatchingMask:
+			NSLeftMouseUpMask |
+			NSLeftMouseDraggedMask |
+			NSMouseMovedMask
+			untilDate:__distFuture
+			inMode:NSEventTrackingRunLoopMode
+			dequeue:YES];
+
+		NSEventType eventType = [anEvent type];
+		if (eventType == NSLeftMouseUp)
+			break;
+
+		NSPoint p = [self convertPointFromBase:[anEvent locationInWindow]];
+		p.y = p.y - mouseDownPoint.y;
+
+		TMAxisRange dragRange = TMMakeAxisRange(r.location + p.y,r.length);
+		CGFloat origin = BORDER_SIZE + BORDER_LINE_SIZE/2;
+		if (dragRange.location < origin)
+		{
+			dragRange.location = origin;
+		}
+		else if (dragRange.location > origin - BORDER_LINE_SIZE + _portHeight - dragRange.length) 
+		{
+			dragRange.location = origin - BORDER_LINE_SIZE + _portHeight - dragRange.length;
+		}
+		draggedLocation = dragRange.location;
+
+		[__portInLight setRange:dragRange];
+
+		/* FIXME Buggy */
+		NSEnumerator *en;
+		TMPortCell *portCell;
+		[_portCells sortUsingSelector:@selector(compareHeight:)];
+		en = [_portCells objectEnumerator];
+		while ((portCell = [en nextObject]))
+		{
+			CGFloat diffLo,diffHi;
+
+			if (portCell == __portInLight)
+			{
+				continue;
+			}
+
+			TMAxisRange portRange = [portCell range];
+			portRange.location = origin;
+
+			diffLo = TMIntersectionAxisRange(portRange, dragRange).length;
+
+			if (diffLo > 0.)
+			{
+				diffHi = TMIntersectionAxisRange(TMMakeAxisRange(portRange.location + dragRange.length, portRange.length), dragRange).length;
+				if (diffHi < diffLo)
+				{
+					draggedLocation = origin;
+					portRange.location += dragRange.length;
+					[portCell setRange:portRange];
+					origin += dragRange.length + portRange.length;
+				}
+				else
+				{
+					draggedLocation = origin + portRange.length;
+					[portCell setRange:portRange];
+					origin += dragRange.length + portRange.length;
+				}
+			}
+			else
+			{
+				[portCell setRange:portRange];
+				origin += portRange.length;
+			}
+
+		}
+
+		//FIXME optimize display
+		[[self superview] setNeedsDisplay:YES];
+
+	}
+	[__portInLight setHandleMode:NO];
+	r.location = draggedLocation;
+	[__portInLight setRange:r];
+	//FIXME optimize display
+	[[self superview] setNeedsDisplay:YES];
+
+
+}
+
 
 @end
 
@@ -241,8 +351,36 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 - (void) drawTitleInRect:(NSRect)r
 {
-	[[NSColor lightGrayColor] set];
+	[[NSColor blackColor] set];
 	NSRectFill(r);
+#ifdef SUPERFLUOUS
+	NSRect carbonRect;
+	carbonRect.origin = NSMakePoint(10,10);
+	carbonRect.size = r.size;
+	[[NSImage imageNamed:@"Carbon-Pattern.tiff"] compositeToPoint:r.origin fromRect:carbonRect operation:NSCompositeSourceOver];
+
+	NSGraphicsContext *ctxt=GSCurrentContext();
+	DPSgsave(ctxt); {
+		DPSsetlinewidth(ctxt, 2);
+		DPSrectclip(ctxt, NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r));
+		DPSmoveto(ctxt, NSMinX(r), NSMaxY(r));
+		DPSlineto(ctxt, NSMaxX(r), NSMaxY(r));
+		DPSlineto(ctxt, NSMaxX(r), NSMinY(r));
+		[[NSColor whiteColor] set];
+		DPSsetalpha(ctxt,0.5);
+		DPSstroke(ctxt);
+		DPSmoveto(ctxt, NSMinX(r), NSMaxY(r));
+		DPSlineto(ctxt, NSMinX(r), NSMinY(r));
+		DPSlineto(ctxt, NSMaxX(r), NSMinY(r));
+		[[NSColor blackColor] set];
+		DPSsetalpha(ctxt,0.5);
+		DPSstroke(ctxt);
+	} DPSgrestore(ctxt);
+#endif
+	/*
+	[[NSColor darkGrayColor] set];
+	NSRectFill(NSInsetRect(r, 1, 1));
+	*/
 
 	NSRect textTitleRect;
 	textTitleRect.origin.x = NSMinX(r) + _titleHeight;
@@ -327,16 +465,16 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	[_borderColor set];
 
 	NSRectFill(NSMakeRect(BORDER_SIZE - BORDER_LINE_SIZE, 
-				BORDER_SIZE - BORDER_LINE_SIZE + _portHeight,
+				BORDER_SIZE,
 				NSWidth(bounds) - BORDER_SIZE * 2 + BORDER_LINE_SIZE * 2,
-				NSHeight(bounds) - _portHeight - 2 * BORDER_SIZE + 2 * BORDER_LINE_SIZE));
+				NSHeight(bounds) - 2 * BORDER_SIZE + BORDER_LINE_SIZE));
 
 
 	[[NSColor windowBackgroundColor] set];
 	NSRectFill(NSMakeRect(BORDER_SIZE, 
-				BORDER_SIZE - BORDER_LINE_SIZE + _portHeight,
+				BORDER_SIZE + BORDER_LINE_SIZE,
 				NSWidth(bounds) - BORDER_SIZE * 2,
-				NSHeight(bounds) - _portHeight - 2 * BORDER_SIZE + BORDER_LINE_SIZE));
+				NSHeight(bounds)- 2 * BORDER_SIZE - BORDER_LINE_SIZE));
 
 	/* draw title */
 	[self drawTitleInRect:NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE,_areaWidth, _titleHeight)];
@@ -345,8 +483,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	/* line under title bar */
 	[_borderColor set];
 	NSRectFill(NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE - BORDER_LINE_SIZE,
-				_areaWidth, BORDER_LINE_SIZE
-				));
+				_areaWidth, BORDER_LINE_SIZE));
 
 	/* draw ports */
 	NSRect portRect;
@@ -556,81 +693,12 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 			[self setNeedsDisplay:YES];
 
 			/* track sorting handle */
-			if (mouseDownPoint.x - BORDER_SIZE < 7 || mouseDownPoint.x - BORDER_SIZE - _areaWidth > -7)
+			if ((mouseDownPoint.x - BORDER_SIZE < PORT_HANDLE_SIZE && [__portInLight isKindOfClass:[TMExportCell class]])
+				       	|| (mouseDownPoint.x - BORDER_SIZE - _areaWidth > -PORT_HANDLE_SIZE && [__portInLight isKindOfClass:[TMImportCell class]]))
 			{
-				[__portInLight setHandleMode:YES];
-				[self setNeedsDisplay:YES];
-				TMAxisRange r = [__portInLight range];
-				CGFloat draggedLocation;
-
-				while (YES)
-				{
-					anEvent = [NSApp nextEventMatchingMask:
-						NSLeftMouseUpMask |
-						NSLeftMouseDraggedMask |
-						NSMouseMovedMask
-						untilDate:__distFuture
-						inMode:NSEventTrackingRunLoopMode
-						dequeue:YES];
-
-					NSEventType eventType = [anEvent type];
-					if (eventType == NSLeftMouseUp)
-						break;
-
-					NSPoint p = [self convertPointFromBase:[anEvent locationInWindow]];
-					p.y = p.y - mouseDownPoint.y;
-
-					TMAxisRange dragRange = TMMakeAxisRange(r.location + p.y,r.length);
-					CGFloat origin = BORDER_SIZE + BORDER_LINE_SIZE/2;
-					if (dragRange.location < origin)
-						dragRange.location = origin;
-					else if (dragRange.location > origin - BORDER_LINE_SIZE + _portHeight - dragRange.length) 
-					{
-						draggedLocation = origin - BORDER_LINE_SIZE + _portHeight - dragRange.length;
-						dragRange.location = draggedLocation;
-					}
-
-
-					[__portInLight setRange:dragRange];
-
-					NSEnumerator *en;
-					TMPortCell *portCell;
-					[_portCells sortUsingSelector:@selector(compareHeight:)];
-					en = [_portCells objectEnumerator];
-					while ((portCell = [en nextObject]))
-					{
-						if (portCell == __portInLight)
-						{
-							continue;
-						}
-
-						TMAxisRange portRange = [portCell range];
-						portRange.location = origin;
-
-						if (TMIntersectionAxisRange(portRange, dragRange).length > 0)
-						{
-							draggedLocation = origin;
-							portRange.location += dragRange.length;
-							origin += dragRange.length;
-						}
-
-						[portCell setRange:portRange];
-						origin += portRange.length;
-					}
-
-					//FIXME optimize display
-					[[self superview] setNeedsDisplay:YES];
-
-				}
-				[__portInLight setHandleMode:NO];
-				r.location = draggedLocation;
-				[__portInLight setRange:r];
-				//FIXME optimize display
-				[[self superview] setNeedsDisplay:YES];
-
-
+				[self _handlePortSorting:mouseDownPoint];
 			}
-			/* track linking */
+			/* track DND linking */
 			else while (YES)
 			{
 				anEvent = [NSApp nextEventMatchingMask:
@@ -767,7 +835,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	TMNodeView *sourceView = [sourcePort representedObject];
 
 
-NSLog(@"connect %@ %@ %@",sourcePort,targetPort,sourceView);
+//NSLog(@"connect %@ %@ %@",sourcePort,targetPort,sourceView);
 
 	if ([types containsObject:TMPasteboardTypeImportLink])
 	{
@@ -788,7 +856,9 @@ NSLog(@"connect %@ %@ %@",sourcePort,targetPort,sourceView);
 
 	[__portInLight setHighlight:NO];
 	__portInLight = nil;
-	[self setNeedsDisplay:YES];
+
+	//FIXME optimize display
+	[[self superview] setNeedsDisplay:YES];
 
 	return YES;
 

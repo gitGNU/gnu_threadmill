@@ -17,6 +17,7 @@
 #import "TMPortCellInternal.h"
 #import "TMDefs.h"
 
+
 TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length)
 {
 	TMAxisRange range;
@@ -42,6 +43,14 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
 
 
 @implementation TMPortCell (Internal)
+
+/* FIXME extern this */
+NSImage *__background_pattern;
+
++ (void) initialize
+{
+	ASSIGN(__background_pattern, [NSImage imageNamed:@"Carbon-Pattern.tiff"]);
+}
 
 - (NSComparisonResult) compareHeight:(TMPortCell *)aCell
 {
@@ -171,18 +180,38 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
                         inView:(NSView *)controlView
 {
 	NSGraphicsContext *ctxt=GSCurrentContext();
-	NSRect cf = [self drawingRectForBounds: cellFrame];
-	/* handle */
+
 	DPSgsave(ctxt); {
+		NSRect cf = [self drawingRectForBounds: cellFrame];
+		float dashes[6] = {1.0,2.0,4.0,5.0,6.0,7.0};
 		DPStranslate(ctxt, NSMinX(cf), NSMinY(cf));
 		DPSsetlinewidth(ctxt, 1);
-		DPSsetrgbcolor(ctxt,0,0,0);
-		DPSmoveto(ctxt, NSWidth(cf) - 3 , 3);
-		DPSlineto(ctxt, NSWidth(cf) - 6 , 3);
-		DPSlineto(ctxt, NSWidth(cf) - 3 , 6);
-		DPSclosepath(ctxt);
-		DPSstroke(ctxt);
+		DPSsetdash(ctxt, dashes ,2, 0.);
+
+		if ([self isKindOfClass:[TMExportCell class]])
+		{
+			DPSsetrgbcolor(ctxt,0.7,0.7,0.7);
+			DPSmoveto(ctxt, PORT_HANDLE_SIZE, 2);
+			DPSlineto(ctxt, PORT_HANDLE_SIZE, NSHeight(cf)-2);
+			DPSstroke(ctxt);
+			DPSsetrgbcolor(ctxt,0.3,0.3,0.3);
+			DPSmoveto(ctxt, PORT_HANDLE_SIZE, 3);
+			DPSlineto(ctxt, PORT_HANDLE_SIZE, NSHeight(cf)-1);
+			DPSstroke(ctxt);
+		}
+		else
+		{
+			DPSsetrgbcolor(ctxt,0.7,0.7,0.7);
+			DPSmoveto(ctxt, NSWidth(cf) - PORT_HANDLE_SIZE, 2);
+			DPSlineto(ctxt, NSWidth(cf) - PORT_HANDLE_SIZE, NSHeight(cf)-2);
+			DPSstroke(ctxt);
+			DPSsetrgbcolor(ctxt,0.3,0.3,0.3);
+			DPSmoveto(ctxt, NSWidth(cf) - PORT_HANDLE_SIZE, 3);
+			DPSlineto(ctxt, NSWidth(cf) - PORT_HANDLE_SIZE, NSHeight(cf)-1);
+			DPSstroke(ctxt);
+		}
 	} DPSgrestore(ctxt);
+
 	[super drawInteriorWithFrame:cellFrame inView:controlView];
 }
 #endif
@@ -198,6 +227,49 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
 	return self;
 }
 
+
+#ifdef DRAW_DASH_HANDLE
+float dashes[6] = {0.5,5.0,4.0,5.0,6.0,7.0};
+#endif
+void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFloat x)
+{
+#ifdef DRAW_DASH_HANDLE
+	DPSsetdash(ctxt, dashes ,2, 0.);
+#endif
+	/* draw handle */
+	DPSsetlinewidth(ctxt, 5);
+	DPSsetlinecap(ctxt, 1);
+	DPSsetrgbcolor(ctxt,0,0,0);
+	DPSsetalpha(ctxt,0.5);
+	DPSmoveto(ctxt, x , 5);
+	DPSlineto(ctxt, x , NSHeight(cf)-5);
+	/*
+	   DPSmoveto(ctxt, NSWidth(cf) - 11 , 9);
+	   DPSlineto(ctxt, NSWidth(cf) - 11 , NSHeight(cf)-7);
+	 */
+
+	DPSgsave(ctxt); {
+		DPSstroke(ctxt);
+	} DPSgrestore(ctxt);
+
+	DPSsetalpha(ctxt,1.0);
+	DPSsetlinewidth(ctxt, 3);
+
+	[color set];
+
+	DPSstroke(ctxt);
+
+#ifdef SUPERFLUOUS
+	DPSsetalpha(ctxt,0.5);
+	DPSsetlinewidth(ctxt, 1);
+	DPSsetlinecap(ctxt, 1);
+	DPSsetrgbcolor(ctxt,1,1,1);
+	DPSsetalpha(ctxt,0.5);
+	DPSmoveto(ctxt, x + 1, 5);
+	DPSlineto(ctxt, x + 1 , NSHeight(cf)-5);
+	DPSstroke(ctxt);
+#endif
+}
 
 - (void) drawInteriorWithFrame:(NSRect)cellFrame
                         inView:(NSView *)controlView
@@ -223,6 +295,33 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
 				[_backgroundColor set];
 			DPSfill(ctxt);
 		} DPSgrestore(ctxt);
+#ifdef SUPERFLUOUS
+		DPSgsave(ctxt); {
+			DPSclip(ctxt);
+			NSRect carbonRect;
+			carbonRect.origin = NSMakePoint(10, 10);
+			carbonRect.size = cellFrame.size;
+			[__background_pattern compositeToPoint:NSZeroPoint fromRect:carbonRect operation:NSCompositeSourceOver];
+			[[NSColor whiteColor] set];
+			DPSnewpath(ctxt);
+			DPSmoveto(ctxt, NSWidth(cf), 0);
+			DPSlineto(ctxt, NSWidth(cf), NSHeight(cf));
+			DPSlineto(ctxt, 0, NSHeight(cf));
+			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
+					MIN_PORT_HEIGHT/2, 90, 130);
+			DPSsetalpha(ctxt,0.3);
+			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE + 2);
+			DPSstroke(ctxt);
+
+			[[NSColor blackColor] set];
+			DPSsetalpha(ctxt,0.3);
+			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
+					MIN_PORT_HEIGHT/2, 130, -90);
+			DPSlineto(ctxt, 0, 0);
+			DPSlineto(ctxt, NSWidth(cf), 0);
+			DPSstroke(ctxt);
+		} DPSgrestore(ctxt);
+#endif
 
 		DPSgsave(ctxt); {
 			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
@@ -244,6 +343,7 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
 		}
 		else
 	       	{
+#ifdef SUPERFLUOUS
 			int pCount = [_pairCells count];
 			if (pCount > 7) pCount = 7;
 
@@ -261,6 +361,7 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
 				DPSfill(ctxt);
 				a+=d;b+=d;
 			}
+#endif
 
 
 			[[[_pairCells lastObject] backgroundColor] set];
@@ -274,34 +375,23 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
 
 		}
 
+#ifdef SUPERFLUOUS
+		DPSgsave(ctxt); {
+			DPSarc(ctxt, MIN_PORT_HEIGHT/14., NSHeight(cf) - MIN_PORT_HEIGHT/2 + MIN_PORT_HEIGHT/14.,
+					MIN_PORT_HEIGHT/6, 90, 450);
+			[[NSColor whiteColor] set];
+			DPSsetalpha(ctxt,0.3);
+			DPSclosepath(ctxt);
+			DPSfill(ctxt);
+			DPSsetalpha(ctxt,1);
+			DPSarc(ctxt, MIN_PORT_HEIGHT/12., NSHeight(cf) - MIN_PORT_HEIGHT/2 + MIN_PORT_HEIGHT/12.,
+					MIN_PORT_HEIGHT/16, 90, 450);
+			DPSclosepath(ctxt);
+			DPSfill(ctxt);
+		} DPSgrestore(ctxt);
+#endif
 
-		/* draw handle */
-		DPSsetlinewidth(ctxt, 5);
-		DPSsetlinecap(ctxt, 1);
-		DPSsetrgbcolor(ctxt,0,0,0);
-		DPSsetalpha(ctxt,0.5);
-		DPSmoveto(ctxt, NSWidth(cf) - 5 , 5);
-		DPSlineto(ctxt, NSWidth(cf) - 5 , NSHeight(cf)-5);
-		DPSstroke(ctxt);
-
-		DPSsetalpha(ctxt,1.0);
-		DPSsetlinewidth(ctxt, 3);
-		DPSmoveto(ctxt, NSWidth(cf) - 5 , 5);
-		DPSlineto(ctxt, NSWidth(cf) - 5 , NSHeight(cf)-5);
-		if (_drawHilight)
-			[_hilightColor set];
-		else
-			[_backgroundColor set];
-		DPSstroke(ctxt);
-
-		DPSsetalpha(ctxt,0.5);
-		DPSsetlinewidth(ctxt, 1);
-		DPSsetlinecap(ctxt, 1);
-		DPSsetrgbcolor(ctxt,1,1,1);
-		DPSsetalpha(ctxt,0.5);
-		DPSmoveto(ctxt, NSWidth(cf) - 4 , 5);
-		DPSlineto(ctxt, NSWidth(cf) - 4 , NSHeight(cf)-5);
-		DPSstroke(ctxt);
+		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, NSWidth(cf) - 5);
 
 	} DPSgrestore(ctxt);
 
@@ -345,37 +435,45 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
 			DPSfill(ctxt);
 		} DPSgrestore(ctxt);
 
+#ifdef SUPERFLUOUS
+		DPSgsave(ctxt); {
+			DPSclip(ctxt);
+			NSRect carbonRect;
+			carbonRect.origin = NSMakePoint(10, 10);
+			carbonRect.size = cellFrame.size;
+			[__background_pattern compositeToPoint:NSZeroPoint fromRect:carbonRect operation:NSCompositeSourceOver];
+			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE + 2);
+
+			DPSnewpath(ctxt);
+			DPSmoveto(ctxt, 0, NSHeight(cf));
+			DPSlineto(ctxt, NSWidth(cf), NSHeight(cf));
+			DPSlineto(ctxt, NSWidth(cf) + MIN_PORT_HEIGHT/2,
+					NSHeight(cf) - MIN_PORT_HEIGHT/2);
+			DPSmoveto(ctxt, NSWidth(cf), NSHeight(cf) - MIN_PORT_HEIGHT);
+			DPSlineto(ctxt, NSWidth(cf), 0);
+			[[NSColor whiteColor] set];
+			DPSsetalpha(ctxt,0.3);
+			DPSstroke(ctxt);
+
+			DPSnewpath(ctxt);
+			DPSmoveto(ctxt, NSWidth(cf), 0);
+			DPSlineto(ctxt, 0, 0);
+			DPSlineto(ctxt, 0, NSHeight(cf));
+			DPSmoveto(ctxt, NSWidth(cf) + MIN_PORT_HEIGHT/2,
+					NSHeight(cf) - MIN_PORT_HEIGHT/2);
+			DPSlineto(ctxt, NSWidth(cf), NSHeight(cf) - MIN_PORT_HEIGHT);
+			[[NSColor blackColor] set];
+			DPSsetalpha(ctxt,0.3);
+			DPSstroke(ctxt);
+		} DPSgrestore(ctxt);
+#endif
+
 		DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
 		[_borderColor set];
 		DPSstroke(ctxt);
 
-		/* draw handle */
-		DPSsetlinewidth(ctxt, 5);
-		DPSsetlinecap(ctxt, 1);
-		DPSsetrgbcolor(ctxt,0,0,0);
-		DPSsetalpha(ctxt,0.5);
-		DPSmoveto(ctxt, 5 , 5);
-		DPSlineto(ctxt, 5 , NSHeight(cf)-5);
-		DPSstroke(ctxt);
+		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, +5);
 
-		DPSsetalpha(ctxt,1.0);
-		DPSsetlinewidth(ctxt, 3);
-		DPSmoveto(ctxt, 5 , 5);
-		DPSlineto(ctxt, 5 , NSHeight(cf)-5);
-		if (_drawHilight)
-			[_hilightColor set];
-		else
-			[_backgroundColor set];
-		DPSstroke(ctxt);
-
-		DPSsetalpha(ctxt,0.5);
-		DPSsetlinewidth(ctxt, 1);
-		DPSsetlinecap(ctxt, 1);
-		DPSsetrgbcolor(ctxt,1,1,1);
-		DPSsetalpha(ctxt,0.5);
-		DPSmoveto(ctxt, 6 , 5);
-		DPSlineto(ctxt, 6 , NSHeight(cf)-5);
-		DPSstroke(ctxt);
 	} DPSgrestore(ctxt);
 
 	[super drawInteriorWithFrame:cellFrame

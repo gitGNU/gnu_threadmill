@@ -16,6 +16,6 @@ TestMill_OBJC_FILES = main.m \
 		externs.m \
 
 
-TestMill_RESOURCE_FILES = TestMill.gorm Threadmill.tiff Threadmill-Logo.tiff Plug.tiff
+TestMill_RESOURCE_FILES = TestMill.gorm Threadmill.tiff Threadmill-Logo.tiff Plug.tiff Carbon-Pattern.tiff
 
 include $(GNUSTEP_MAKEFILES)/application.make

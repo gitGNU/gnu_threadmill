@@ -122,6 +122,7 @@
 
 				DPSstroke(ctxt);
 
+#ifdef SUPERFLUOUS
 				DPSgsave(ctxt); {
 					[[NSColor whiteColor] set];
 					DPStranslate(ctxt, 0, 1);
@@ -137,6 +138,7 @@
 
 					DPSstroke(ctxt);
 				} DPSgrestore(ctxt);
+#endif
 
 			}
 
