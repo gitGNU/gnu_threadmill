@@ -35,6 +35,7 @@
 	id __contentView;
 	id __portInLight;
 	id __portDragOut;
+	id __portExpanded;
 	NSUInteger __hitSearchIndex;
 
 	NSColor *_borderColor;
@@ -59,5 +60,8 @@
 - (TMPortCell *) portCellAtPoint:(NSPoint)p;
 - (NSRect) convertPortCellFrame:(TMPortCell *)aCell
 			toView:(NSView *)aView;
+/* FIXME */
+- (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell
+			toImportCell:(TMImportCell *)importCell;
 @end
 

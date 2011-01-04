@@ -95,13 +95,22 @@
 
 				TMNodeView *importView = [importCell representedObject];
 				NSRect importFrame = [importView convertPortCellFrame:importCell toView:self];
+				/* FIXME API */
+				CGFloat frameCellHight = [importView connectionHeightForExportCell:exportCell 
+											toImportCell:importCell];
+
+				importFrame.origin.y -= frameCellHight;
+				/*
+				frameCellHight = [importView convertPoint:NSMakePoint(0, frameCellHight) toView:self].y;
+				importFrame.origin.y = frameCellHight - 1;
+				importFrame.size.width = 2;
+				*/
 
 
 				CGFloat dist = 
 					fabs(NSMaxX(exportFrame) - NSMinX(importFrame)) +
-					fabs(NSMaxY(exportFrame) - NSMaxY(importFrame))
-				       
-					;
+					fabs(NSMaxY(exportFrame) - NSMaxY(importFrame));
+
 				dist /= 3;
 
 				DPSsetlinewidth(ctxt, 3);
@@ -123,6 +132,7 @@
 				DPSstroke(ctxt);
 
 #ifdef SUPERFLUOUS
+				/* draw cable speculars */
 				DPSgsave(ctxt); {
 					[[NSColor whiteColor] set];
 					DPStranslate(ctxt, 0, 1);

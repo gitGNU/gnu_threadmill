@@ -89,7 +89,8 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	/* expand for port name as necessary */
 	CGFloat origin = BORDER_SIZE + BORDER_LINE_SIZE/2;
-	NSEnumerator *en = [_portCells reverseObjectEnumerator];
+
+	NSEnumerator *en = [_portCells objectEnumerator];
 	TMPortCell *port;
 	while ((port = [en nextObject]))
 	{
@@ -201,7 +202,6 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 		[__portInLight setRange:dragRange];
 
-		/* FIXME Buggy */
 		NSEnumerator *en;
 		TMPortCell *portCell;
 		[_portCells sortUsingSelector:@selector(compareHeight:)];
@@ -470,11 +470,14 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 				NSHeight(bounds) - 2 * BORDER_SIZE + BORDER_LINE_SIZE));
 
 
-	[[NSColor windowBackgroundColor] set];
-	NSRectFill(NSMakeRect(BORDER_SIZE, 
-				BORDER_SIZE + BORDER_LINE_SIZE,
-				NSWidth(bounds) - BORDER_SIZE * 2,
-				NSHeight(bounds)- 2 * BORDER_SIZE - BORDER_LINE_SIZE));
+	if (__contentView != nil && ![__contentView isHidden])
+	{
+		[[NSColor windowBackgroundColor] set];
+		NSRectFill(NSMakeRect(BORDER_SIZE, 
+					BORDER_SIZE + _portHeight,
+					NSWidth(bounds) - BORDER_SIZE * 2,
+					NSHeight([__contentView frame])));
+	}
 
 	/* draw title */
 	[self drawTitleInRect:NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE,_areaWidth, _titleHeight)];
@@ -485,6 +488,12 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRectFill(NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE - BORDER_LINE_SIZE,
 				_areaWidth, BORDER_LINE_SIZE));
 
+	[[NSColor blackColor] set];
+	NSRectFill(NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE, _areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
+#ifdef SUPERFLUOUS
+	[[NSImage imageNamed:@"Carbon-Pattern.tiff"] compositeToPoint:NSMakePoint(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE) fromRect:NSMakeRect(0,0,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2) operation:NSCompositeSourceOver];
+#endif
+
 	/* draw ports */
 	NSRect portRect;
 	portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
@@ -494,9 +503,16 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	while ((port = [en nextObject]))
 	{
 		if (port == __portInLight) continue;
+		if (port == __portExpanded) continue;
 		__port_set_frame(port, &portRect);
 		[port setBorderColor:_borderColor];
 		[port drawWithFrame:portRect inView:self];
+	}
+	if (__portExpanded != nil)
+	{
+		__port_set_frame(__portExpanded, &portRect);
+		[__portExpanded setBorderColor:_borderColor];
+		[__portExpanded drawWithFrame:portRect inView:self];
 	}
 	if (__portInLight != nil)
 	{
@@ -712,7 +728,27 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 				NSEventType eventType = [anEvent type];
 
 				if (eventType == NSLeftMouseUp)
+				{
+
+					if ((mouseDownPoint.x - BORDER_SIZE < PORT_HANDLE_SIZE && [__portInLight isKindOfClass:[TMImportCell class]]))
+					{
+						[__portExpanded expandConnectors:NO];
+
+						if (__portExpanded == port)
+						{
+							__portExpanded = nil;
+						}
+						else
+						{
+							__portExpanded = port;
+							[__portExpanded expandConnectors:YES];
+						}
+
+						[[self superview] setNeedsDisplay:YES];
+					}
+
 					break;
+				}
 
 				NSPasteboard *pb;
 				pb = [NSPasteboard pasteboardWithName:NSDragPboard];
@@ -749,6 +785,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 			[__portInLight setHighlight:NO];
 			__portInLight = nil;
 			[__portInLight setHandleMode:NO];
+			//[__portExpanded expandConnectors:NO];
 			[self setNeedsDisplay:YES];
 		}
 	}
@@ -914,6 +951,16 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	__port_set_frame(aCell, &portRect);
 	return [self convertRect:portRect toView:aView];
 }
+
+/* fix me */
+- (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell
+			toImportCell:(TMImportCell *)importCell
+{
+//	NSLog(@"check %d", [_portCells indexOfObject:importCell]);
+
+	return [importCell connectionHeightForExportCell:exportCell];
+}
+
 
 - (TMPortCell *) portCellAtPoint:(NSPoint)p
 {

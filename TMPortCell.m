@@ -227,6 +227,25 @@ NSImage *__background_pattern;
 	return self;
 }
 
+- (void) expandConnectors:(BOOL)shouldExpand
+{
+	_connectorsAreExpanded = shouldExpand;
+}
+
+- (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell
+{
+
+	/*
+	if (_pairCells != nil)
+	{
+		NSLog(@">>%d %d", [_pairCells count], [_pairCells indexOfObject:exportCell]);
+	}
+	*/
+	if (_connectorsAreExpanded)
+		return [_pairCells indexOfObject:exportCell] * MIN_PORT_HEIGHT * 0.66;
+	else return 0;
+}
+
 
 #ifdef DRAW_DASH_HANDLE
 float dashes[6] = {0.5,5.0,4.0,5.0,6.0,7.0};
@@ -280,12 +299,45 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 	DPSgsave(ctxt); {
 		DPStranslate(ctxt, NSMinX(cf), NSMinY(cf));
-		DPSmoveto(ctxt, 0, 0);
-		DPSlineto(ctxt, NSWidth(cf), 0);
+		DPSmoveto(ctxt, NSWidth(cf), 0);
 		DPSlineto(ctxt, NSWidth(cf), NSHeight(cf));
 		DPSlineto(ctxt, 0, NSHeight(cf));
-		DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
-				MIN_PORT_HEIGHT/2, 90, -90);
+
+		int pCount = _pairCells != nil?[_pairCells count]:0;
+		CGFloat downHigh;
+		CGFloat xOnArc;
+		CGFloat angleOfX;
+
+		if (_connectorsAreExpanded && pCount > 1)
+		{
+			downHigh = NSHeight(cf) - MIN_PORT_HEIGHT/2 - (pCount - 1) * MIN_PORT_HEIGHT * 0.66;
+			DPSarc(ctxt, 0, NSHeight(cf) - MIN_PORT_HEIGHT/2,
+					MIN_PORT_HEIGHT/2, 90, 180);
+			DPSlineto(ctxt, -MIN_PORT_HEIGHT/2, downHigh);
+			if (downHigh < 0)
+			{
+				DPSarc(ctxt, 0, downHigh, MIN_PORT_HEIGHT/2, 180, 0);
+				DPSlineto(ctxt, MIN_PORT_HEIGHT/2, 0);
+			}
+			else if (downHigh - MIN_PORT_HEIGHT/2 < 0)
+			{
+				xOnArc = sqrt(MIN_PORT_HEIGHT * MIN_PORT_HEIGHT/ 4. - (downHigh * downHigh));
+				angleOfX = -atan2(downHigh, xOnArc) * 57.29577951308232;
+				DPSarc(ctxt, 0, downHigh, MIN_PORT_HEIGHT/2, 180, angleOfX);
+			}
+			else
+			{
+				DPSarc(ctxt, 0, downHigh, MIN_PORT_HEIGHT/2, 180, -90);
+				DPSlineto(ctxt, 0, 0);
+			}
+
+		}
+		else
+	       	{
+			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
+					MIN_PORT_HEIGHT/2, 90, -90);
+			DPSlineto(ctxt, 0, 0);
+		}
 		DPSclosepath(ctxt);
 
 		DPSgsave(ctxt); {
@@ -296,12 +348,15 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 			DPSfill(ctxt);
 		} DPSgrestore(ctxt);
 #ifdef SUPERFLUOUS
+		/* fill carbon pattern */
 		DPSgsave(ctxt); {
 			DPSclip(ctxt);
 			NSRect carbonRect;
 			carbonRect.origin = NSMakePoint(10, 10);
 			carbonRect.size = cellFrame.size;
 			[__background_pattern compositeToPoint:NSZeroPoint fromRect:carbonRect operation:NSCompositeSourceOver];
+
+			/* draw light frame */
 			[[NSColor whiteColor] set];
 			DPSnewpath(ctxt);
 			DPSmoveto(ctxt, NSWidth(cf), 0);
@@ -315,11 +370,41 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 			[[NSColor blackColor] set];
 			DPSsetalpha(ctxt,0.3);
-			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
-					MIN_PORT_HEIGHT/2, 130, -90);
-			DPSlineto(ctxt, 0, 0);
+
+			/* draw dark frame */
+			if (_connectorsAreExpanded && pCount > 1)
+			{
+				DPSarc(ctxt, 0, NSHeight(cf) - MIN_PORT_HEIGHT/2,
+						MIN_PORT_HEIGHT/2, 130, 180);
+				DPSlineto(ctxt, -MIN_PORT_HEIGHT/2, downHigh);
+				if (downHigh < 0)
+				{
+					DPSarc(ctxt, 0, downHigh, MIN_PORT_HEIGHT/2, 180, -50);
+					DPSmoveto(ctxt, MIN_PORT_HEIGHT/2, 0);
+				}
+				else if (downHigh - MIN_PORT_HEIGHT/2 < 0)
+				{
+					DPSarc(ctxt, 0, downHigh, MIN_PORT_HEIGHT/2, 180, MIN(angleOfX, -50));
+					DPSmoveto(ctxt, xOnArc, 0);
+				}
+				else
+				{
+					DPSarc(ctxt, 0, downHigh, MIN_PORT_HEIGHT/2, 180, -90);
+					DPSlineto(ctxt, 0, 0);
+				}
+
+			}
+			else
+			{
+				DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
+						MIN_PORT_HEIGHT/2, 130, -90);
+				DPSlineto(ctxt, 0, 0);
+			}
+
 			DPSlineto(ctxt, NSWidth(cf), 0);
 			DPSstroke(ctxt);
+
+
 		} DPSgrestore(ctxt);
 #endif
 
@@ -328,6 +413,8 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 			[_borderColor set];
 			DPSstroke(ctxt);
 		} DPSgrestore(ctxt);
+
+		int i; CGFloat yShift;
 
 		DPSnewpath(ctxt);
 		if (_pairCells == nil)
@@ -341,17 +428,33 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
 			DPSstroke(ctxt);
 		}
+		else if (_connectorsAreExpanded)
+		{
+			int pCount = [_pairCells count];
+			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
+			for (i = 0, yShift = 0; i < pCount; i++, yShift -= MIN_PORT_HEIGHT * 0.66)
+			{
+				DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2 + yShift,
+						MIN_PORT_HEIGHT/4, 0, 360);
+				[[[_pairCells objectAtIndex:i] backgroundColor] set];
+				DPSgsave(ctxt); {DPSfill(ctxt);} DPSgrestore(ctxt);
+				[[NSColor blackColor] set];
+				DPSstroke(ctxt);
+			}
+		}
 		else
 	       	{
+			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
 #ifdef SUPERFLUOUS
-			int pCount = [_pairCells count];
-			if (pCount > 7) pCount = 7;
+			/* beach ball */
+			int max7 = [_pairCells count];
+			if (max7 > 7) max7 = 7;
 
-			CGFloat d = 360./pCount;
+			CGFloat d = 360./max7;
 			CGFloat a,b;
 
 			int i;
-			for (i = 0, a=90, b=90+d; i < pCount; i++)
+			for (i = 0, a=90, b=90+d; i < max7; i++)
 			{
 				[[[_pairCells objectAtIndex:i] backgroundColor] set];
 				DPSmoveto(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2);
@@ -361,34 +464,38 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 				DPSfill(ctxt);
 				a+=d;b+=d;
 			}
-#endif
-
-
-			[[[_pairCells lastObject] backgroundColor] set];
 
 			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
 					MIN_PORT_HEIGHT/4, 0, 360);
 			DPSclosepath(ctxt);
+#else
+			[[[_pairCells lastObject] backgroundColor] set];
+			DPSclosepath(ctxt);
+			DPSgsave(ctxt); {DPSfill(ctxt);} DPSgrestore(ctxt);
+#endif
 			[[NSColor blackColor] set];
-			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
 			DPSstroke(ctxt);
-
 		}
 
+		/* draw beach ball speculars */
 #ifdef SUPERFLUOUS
-		DPSgsave(ctxt); {
-			DPSarc(ctxt, MIN_PORT_HEIGHT/14., NSHeight(cf) - MIN_PORT_HEIGHT/2 + MIN_PORT_HEIGHT/14.,
-					MIN_PORT_HEIGHT/6, 90, 450);
-			[[NSColor whiteColor] set];
-			DPSsetalpha(ctxt,0.3);
-			DPSclosepath(ctxt);
-			DPSfill(ctxt);
-			DPSsetalpha(ctxt,1);
-			DPSarc(ctxt, MIN_PORT_HEIGHT/12., NSHeight(cf) - MIN_PORT_HEIGHT/2 + MIN_PORT_HEIGHT/12.,
-					MIN_PORT_HEIGHT/16, 90, 450);
-			DPSclosepath(ctxt);
-			DPSfill(ctxt);
-		} DPSgrestore(ctxt);
+		if (!_connectorsAreExpanded || _pairCells == nil) pCount = 1;
+		for (i = 0, yShift = 0; i < pCount; i++, yShift -= MIN_PORT_HEIGHT * 0.66)
+		{
+			DPSgsave(ctxt); {
+				DPSarc(ctxt, MIN_PORT_HEIGHT/14., NSHeight(cf) - MIN_PORT_HEIGHT/2 + MIN_PORT_HEIGHT/14. + yShift,
+						MIN_PORT_HEIGHT/6, 90, 450);
+				[[NSColor whiteColor] set];
+				DPSsetalpha(ctxt,0.3);
+				DPSclosepath(ctxt);
+				DPSfill(ctxt);
+				DPSsetalpha(ctxt,1);
+				DPSarc(ctxt, MIN_PORT_HEIGHT/12., NSHeight(cf) - MIN_PORT_HEIGHT/2 + MIN_PORT_HEIGHT/12. + yShift,
+						MIN_PORT_HEIGHT/16, 90, 450);
+				DPSclosepath(ctxt);
+				DPSfill(ctxt);
+			} DPSgrestore(ctxt);
+		}
 #endif
 
 		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, NSWidth(cf) - 5);

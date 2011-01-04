@@ -34,10 +34,13 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
 	TMAxisRange _range;
 
 	NSMutableArray *_pairCells;
+	BOOL _connectorsAreExpanded;
+	
 	
 //	NSView *_cellContent;
 }
 - (id) initWithName:(NSString *)aName;
+- (void) expandConnectors:(BOOL)shouldExpand;
 - (void) setHighlight:(BOOL)drawHi;
 - (NSColor *) backgroundColor;
 - (void) setBackgroundColor:(NSColor *)aColor;
@@ -51,8 +54,10 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
 @end
 
 
-@interface TMImportCell : TMPortCell
-@end
-
 @interface TMExportCell : TMPortCell
 @end
+
+@interface TMImportCell : TMPortCell
+- (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell;
+@end
+
