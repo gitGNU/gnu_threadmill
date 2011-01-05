@@ -428,7 +428,7 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		int i; CGFloat yShift;
 
 		DPSnewpath(ctxt);
-		if (_pairCells == nil)
+		if (_pairCells == nil || [_pairCells count] == 0)
 		{
 			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
 					MIN_PORT_HEIGHT/4, 90, 450);
@@ -480,7 +480,8 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 					MIN_PORT_HEIGHT/4, 0, 360);
 			DPSclosepath(ctxt);
 #else
-			[[[_pairCells lastObject] backgroundColor] set];
+			if ([_pairCells lastObject] != nil)
+				[[[_pairCells lastObject] backgroundColor] set];
 			DPSclosepath(ctxt);
 			DPSgsave(ctxt); {DPSfill(ctxt);} DPSgrestore(ctxt);
 #endif
