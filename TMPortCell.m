@@ -70,7 +70,9 @@ NSImage *__background_pattern;
 		_pairCells = [NSMutableArray new];
 	}
 
-	[_pairCells addObject:aPortCell];
+	if (![_pairCells containsObject:aPortCell])
+		[_pairCells addObject:aPortCell];
+
 	[view setNeedsDisplay:YES];
 }
 
@@ -119,6 +121,9 @@ NSImage *__background_pattern;
 	[self initTextCell:aName];
 	[self setAlignment:NSCenterTextAlignment];
 	[self setHighlightColor:[NSColor whiteColor]];
+
+	_pairCells = [NSMutableArray new];
+
 	return self;
 }
 
@@ -151,6 +156,7 @@ NSImage *__background_pattern;
 {
 	return _backgroundColor;
 }
+
 - (void) setBackgroundColor:(NSColor *)aColor
 {
 	ASSIGN(_backgroundColor, aColor);
@@ -163,8 +169,13 @@ NSImage *__background_pattern;
 
 - (NSArray *) pairs
 {
+	if (_pairCells == nil)
+	{
+		_pairCells = [NSMutableArray new];
+	}
 	return _pairCells;
 }
+
 /*
 - (void)setRepresentedObject:(id)anObject
 {

@@ -488,10 +488,14 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRectFill(NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE - BORDER_LINE_SIZE,
 				_areaWidth, BORDER_LINE_SIZE));
 
-	[[NSColor blackColor] set];
-	NSRectFill(NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE, _areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
+	[[NSColor darkGrayColor] set];
+	NSRectFill(NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE,
+			       	_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
 #ifdef SUPERFLUOUS
-	[[NSImage imageNamed:@"Carbon-Pattern.tiff"] compositeToPoint:NSMakePoint(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE) fromRect:NSMakeRect(0,0,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2) operation:NSCompositeSourceOver];
+	[[NSImage imageNamed:@"Carbon-Pattern.tiff"]
+	       	compositeToPoint:NSMakePoint(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE)
+		fromRect:NSMakeRect(0,0,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2)
+	       	operation:NSCompositeSourceOver];
 #endif
 
 	/* draw ports */
@@ -822,23 +826,25 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSPasteboard *pb = [sender draggingPasteboard];
 	NSArray *types = [pb types];
 
-	TMPortCell *port = [self portCellAtPoint:[self convertPointFromBase:[sender draggingLocation]]];
+	TMPortCell *sourcePort = [sender draggingSource];
+	TMPortCell *targetPort = [self portCellAtPoint:[self convertPointFromBase:[sender draggingLocation]]];
 
-	if (__portInLight != port)
+
+	if (__portInLight != targetPort)
 	{
 		[__portInLight setHighlight:NO];
 		__portInLight = nil;
 		[self setNeedsDisplay:YES];
 	}
 
-	if (port != nil)
+	if (targetPort != nil && ![[targetPort pairs] containsObject:sourcePort])
 	{
-		if ([port isKindOfClass:[TMImportCell class]])
+		if ([targetPort isKindOfClass:[TMImportCell class]])
 		{
 			if ([types containsObject:TMPasteboardTypeExportLink])
 			{
-				[port setHighlight:YES];
-				__portInLight = port;
+				[targetPort setHighlight:YES];
+				__portInLight = targetPort;
 				[self setNeedsDisplay:YES];
 				return NSDragOperationLink;
 			}
@@ -847,8 +853,8 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		{
 			if ([types containsObject:TMPasteboardTypeImportLink])
 			{
-				[port setHighlight:YES];
-				__portInLight = port;
+				[targetPort setHighlight:YES];
+				__portInLight = targetPort;
 				[self setNeedsDisplay:YES];
 				return NSDragOperationLink;
 			}
@@ -872,8 +878,6 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	TMNodeView *sourceView = [sourcePort representedObject];
 
 
-//NSLog(@"connect %@ %@ %@",sourcePort,targetPort,sourceView);
-
 	if ([types containsObject:TMPasteboardTypeImportLink])
 	{
 		[_node setExportName:[targetPort title]
@@ -886,7 +890,6 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 			toNode:_node
 			forImportName:[targetPort title]];
 	}
-
 
 	[sourcePort addConnection:targetPort];
 	[targetPort addConnection:sourcePort];

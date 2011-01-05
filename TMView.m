@@ -154,9 +154,6 @@
 
 		}
 	}
-	NSLog(@"%d", counter);
-
-
 }
 
 @end
