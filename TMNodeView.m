@@ -376,7 +376,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRect carbonRect;
 	carbonRect.origin = NSMakePoint(10,10);
 	carbonRect.size = r.size;
-	[[NSImage imageNamed:@"Carbon-Pattern.tiff"] compositeToPoint:r.origin fromRect:carbonRect operation:NSCompositeSourceOver];
+	[[NSImage imageNamed:@"FiberPattern.tiff"] compositeToPoint:r.origin fromRect:carbonRect operation:NSCompositeSourceOver];
 
 	/* frame */
 	NSGraphicsContext *ctxt=GSCurrentContext();
@@ -386,7 +386,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		DPSmoveto(ctxt, NSMinX(r), NSMaxY(r));
 		DPSlineto(ctxt, NSMaxX(r), NSMaxY(r));
 		DPSlineto(ctxt, NSMaxX(r), NSMinY(r));
-		[[NSColor whiteColor] set];
+		[[NSColor lightGrayColor] set];
 		DPSsetalpha(ctxt,0.3);
 		DPSstroke(ctxt);
 		DPSmoveto(ctxt, NSMinX(r), NSMaxY(r));
@@ -512,7 +512,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRectFill(NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE,
 			       	_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
 #ifdef SUPERFLUOUS
-	[[NSImage imageNamed:@"Carbon-Pattern.tiff"]
+	[[NSImage imageNamed:@"FiberPattern.tiff"]
 	       	compositeToPoint:NSMakePoint(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE)
 		fromRect:NSMakeRect(0,0,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2)
 	       	operation:NSCompositeSourceOver];
@@ -749,10 +749,14 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 			TMAxisRange range = [mouseDownPort expandedRange];
 			NSRect trackArea = NSMakeRect(BORDER_SIZE - MIN_PORT_HEIGHT/2, range.location, PORT_HANDLE_SIZE + MIN_PORT_HEIGHT/2, range.length);
+			/* extend area for ease of pointing TODO use alarmer instead */
+			trackArea = NSInsetRect(trackArea, -20, -20);
+			trackArea = NSIntegralRect(trackArea);
 
 			while (YES)
 			{
 				anEvent = [NSApp nextEventMatchingMask:
+					NSLeftMouseDownMask |
 					NSLeftMouseUpMask |
 					NSLeftMouseDraggedMask |
 					NSMouseMovedMask
@@ -771,16 +775,57 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 						break;
 					}
 				}
+				else if (eventType == NSLeftMouseDown)
+				{
+				}
+				else if (eventType == NSLeftMouseUp)
+				{
+					mouseLoc = [self convertPointFromBase:[anEvent locationInWindow]];
+					if (!NSPointInRect(mouseLoc, trackArea))
+					{
+						break;
+					}
+				}
+				else if (eventType == NSLeftMouseDragged)
+				{
+					mouseLoc = [self convertPointFromBase:[anEvent locationInWindow]];
+					if (!NSPointInRect(mouseLoc, trackArea))
+					{
+						//FIXME just break all connections for now, turn it into DnD for other port later.
+						NSEnumerator *en = [[mouseDownPort pairs] objectEnumerator];
+						TMPortCell *remotePort;
+						while ((remotePort = [en nextObject]))
+						{
+							[remotePort deleteConnection:mouseDownPort];
+							[mouseDownPort deleteConnection:remotePort];
+						}
+
+
+						[[self superview] setNeedsDisplay:YES]; //FIXME optimize display
+
+						NSLog(@"break in dragged");
+						break;
+					}
+				}
+
 			}
 
 			[mouseDownPort expandConnectors:NO];
 			[[self superview] setNeedsDisplay:YES];
 		}
-		/* mouse down on port content - track DND linking */
+		/* mouse down on port content - track DnD linking */
 		else 
 		{
+			BOOL pairOn = YES;
 			[mouseDownPort setHighlighted:YES];
 			[self setNeedsDisplay:YES];
+			NSEnumerator *en = [[mouseDownPort pairs] objectEnumerator];
+			TMPortCell *pairPort;
+			while ((pairPort = [en nextObject]))
+			{
+				[pairPort setHighlighted:YES];
+			}
+			[[self superview] setNeedsDisplay:YES]; // FIXME optimize this
 
 			while (YES)
 			{
@@ -791,6 +836,17 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 					untilDate:__distFuture
 					inMode:NSEventTrackingRunLoopMode
 					dequeue:YES];
+
+				if (pairOn)
+				{
+					pairOn = NO;
+					en = [[mouseDownPort pairs] objectEnumerator];
+					while ((pairPort = [en nextObject]))
+					{
+						[pairPort setHighlighted:NO];
+					}
+					[[self superview] setNeedsDisplay:YES]; // FIXME optimize this
+				}
 
 				NSEventType eventType = [anEvent type];
 

@@ -58,7 +58,7 @@ NSImage *__background_pattern;
 
 + (void) initialize
 {
-	ASSIGN(__background_pattern, [NSImage imageNamed:@"Carbon-Pattern.tiff"]);
+	ASSIGN(__background_pattern, [NSImage imageNamed:@"FiberPattern.tiff"]);
 }
 
 - (NSComparisonResult) compareHeight:(TMPortCell *)aCell
@@ -72,8 +72,6 @@ NSImage *__background_pattern;
 
 - (void) addConnection:(TMPortCell *)aPortCell
 {
-	TMNodeView *view = [self representedObject];
-
 	if (_pairCells == nil)
 	{
 		_pairCells = [NSMutableArray new];
@@ -81,15 +79,11 @@ NSImage *__background_pattern;
 
 	if (![_pairCells containsObject:aPortCell])
 		[_pairCells addObject:aPortCell];
-
-	[view setNeedsDisplay:YES];
 }
 
 - (void) deleteConnection:(TMPortCell *)aPortCell
 {
-	TMNodeView *view = [self representedObject];
 	[_pairCells removeObject:aPortCell];
-	[view setNeedsDisplay:YES];
 }
 
 /*
@@ -182,7 +176,7 @@ NSImage *__background_pattern;
 	{
 		_pairCells = [NSMutableArray new];
 	}
-	return _pairCells;
+	return [NSArray arrayWithArray:_pairCells];
 }
 
 - (void) expandConnectors:(BOOL)shouldExpand
@@ -402,13 +396,13 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 			DPSfill(ctxt);
 		} DPSgrestore(ctxt);
 #ifdef SUPERFLUOUS
-		/* fill carbon pattern */
+		/* fill fiber pattern */
 		DPSgsave(ctxt); {
 			DPSclip(ctxt);
-			NSRect carbonRect;
-			carbonRect.origin = NSMakePoint(10, 10);
-			carbonRect.size = cellFrame.size;
-			[__background_pattern compositeToPoint:NSZeroPoint fromRect:carbonRect operation:NSCompositeSourceOver];
+			NSRect fiberRect;
+			fiberRect.origin = NSMakePoint(10, 10);
+			fiberRect.size = cellFrame.size;
+			[__background_pattern compositeToPoint:NSZeroPoint fromRect:fiberRect operation:NSCompositeSourceOver];
 
 			/* draw light frame */
 			[[NSColor whiteColor] set];
@@ -471,11 +465,18 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		int i; CGFloat yShift;
 
 		DPSnewpath(ctxt);
-		if (pCount == 0)
+		if (pCount < 2)
 		{
 			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
 					MIN_PORT_HEIGHT/4, 0, 360);
+
+			if (pCount == 1)
+			{
+				[[[_pairCells lastObject] backgroundColor] set];
+			}
+			else
 			[[NSColor darkGrayColor] set];
+
 			DPSclosepath(ctxt);
 			DPSgsave(ctxt); {DPSfill(ctxt);} DPSgrestore(ctxt);
 			[[NSColor blackColor] set];
@@ -573,7 +574,7 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 		/* draw beach ball speculars -- draw at last coz it sets pCount = 1 */
 #ifdef SUPERFLUOUS
-		if (!_connectorsAreExpanded || _pairCells == nil) pCount = 1;
+		if (!_connectorsAreExpanded || pCount == 0) pCount = 1;
 		for (i = 0, yShift = 0; i < pCount; i++, yShift -= MIN_PORT_HEIGHT * 0.66)
 		{
 			DPSgsave(ctxt); {
@@ -608,7 +609,11 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 - (TMAxisRange) expandedRange
 {
-	CGFloat expandHigh = MIN_PORT_HEIGHT + ([_pairCells count] - 1) * MIN_PORT_HEIGHT * 0.66;
+	int pCount = [_pairCells count];
+
+	if (pCount < 2) return _range;
+
+	CGFloat expandHigh = MIN_PORT_HEIGHT + (pCount - 1) * MIN_PORT_HEIGHT * 0.66;
 
 	return TMMakeAxisRange(_range.location + _range.length - expandHigh, expandHigh);
 }
@@ -652,10 +657,10 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 #ifdef SUPERFLUOUS
 		DPSgsave(ctxt); {
 			DPSclip(ctxt);
-			NSRect carbonRect;
-			carbonRect.origin = NSMakePoint(10, 10);
-			carbonRect.size = cellFrame.size;
-			[__background_pattern compositeToPoint:NSZeroPoint fromRect:carbonRect operation:NSCompositeSourceOver];
+			NSRect fiberRect;
+			fiberRect.origin = NSMakePoint(10, 10);
+			fiberRect.size = cellFrame.size;
+			[__background_pattern compositeToPoint:NSZeroPoint fromRect:fiberRect operation:NSCompositeSourceOver];
 			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE + 2);
 
 			DPSnewpath(ctxt);

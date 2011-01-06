@@ -160,6 +160,13 @@
 
 @implementation TMView
 
+NSImage *im;
+
++ (void) initialize
+{
+	im = RETAIN([NSImage imageNamed:@"FiberPattern.tiff"]);
+}
+
 - (id) init
 {
 	_nodes = [[NSMutableArray alloc] init];
@@ -175,8 +182,19 @@
 
 - (void) drawRect:(NSRect)r
 {
-	[[NSColor whiteColor] set];
+//	[[NSColor brownColor] set];
+	[[NSColor blackColor] set];
 	NSRectFill(r);
+	NSRect bounds = [self bounds];
+	CGFloat i,j;
+	NSRect imRect;
+	imRect.origin = NSZeroPoint;
+	imRect.size = [im size];
+	for (j = 0; j < NSHeight(bounds); j += NSHeight(imRect))
+	for (i = 0; i < NSWidth(bounds); i += NSWidth(imRect))
+	{
+		[im compositeToPoint:NSMakePoint(i,j) fromRect:imRect operation:NSCompositeSourceOver];
+	}
 
 	NSEnumerator *en = [[self subviews] objectEnumerator];
 	TMNodeView *view;
@@ -186,7 +204,6 @@
 		[self drawWiresForNodeView:view];
 	}
 
-	
 
 }
 

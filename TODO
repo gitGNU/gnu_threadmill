@@ -4,3 +4,6 @@
 * Allow runtime choice superfluous, may be useful when drawing in zooming mode.
 * Trace intersecting node frame to draw nice drop shadow.
 * Adjust the initial and final stroke's length based on pair's distance
+* When expanding connection slot, should glow light when mouse is over port and set up and alarmer so the expansion don't collapse as soon as mouse left tracking area.
+* When pressing on port cell, the connected cables could also be lighten up.
+* Drag content switcher to show a pie menu of alternate operations.
