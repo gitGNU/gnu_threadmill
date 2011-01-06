@@ -50,17 +50,31 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	DPSgsave(ctxt); {
 		DPStranslate(ctxt, NSMinX(cf), NSMinY(cf));
 
+
 		if ([self isHighlighted])
+		{
 			//FIXME define highlight color
-			[[NSColor cyanColor] set];
-		else
+			//DPSsetrgbcolor(ctxt,0.5,0.7,1.0);
 			[[NSColor whiteColor] set];
+		}
+		else
+			[[NSColor grayColor] set];
 
 		DPSmoveto(ctxt, NSWidth(cf)/2, NSHeight(cf) * (mode?1:2)/3.);
 		DPSlineto(ctxt, NSWidth(cf)/2 + NSWidth(cf) * 3/15., NSHeight(cf) * (mode?2:1)/3.);
 		DPSlineto(ctxt, NSWidth(cf)/2 - NSWidth(cf) * 3/15., NSHeight(cf) * (mode?2:1)/3.);
-
 		DPSclosepath(ctxt);
+#ifdef SUPERFLUOUS
+		if ([self isHighlighted])
+		{
+			DPSgsave(ctxt); {
+				DPSsetlinewidth(ctxt, 4); //FIXME
+				DPSsetalpha(ctxt,0.1);
+				DPSstroke(ctxt);
+			} DPSgrestore(ctxt);
+		}
+#endif
+
 		DPSfill(ctxt);
 	} DPSgrestore(ctxt);
 }
@@ -336,16 +350,22 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		NSRect r = NSInsetRect([self bounds],BORDER_SIZE ,BORDER_SIZE );
 		DPSsetlinejoin(ctxt, 1);
 
-		DPSsetalpha(ctxt, 0.1);
+		DPSsetrgbcolor(ctxt,0.3,0.9,1.0);
+#ifdef SUPERFLUOUS
+		DPSsetalpha(ctxt, 0.2);
 		DPSsetlinewidth(ctxt, 16);
-		DPSsetrgbcolor(ctxt,0.0,0.5,0.8);
+#else
+		DPSsetlinewidth(ctxt, 10);
+#endif
 		DPSrectstroke(ctxt, NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r));
 
+#ifdef SUPERFLUOUS
 		DPSsetlinewidth(ctxt, 12);
 		DPSrectstroke(ctxt, NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r));
 
-		DPSsetlinewidth(ctxt, 10);
+		DPSsetlinewidth(ctxt, 8);
 		DPSrectstroke(ctxt, NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r));
+#endif
 	}
 }
 
@@ -359,6 +379,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	carbonRect.size = r.size;
 	[[NSImage imageNamed:@"Carbon-Pattern.tiff"] compositeToPoint:r.origin fromRect:carbonRect operation:NSCompositeSourceOver];
 
+	/* frame */
 	NSGraphicsContext *ctxt=GSCurrentContext();
 	DPSgsave(ctxt); {
 		DPSsetlinewidth(ctxt, 2);

@@ -176,6 +176,11 @@ NSImage *__background_pattern;
 	return _pairCells;
 }
 
+- (void) expandConnectors:(BOOL)shouldExpand
+{
+	_connectorsAreExpanded = shouldExpand;
+}
+
 /*
 - (void)setRepresentedObject:(id)anObject
 {
@@ -238,11 +243,6 @@ NSImage *__background_pattern;
 	return self;
 }
 
-- (void) expandConnectors:(BOOL)shouldExpand
-{
-	_connectorsAreExpanded = shouldExpand;
-}
-
 - (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell
 {
 
@@ -261,7 +261,11 @@ NSImage *__background_pattern;
 #ifdef DRAW_DASH_HANDLE
 float dashes[6] = {0.5,5.0,4.0,5.0,6.0,7.0};
 #endif
-void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFloat x)
+void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFloat x
+#ifdef SUPERFLUOUS
+		,BOOL hi
+#endif
+		)
 {
 #ifdef DRAW_DASH_HANDLE
 	DPSsetdash(ctxt, dashes ,2, 0.);
@@ -287,7 +291,28 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 	[color set];
 
+#ifdef SUPERFLUOUS
+	DPSgsave(ctxt); {
+		DPSstroke(ctxt);
+	} DPSgrestore(ctxt);
+
+	DPSgsave(ctxt); {
+		DPSsetalpha(ctxt,0.2);
+		DPSgsave(ctxt); {
+			DPSsetlinewidth(ctxt, 7);
+			DPSstroke(ctxt);
+		} DPSgrestore(ctxt);
+		DPSsetlinewidth(ctxt, 9);
+		DPSstroke(ctxt);
+	} DPSgrestore(ctxt);
+
 	DPSstroke(ctxt);
+
+#else
+
+	DPSstroke(ctxt);
+#endif
+
 
 #ifdef SUPERFLUOUS
 	DPSsetalpha(ctxt,0.5);
@@ -428,10 +453,10 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		int i; CGFloat yShift;
 
 		DPSnewpath(ctxt);
-		if (_pairCells == nil || [_pairCells count] == 0)
+		if (pCount == 0)
 		{
 			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
-					MIN_PORT_HEIGHT/4, 90, 450);
+					MIN_PORT_HEIGHT/4, 0, 360);
 			[[NSColor darkGrayColor] set];
 			DPSclosepath(ctxt);
 			DPSgsave(ctxt); {DPSfill(ctxt);} DPSgrestore(ctxt);
@@ -480,16 +505,55 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 					MIN_PORT_HEIGHT/4, 0, 360);
 			DPSclosepath(ctxt);
 #else
-			if ([_pairCells lastObject] != nil)
-				[[[_pairCells lastObject] backgroundColor] set];
+			DPSarc(ctxt, 0., NSHeight(cf) - MIN_PORT_HEIGHT/2,
+					MIN_PORT_HEIGHT/4, 0, 360);
+			[[NSColor darkGrayColor] set];
 			DPSclosepath(ctxt);
+			DPSgsave(ctxt); {DPSfill(ctxt);} DPSgrestore(ctxt);
+
+			[[NSColor windowBackgroundColor] set];
 			DPSgsave(ctxt); {DPSfill(ctxt);} DPSgrestore(ctxt);
 #endif
 			[[NSColor blackColor] set];
+			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
 			DPSstroke(ctxt);
+
+			/* draw connection counter */
+			if (pCount > 1 && !_connectorsAreExpanded)
+			{
+				//FIXME cache these ?
+
+				NSFont * font = [NSFont systemFontOfSize:[[self font] pointSize] * 3/4.];
+				NSDictionary* attr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+					NSFontAttributeName, [self textColor],
+					NSForegroundColorAttributeName, nil];
+				NSDictionary* hattr = [NSDictionary dictionaryWithObjectsAndKeys:font,
+					NSFontAttributeName, [NSColor whiteColor],
+					NSForegroundColorAttributeName, nil];
+
+				NSAttributedString *attrStr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%d", pCount] attributes:attr];
+				AUTORELEASE(attrStr);
+
+				NSRect strRect;
+				strRect.size = [attrStr size];
+				strRect.origin = NSMakePoint(MIN_PORT_HEIGHT/4 + 2*BORDER_LINE_SIZE, NSHeight(cf) - MIN_PORT_HEIGHT/2 - NSHeight(strRect)/2);
+
+#ifdef SUPERFLUOUS
+				{
+					NSAttributedString *attrStr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%d", pCount] attributes:hattr];
+					AUTORELEASE(attrStr);
+					[attrStr drawInRect:NSOffsetRect(strRect, -1, -1)];
+				}
+#endif
+				[attrStr drawInRect:strRect];
+
+
+
+			}
 		}
 
-		/* draw beach ball speculars */
+
+		/* draw beach ball speculars -- draw at last coz it sets pCount = 1 */
 #ifdef SUPERFLUOUS
 		if (!_connectorsAreExpanded || _pairCells == nil) pCount = 1;
 		for (i = 0, yShift = 0; i < pCount; i++, yShift -= MIN_PORT_HEIGHT * 0.66)
@@ -510,7 +574,12 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		}
 #endif
 
-		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, NSWidth(cf) - 5);
+		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, NSWidth(cf) - 5
+#ifdef SUPERFLUOUS
+		,_drawHilight
+#endif
+				);
+
 
 	} DPSgrestore(ctxt);
 
@@ -591,7 +660,11 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		[_borderColor set];
 		DPSstroke(ctxt);
 
-		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, +5);
+		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, +5
+#ifdef SUPERFLUOUS
+		,_drawHilight
+#endif
+				);
 
 	} DPSgrestore(ctxt);
 

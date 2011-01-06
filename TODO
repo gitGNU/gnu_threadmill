@@ -1,3 +1,5 @@
 == TODO ==
 * TMNode should not be retained by a TMNodeView but by a non-GUI manager retained by TMView so the mill can works in non-GUI mode.
 * Drag port handle left-right will change direction.
+* Allow runtime choice superfluous, may be useful when drawing in zooming mode.
+* Trace intersecting node frame to draw nice drop shadow.
