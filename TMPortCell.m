@@ -22,8 +22,17 @@ TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length)
 {
 	TMAxisRange range;
 
-	range.location = location;
-	range.length = length;
+	if (length < 0)
+	{
+		range.location = location + length;
+		range.length = -length;
+	}
+	else
+	{
+		range.location = location;
+		range.length = length;
+	}
+
 	return range;
 }
 
@@ -137,19 +146,19 @@ NSImage *__background_pattern;
 	[super dealloc];
 }
 
-- (void) setHighlight:(BOOL)drawHi
-{
-	_drawHilight = drawHi;
-}
-
 - (void) setBorderColor:(NSColor *)aColor
 {
 	ASSIGN(_borderColor, aColor);
 }
 
-- (void) setHandleMode:(BOOL)mode
+- (void) setHandled:(BOOL)mode
 {
 	_handleMode = mode;
+}
+
+- (BOOL) isHandled
+{
+	return _handleMode;
 }
 
 - (NSColor *) backgroundColor
@@ -179,6 +188,16 @@ NSImage *__background_pattern;
 - (void) expandConnectors:(BOOL)shouldExpand
 {
 	_connectorsAreExpanded = shouldExpand;
+}
+
+- (BOOL) connectorsAreExpanded
+{
+	return _connectorsAreExpanded;
+}
+
+- (TMAxisRange) expandedRange
+{
+	return _range;
 }
 
 /*
@@ -292,29 +311,24 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 	[color set];
 
 #ifdef SUPERFLUOUS
-	DPSgsave(ctxt); {
-		DPSstroke(ctxt);
-	} DPSgrestore(ctxt);
-
-	DPSgsave(ctxt); {
-		DPSsetalpha(ctxt,0.2);
+	if (hi)
+	{
 		DPSgsave(ctxt); {
-			DPSsetlinewidth(ctxt, 7);
 			DPSstroke(ctxt);
 		} DPSgrestore(ctxt);
-		DPSsetlinewidth(ctxt, 9);
-		DPSstroke(ctxt);
-	} DPSgrestore(ctxt);
 
+		DPSgsave(ctxt); {
+			DPSsetalpha(ctxt,0.2);
+			DPSgsave(ctxt); {
+				DPSsetlinewidth(ctxt, 7);
+				DPSstroke(ctxt);
+			} DPSgrestore(ctxt);
+			DPSsetlinewidth(ctxt, 9);
+			DPSstroke(ctxt);
+		} DPSgrestore(ctxt);
+	}
 	DPSstroke(ctxt);
 
-#else
-
-	DPSstroke(ctxt);
-#endif
-
-
-#ifdef SUPERFLUOUS
 	DPSsetalpha(ctxt,0.5);
 	DPSsetlinewidth(ctxt, 1);
 	DPSsetlinecap(ctxt, 1);
@@ -323,7 +337,11 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 	DPSmoveto(ctxt, x + 1, 5);
 	DPSlineto(ctxt, x + 1 , NSHeight(cf)-5);
 	DPSstroke(ctxt);
+#else
+
+	DPSstroke(ctxt);
 #endif
+
 }
 
 - (void) drawInteriorWithFrame:(NSRect)cellFrame
@@ -346,7 +364,7 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 		if (_connectorsAreExpanded && pCount > 1)
 		{
-			downHigh = NSHeight(cf) - MIN_PORT_HEIGHT/2 - (pCount - 1) * MIN_PORT_HEIGHT * 0.66;
+			downHigh = NSHeight(cf) - MIN_PORT_HEIGHT/2 - (pCount - 1) * MIN_PORT_HEIGHT * 0.66; //FIXME define this 0.66
 			DPSarc(ctxt, 0, NSHeight(cf) - MIN_PORT_HEIGHT/2,
 					MIN_PORT_HEIGHT/2, 90, 180);
 			DPSlineto(ctxt, -MIN_PORT_HEIGHT/2, downHigh);
@@ -377,7 +395,7 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		DPSclosepath(ctxt);
 
 		DPSgsave(ctxt); {
-			if (_drawHilight && !_handleMode)
+			if (_cell.is_highlighted && !_handleMode)
 				[_hilightColor set];
 			else
 				[_backgroundColor set];
@@ -574,9 +592,9 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		}
 #endif
 
-		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, NSWidth(cf) - 5
+		__draw_handle_line(ctxt, cf, _handleMode?_hilightColor:_backgroundColor, NSWidth(cf) - 5
 #ifdef SUPERFLUOUS
-		,_drawHilight
+		,_handleMode
 #endif
 				);
 
@@ -587,6 +605,14 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		inView:controlView];
 
 }
+
+- (TMAxisRange) expandedRange
+{
+	CGFloat expandHigh = MIN_PORT_HEIGHT + ([_pairCells count] - 1) * MIN_PORT_HEIGHT * 0.66;
+
+	return TMMakeAxisRange(_range.location + _range.length - expandHigh, expandHigh);
+}
+
 
 @end
 
@@ -616,7 +642,7 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		DPSclosepath(ctxt);
 
 		DPSgsave(ctxt); {
-			if (_drawHilight && !_handleMode)
+			if (_cell.is_highlighted && !_handleMode)
 				[_hilightColor set];
 			else
 				[_backgroundColor set];
@@ -660,9 +686,9 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		[_borderColor set];
 		DPSstroke(ctxt);
 
-		__draw_handle_line(ctxt, cf, _drawHilight?_hilightColor:_backgroundColor, +5
+		__draw_handle_line(ctxt, cf, _handleMode?_hilightColor:_backgroundColor, +5
 #ifdef SUPERFLUOUS
-		,_drawHilight
+		,_handleMode
 #endif
 				);
 

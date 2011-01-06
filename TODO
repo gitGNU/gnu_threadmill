@@ -3,3 +3,4 @@
 * Drag port handle left-right will change direction.
 * Allow runtime choice superfluous, may be useful when drawing in zooming mode.
 * Trace intersecting node frame to draw nice drop shadow.
+* Adjust the initial and final stroke's length based on pair's distance

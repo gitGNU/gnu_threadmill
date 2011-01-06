@@ -83,7 +83,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 @interface TMNodeView (Internal)
 - (void) _recalculateFrame;
 - (void) _setNode:(TMNode *)aNode;
-- (void) _handlePortSorting:(NSPoint)mouseDownPoint;
+- (void) _handlePort:(TMPortCell *)aPort sortingFromPoint:(NSPoint)mouseDownPoint;
 @end
 
 @implementation TMNodeView (Internal)
@@ -176,13 +176,13 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	[self setNeedsDisplay:YES];
 }
 
-- (void) _handlePortSorting:(NSPoint)mouseDownPoint
+- (void) _handlePort:(TMPortCell *)aPort sortingFromPoint:(NSPoint)mouseDownPoint;
 {
 	NSEvent *anEvent;
 
-	[__portInLight setHandleMode:YES];
+	[aPort setHandled:YES];
 	[self setNeedsDisplay:YES];
-	TMAxisRange r = [__portInLight range];
+	TMAxisRange r = [aPort range];
 	CGFloat draggedLocation = r.location;
 
 	while (YES)
@@ -214,7 +214,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		}
 		draggedLocation = dragRange.location;
 
-		[__portInLight setRange:dragRange];
+		[aPort setRange:dragRange];
 
 		NSEnumerator *en;
 		TMPortCell *portCell;
@@ -224,7 +224,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		{
 			CGFloat diffLo,diffHi;
 
-			if (portCell == __portInLight)
+			if (portCell == aPort)
 			{
 				continue;
 			}
@@ -263,13 +263,11 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		[[self superview] setNeedsDisplay:YES];
 
 	}
-	[__portInLight setHandleMode:NO];
+	[aPort setHandled:NO];
 	r.location = draggedLocation;
-	[__portInLight setRange:r];
+	[aPort setRange:r];
 	//FIXME optimize display
 	[[self superview] setNeedsDisplay:YES];
-
-
 }
 
 
@@ -350,17 +348,18 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		NSRect r = NSInsetRect([self bounds],BORDER_SIZE ,BORDER_SIZE );
 		DPSsetlinejoin(ctxt, 1);
 
-		DPSsetrgbcolor(ctxt,0.3,0.9,1.0);
+		DPSsetrgbcolor(ctxt,0.3,0.8,1.0);
 #ifdef SUPERFLUOUS
-		DPSsetalpha(ctxt, 0.2);
+		DPSsetalpha(ctxt, 0.1);
 		DPSsetlinewidth(ctxt, 16);
 #else
-		DPSsetlinewidth(ctxt, 10);
+		DPSsetlinewidth(ctxt, 13);
 #endif
 		DPSrectstroke(ctxt, NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r));
 
 #ifdef SUPERFLUOUS
-		DPSsetlinewidth(ctxt, 12);
+		DPSsetalpha(ctxt, 0.3);
+		DPSsetlinewidth(ctxt, 10);
 		DPSrectstroke(ctxt, NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r));
 
 		DPSsetlinewidth(ctxt, 8);
@@ -523,28 +522,34 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRect portRect;
 	portRect.size.width = _areaWidth + BORDER_LINE_SIZE;
 	portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE/2;
-	NSEnumerator *en = [_portCells reverseObjectEnumerator];
+
+	NSEnumerator *en = [_portCells objectEnumerator];
 	TMPortCell *port;
 	while ((port = [en nextObject]))
 	{
-		if (port == __portInLight) continue;
-		if (port == __portExpanded) continue;
+		if ([port isHandled] || [port connectorsAreExpanded]) continue;
 		__port_set_frame(port, &portRect);
 		[port setBorderColor:_borderColor];
 		[port drawWithFrame:portRect inView:self];
 	}
-	if (__portExpanded != nil)
+
+	en = [_portCells objectEnumerator];
+	while ((port = [en nextObject]))
 	{
-		__port_set_frame(__portExpanded, &portRect);
-		[__portExpanded setBorderColor:_borderColor];
-		[__portExpanded drawWithFrame:portRect inView:self];
+		if ([port isHandled])
+		{
+			__port_set_frame(port, &portRect);
+			[port setBorderColor:_borderColor];
+			[port drawWithFrame:NSInsetRect(portRect, -2, 0) inView:self];
+		}
+		else if ([port connectorsAreExpanded])
+		{
+			__port_set_frame(port, &portRect);
+			[port setBorderColor:_borderColor];
+			[port drawWithFrame:portRect inView:self];
+		}
 	}
-	if (__portInLight != nil)
-	{
-		__port_set_frame(__portInLight, &portRect);
-		[__portInLight setBorderColor:_borderColor];
-		[__portInLight drawWithFrame:portRect inView:self];
-	}
+
 
 	/* for debugging
 	[[NSColor redColor] set];
@@ -637,6 +642,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSPoint frameDragOrigin = [[self superview] convertPointFromBase:[anEvent locationInWindow]];
 	NSPoint mouseDownPoint = [self convertPointFromBase:[anEvent locationInWindow]];
 	NSRect originFrame = [self frame];
+	TMPortCell *mouseDownPort;
 
 	/* display mouse down here */
 
@@ -646,6 +652,8 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 
 	/* FIXME track cells somewhere else */
+
+	/* mouse down in content switch */
 	NSRect buttonRect = NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE,_titleHeight, _titleHeight);
 	if (NSPointInRect(mouseDownPoint, buttonRect))
 	{
@@ -677,7 +685,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 				break;
 		}
 	}
-	/* track frame movement */
+	/* mouse down in title - track frame movement */
 	else if (NSPointInRect(mouseDownPoint, NSMakeRect(0,
 					NSMaxY(bounds) - _titleHeight - BORDER_SIZE,
 					NSWidth(bounds),
@@ -720,27 +728,61 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		[self setBorderColor:oldBorderColor];
 	}
 	/* track port dragging */
-	else
+	else if ((mouseDownPort = [self portCellAtPoint:mouseDownPoint]) != nil)
 	{
 		NSRect portRect;
 		portRect.origin = NSMakePoint(BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE*1.5);
 		NSEnumerator *en = [_portCells reverseObjectEnumerator];
-		TMPortCell *port = [self portCellAtPoint:mouseDownPoint];
 
-		if (port != nil)
+		/* mouse down on handle - track sorting handle */
+		if ((mouseDownPoint.x - BORDER_SIZE < PORT_HANDLE_SIZE && [mouseDownPort isKindOfClass:[TMExportCell class]])
+				|| (mouseDownPoint.x - BORDER_SIZE - _areaWidth > -PORT_HANDLE_SIZE && [mouseDownPort isKindOfClass:[TMImportCell class]]))
 		{
-			__portInLight = port;
-			[__portInLight setHighlight:YES];
+			[self _handlePort:mouseDownPort sortingFromPoint:mouseDownPoint];
+		}
+		/* mouse down on import connector */
+		else if ((mouseDownPoint.x - BORDER_SIZE < PORT_HANDLE_SIZE && [mouseDownPort isKindOfClass:[TMImportCell class]]))
+		{
+			NSPoint mouseLoc = mouseDownPoint;
+			[mouseDownPort expandConnectors:YES];
+			[[self superview] setNeedsDisplay:YES];
+
+			TMAxisRange range = [mouseDownPort expandedRange];
+			NSRect trackArea = NSMakeRect(BORDER_SIZE - MIN_PORT_HEIGHT/2, range.location, PORT_HANDLE_SIZE + MIN_PORT_HEIGHT/2, range.length);
+
+			while (YES)
+			{
+				anEvent = [NSApp nextEventMatchingMask:
+					NSLeftMouseUpMask |
+					NSLeftMouseDraggedMask |
+					NSMouseMovedMask
+					untilDate:__distFuture
+					inMode:NSEventTrackingRunLoopMode
+					dequeue:YES];
+
+				NSEventType eventType = [anEvent type];
+
+				if (eventType == NSMouseMoved)
+				{
+					mouseLoc = [self convertPointFromBase:[anEvent locationInWindow]];
+
+					if (!NSPointInRect(mouseLoc, trackArea))
+					{
+						break;
+					}
+				}
+			}
+
+			[mouseDownPort expandConnectors:NO];
+			[[self superview] setNeedsDisplay:YES];
+		}
+		/* mouse down on port content - track DND linking */
+		else 
+		{
+			[mouseDownPort setHighlighted:YES];
 			[self setNeedsDisplay:YES];
 
-			/* track sorting handle */
-			if ((mouseDownPoint.x - BORDER_SIZE < PORT_HANDLE_SIZE && [__portInLight isKindOfClass:[TMExportCell class]])
-				       	|| (mouseDownPoint.x - BORDER_SIZE - _areaWidth > -PORT_HANDLE_SIZE && [__portInLight isKindOfClass:[TMImportCell class]]))
-			{
-				[self _handlePortSorting:mouseDownPoint];
-			}
-			/* track DND linking */
-			else while (YES)
+			while (YES)
 			{
 				anEvent = [NSApp nextEventMatchingMask:
 					NSLeftMouseUpMask |
@@ -754,23 +796,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 				if (eventType == NSLeftMouseUp)
 				{
-
-					if ((mouseDownPoint.x - BORDER_SIZE < PORT_HANDLE_SIZE && [__portInLight isKindOfClass:[TMImportCell class]]))
-					{
-						[__portExpanded expandConnectors:NO];
-
-						if (__portExpanded == port)
-						{
-							__portExpanded = nil;
-						}
-						else
-						{
-							__portExpanded = port;
-							[__portExpanded expandConnectors:YES];
-						}
-
-						[[self superview] setNeedsDisplay:YES];
-					}
+					/* handle expanded connector */
 
 					break;
 				}
@@ -781,7 +807,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 				id type;
 
 
-				if ([port isKindOfClass:[TMImportCell class]])
+				if ([mouseDownPort isKindOfClass:[TMImportCell class]])
 				{
 					type = TMPasteboardTypeImportLink;
 				}
@@ -791,26 +817,20 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 				}
 
 				[pb declareTypes:[NSArray arrayWithObject:type] owner:self];
-				[pb setString:[port title] forType:type];
-
-				__portDragOut = port;
+				[pb setString:[mouseDownPort title] forType:type];
 
 				[super dragImage:[NSImage imageNamed:@"Plug.tiff"]
 					at:mouseDownPoint
 					offset:NSZeroSize
 					event:anEvent
 					pasteboard:pb
-					source:__portDragOut
+					source:mouseDownPort
 					slideBack:YES];
 
 				break;
 
 			}
-
-			[__portInLight setHighlight:NO];
-			__portInLight = nil;
-			[__portInLight setHandleMode:NO];
-			//[__portExpanded expandConnectors:NO];
+			[mouseDownPort setHighlighted:NO];
 			[self setNeedsDisplay:YES];
 		}
 	}
@@ -836,7 +856,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 - (void)draggingExited:(id < NSDraggingInfo >)sender
 {
-	[__portInLight setHighlight:NO];
+	[__portInLight setHighlighted:NO];
 	__portInLight = nil;
 	[self setNeedsDisplay:YES]; //FIXME only need to update the port frame
 }
@@ -853,7 +873,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	if (__portInLight != targetPort)
 	{
-		[__portInLight setHighlight:NO];
+		[__portInLight setHighlighted:NO];
 		__portInLight = nil;
 		[self setNeedsDisplay:YES];
 	}
@@ -864,7 +884,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		{
 			if ([types containsObject:TMPasteboardTypeExportLink])
 			{
-				[targetPort setHighlight:YES];
+				[targetPort setHighlighted:YES];
 				__portInLight = targetPort;
 				[self setNeedsDisplay:YES];
 				return NSDragOperationLink;
@@ -874,7 +894,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		{
 			if ([types containsObject:TMPasteboardTypeImportLink])
 			{
-				[targetPort setHighlight:YES];
+				[targetPort setHighlighted:YES];
 				__portInLight = targetPort;
 				[self setNeedsDisplay:YES];
 				return NSDragOperationLink;
@@ -915,7 +935,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	[sourcePort addConnection:targetPort];
 	[targetPort addConnection:sourcePort];
 
-	[__portInLight setHighlight:NO];
+	[__portInLight setHighlighted:NO];
 	__portInLight = nil;
 
 	//FIXME optimize display

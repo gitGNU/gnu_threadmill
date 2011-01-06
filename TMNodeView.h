@@ -35,7 +35,6 @@
 	id __contentView;
 	id __portInLight;
 	id __portDragOut;
-	id __portExpanded;
 	NSUInteger __hitSearchIndex;
 
 	NSColor *_borderColor;

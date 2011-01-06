@@ -29,7 +29,6 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
 	NSColor *_borderColor;
 	NSColor *_backgroundColor;
 	NSColor *_hilightColor;
-	BOOL _drawHilight;
 	BOOL _handleMode;
 	TMAxisRange _range;
 
@@ -41,13 +40,15 @@ TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
 }
 - (id) initWithName:(NSString *)aName;
 - (void) expandConnectors:(BOOL)shouldExpand;
-- (void) setHighlight:(BOOL)drawHi;
+- (BOOL) connectorsAreExpanded;
+- (TMAxisRange) expandedRange;
 - (NSColor *) backgroundColor;
 - (void) setBackgroundColor:(NSColor *)aColor;
 - (void) setHighlightColor:(NSColor *)aColor;
 - (void) setBorderColor:(NSColor *)aColor;
 
-- (void) setHandleMode:(BOOL)mode;
+- (void) setHandled:(BOOL)mode;
+- (BOOL) isHandled;
 
 
 - (NSArray *) pairs;
