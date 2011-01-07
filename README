@@ -21,16 +21,40 @@
   Threadmill aims to build a high level GUI system to manage graph nodes with
   customizable front ends that allow wrapping any kind of node from real time
   generated unix cmdline output to Objective-C method calls. 
+                                          _________
+ ________________________________________/ DESIGNS \___________________________
 
-      _________
- ____/ LICENSE \_______________________________________________________________
+  Threadmill is designed to run with or without GUI and can be categorized
+  in 3 modules, the library, the palettes and the applications. The library
+  also separated into GUI and non-GUI layers.  The non-GUI only expose nodes
+  and port names to the GUI layer. The only way to access the ports is to
+  refer to them by names and only nodes will post notifications when certain
+  events occured such as data available or new connection is estrablished so
+  the GUI layer can update.
 
-  The Threadmill library and resources are covered under the WTFPL.
+  All the design decisions will be made with concerns of the original purpose
+  of using Threadmill to support part of 3Σ's operation dependency system.
 
-  The Threadmill application is covered under the GNU Public License.
+  (3Σ is a 3D mesh and object relationship modeling software based on the
+  being developed AP3 framework.)
+      __________
+ ____/ LICENSES \______________________________________________________________
 
-  Please read COPYING.WTFPL, COPYING.ARTWORKS, COPYINGv3 for more information.
+  The Threadmill library, resources are covered under the WTFPL.
 
+  The Threadmill palettes and palettes resources are upto contributors'
+  decision.
+
+  The Threadmill application and tools are covered under the version 3 of
+  GNU Public License.
+
+  Please read COPYING.WTFPL, COPYING.ARTWORKS, COPYINGv3 for more
+  information.
+                              _______
+ ____________________________/ LINKS \_________________________________________
+
+  * http://qstx.blogspot.com/2010/12/threadmill.html (official website)
+  * http://mus3.sourceforge.net (3Σ and AP3)
                                                         _________
  ______________________________________________________/ AUTHORS \_____________
 

@@ -1,9 +1,29 @@
-== TODO ==
-* TMNode should not be retained by a TMNodeView but by a non-GUI manager retained by TMView so the mill can works in non-GUI mode.
-* Drag port handle left-right will change direction.
-* Allow runtime choice superfluous, may be useful when drawing in zooming mode.
-* Trace intersecting node frame to draw nice drop shadow.
-* Adjust the initial and final stroke's length based on pair's distance
-* When expanding connection slot, should glow light when mouse is over port and set up and alarmer so the expansion don't collapse as soon as mouse left tracking area.
-* When pressing on port cell, the connected cables could also be lighten up.
+== TODOs ==
+
+=== Looks & Feels ===
+* Content scaler
+* Group / Ungroup support : this will be implemented using the TMView as
+  a node's content view 
 * Drag content switcher to show a pie menu of alternate operations.
+	# Compact : smallest display possible that still support connection
+          changing, dragging something near should show name.
+	# Lock : smallest display, port only show name over wires on mouse
+          over node.
+	# Delete : remove node permanently.
+	# Hide : draw wire dash indicating hidden nodes.
+	# Pin : prevent Graphviz auto adjust.
+* Graphviz support.
+* When expanding connection slot, should glow light when mouse is over port
+  and set up and alarmer so the expansion don't collapse as soon as mouse left
+  tracking area.
+* Adjust the initial and final stroke's length based on pair's distance
+* Drag port handle left-right will change direction.
+* When pressing on port cell, the connected cables could also be lighten up.
+* Trace intersecting node frame to draw nice drop shadow by sortng all rects'
+  edges as NSPoint->NSPoint vectors, trace the edge by following intersected
+  vectors' origins.
+* Allow runtime choice superfluous, may be useful when drawing in zooming mode.
+
+=== Object Model ===
+* TMNode should not be retained by a TMNodeView but by a non-GUI manager
+  retained by TMView so the mill can works in non-GUI mode.

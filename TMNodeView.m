@@ -50,6 +50,8 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	DPSgsave(ctxt); {
 		DPStranslate(ctxt, NSMinX(cf), NSMinY(cf));
 
+		DPSsetlinejoin(ctxt, 1);
+		DPSsetlinecap(ctxt, 1);
 
 		if ([self isHighlighted])
 		{
@@ -60,22 +62,27 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		else
 			[[NSColor grayColor] set];
 
-		DPSmoveto(ctxt, NSWidth(cf)/2, NSHeight(cf) * (mode?1:2)/3.);
-		DPSlineto(ctxt, NSWidth(cf)/2 + NSWidth(cf) * 3/15., NSHeight(cf) * (mode?2:1)/3.);
-		DPSlineto(ctxt, NSWidth(cf)/2 - NSWidth(cf) * 3/15., NSHeight(cf) * (mode?2:1)/3.);
-		DPSclosepath(ctxt);
+		DPSmoveto(ctxt, NSWidth(cf)/2 + NSWidth(cf)/4., NSHeight(cf) * (mode?2:1)/3.);
+		DPSlineto(ctxt, NSWidth(cf)/2, NSHeight(cf) * (mode?1:2)/3.);
+		DPSlineto(ctxt, NSWidth(cf)/2 - NSWidth(cf)/4., NSHeight(cf) * (mode?2:1)/3.);
+	//	DPSclosepath(ctxt);
 #ifdef SUPERFLUOUS
 		if ([self isHighlighted])
 		{
 			DPSgsave(ctxt); {
-				DPSsetlinewidth(ctxt, 4); //FIXME
-				DPSsetalpha(ctxt,0.1);
+					DPSgsave(ctxt); {
+						DPSsetalpha(ctxt,0.1);
+						DPSsetlinewidth(ctxt, MIN_PORT_HEIGHT/2.5);
+						DPSstroke(ctxt);
+					} DPSgrestore(ctxt);
+				DPSsetalpha(ctxt,0.3);
+				DPSsetlinewidth(ctxt, MIN_PORT_HEIGHT/5.);
 				DPSstroke(ctxt);
 			} DPSgrestore(ctxt);
 		}
 #endif
-
-		DPSfill(ctxt);
+		DPSsetlinewidth(ctxt, MIN_PORT_HEIGHT/10);
+		DPSstroke(ctxt);
 	} DPSgrestore(ctxt);
 }
 @end
