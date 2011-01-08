@@ -158,7 +158,9 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	if (!contentHidden)
 	{
-		contentRect.origin = NSMakePoint(BORDER_SIZE + (_areaWidth / 2) - (NSWidth(contentRect) / 2), NSMaxY(bounds) - _titleHeight - BORDER_SIZE - NSHeight(contentRect) - BORDER_LINE_SIZE);
+		contentRect.origin.x = BORDER_SIZE + (_areaWidth / 2) - (NSWidth(contentRect) / 2);
+		contentRect.origin.y = NSMaxY(bounds) - _titleHeight
+			- BORDER_SIZE - NSHeight(contentRect) - BORDER_LINE_SIZE;
 		[__contentView setFrameOrigin:contentRect.origin];
 	}
 
@@ -380,10 +382,10 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	[[NSColor blackColor] set];
 	NSRectFill(r);
 #ifdef SUPERFLUOUS
-	NSRect carbonRect;
-	carbonRect.origin = NSMakePoint(10,10);
-	carbonRect.size = r.size;
-	[[NSImage imageNamed:@"FiberPattern.tiff"] compositeToPoint:r.origin fromRect:carbonRect operation:NSCompositeSourceOver];
+	NSRect fiberRect;
+	fiberRect.origin = NSMakePoint(10,10);
+	fiberRect.size = r.size;
+	[[NSImage imageNamed:@"FiberPattern.tiff"] drawAtPoint:r.origin fromRect:fiberRect operation:NSCompositeSourceOver fraction:1];
 
 	/* frame */
 	NSGraphicsContext *ctxt=GSCurrentContext();
@@ -520,9 +522,10 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 			       	_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
 #ifdef SUPERFLUOUS
 	[[NSImage imageNamed:@"FiberPattern.tiff"]
-	       	compositeToPoint:NSMakePoint(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE)
+	       	drawAtPoint:NSMakePoint(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE)
 		fromRect:NSMakeRect(0,0,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2)
-	       	operation:NSCompositeSourceOver];
+	       	operation:NSCompositeSourceOver
+		fraction:1];
 #endif
 
 	/* draw ports */
@@ -738,7 +741,9 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	else if ((mouseDownPort = [self portCellAtPoint:mouseDownPoint]) != nil)
 	{
 		NSRect portRect;
-		portRect.origin = NSMakePoint(BORDER_SIZE - BORDER_LINE_SIZE, BORDER_SIZE - BORDER_LINE_SIZE*1.5);
+		portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE;
+		portRect.origin.y = BORDER_SIZE - BORDER_LINE_SIZE*1.5;
+
 		NSEnumerator *en = [_portCells reverseObjectEnumerator];
 
 		/* mouse down on handle - track sorting handle */

@@ -13,13 +13,14 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#define MIN_TITLE_HEIGHT 20.0
-#define MIN_PORT_HEIGHT 20.0
-#define BORDER_SIZE 30.0
-#define BORDER_LINE_SIZE 2.0
-#define TEXT_OFFSET 5.0
-#define PORT_HANDLE_SIZE 20.0
-#define DRAW_DASH_HANDLE
-#define SUPERFLUOUS 
-#define WIRE_WIDTH 3.0
-#define WIRE_SPECULAR_ALPHA 0.8
+
+typedef struct _TMAxisRange
+{
+	CGFloat location;
+	CGFloat length;
+} TMAxisRange;
+
+TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length);
+TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
+
+void TMFillImageAtPointInRect(NSImage *image, NSPoint p, NSRect r);

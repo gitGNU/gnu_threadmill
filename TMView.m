@@ -34,6 +34,7 @@
 	TMNode *newNode;
 	newNode = AUTORELEASE([[TMNode alloc] init]);
 
+	NSLog(@"%d", [sender tag]);
 
 /* create some ports */
 	[newNode createImportWithName:@"test import 1"];
@@ -113,8 +114,7 @@
 
 				dist /= 3;
 
-				DPSsetlinewidth(ctxt, 3);
-
+				/* stroke wire */
 				DPSmoveto(ctxt, NSMaxX(exportFrame), NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
 				DPSlineto(ctxt, NSMaxX(exportFrame) + BORDER_SIZE/2, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
 				DPScurveto(ctxt,
@@ -123,28 +123,30 @@
 					       	NSMinX(importFrame) - BORDER_SIZE/2, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
 				DPSlineto(ctxt, NSMinX(importFrame), NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
 
+				/* draw wire outline */
 				DPSgsave(ctxt); {
 					[[NSColor blackColor] set];
-					DPSsetlinewidth(ctxt, 5);
+					DPSsetlinewidth(ctxt, 2 + WIRE_WIDTH);
 					DPSstroke(ctxt);
 				} DPSgrestore(ctxt);
 
+				DPSsetlinewidth(ctxt, WIRE_WIDTH);
 				DPSstroke(ctxt);
 
 #ifdef SUPERFLUOUS
 				/* draw cable speculars */
 				DPSgsave(ctxt); {
+					DPSsetlinewidth(ctxt, WIRE_WIDTH/3);
 					[[NSColor whiteColor] set];
-					DPStranslate(ctxt, 0, 1);
-					DPSsetlinewidth(ctxt, 1);
+					DPSsetalpha(ctxt, WIRE_SPECULAR_ALPHA);
 
-					DPSmoveto(ctxt, NSMaxX(exportFrame), NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
-					DPSlineto(ctxt, NSMaxX(exportFrame) + BORDER_SIZE/2, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2);
+					DPSmoveto(ctxt, NSMaxX(exportFrame), NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3);
+					DPSlineto(ctxt, NSMaxX(exportFrame) + BORDER_SIZE/2, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3);
 					DPScurveto(ctxt,
-							NSMaxX(exportFrame) + BORDER_SIZE/2 + dist, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2,
-							NSMinX(importFrame) - BORDER_SIZE/2 - dist, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2,
-							NSMinX(importFrame) - BORDER_SIZE/2, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
-					DPSlineto(ctxt, NSMinX(importFrame), NSMaxY(importFrame) - MIN_PORT_HEIGHT/2);
+							NSMaxX(exportFrame) + BORDER_SIZE/2 + dist, NSMaxY(exportFrame) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3,
+							NSMinX(importFrame) - BORDER_SIZE/2 - dist, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3,
+							NSMinX(importFrame) - BORDER_SIZE/2, NSMaxY(importFrame) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3);
+					DPSlineto(ctxt, NSMinX(importFrame), NSMaxY(importFrame) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3);
 
 					DPSstroke(ctxt);
 				} DPSgrestore(ctxt);
@@ -182,19 +184,12 @@ NSImage *im;
 
 - (void) drawRect:(NSRect)r
 {
-//	[[NSColor brownColor] set];
-	[[NSColor blackColor] set];
+	[[NSColor brownColor] set];
+//	[[NSColor blackColor] set];
 	NSRectFill(r);
 	NSRect bounds = [self bounds];
-	CGFloat i,j;
-	NSRect imRect;
-	imRect.origin = NSZeroPoint;
-	imRect.size = [im size];
-	for (j = 0; j < NSHeight(bounds); j += NSHeight(imRect))
-	for (i = 0; i < NSWidth(bounds); i += NSWidth(imRect))
-	{
-		[im compositeToPoint:NSMakePoint(i,j) fromRect:imRect operation:NSCompositeSourceOver];
-	}
+
+	TMFillImageAtPointInRect(im, NSZeroPoint, r);
 
 	NSEnumerator *en = [[self subviews] objectEnumerator];
 	TMNodeView *view;

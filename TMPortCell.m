@@ -18,38 +18,6 @@
 #import "TMDefs.h"
 
 
-TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length)
-{
-	TMAxisRange range;
-
-	if (length < 0)
-	{
-		range.location = location + length;
-		range.length = -length;
-	}
-	else
-	{
-		range.location = location;
-		range.length = length;
-	}
-
-	return range;
-}
-
-TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange)
-{
-	
-	CGFloat maxA = aRange.location + aRange.length;
-	CGFloat maxB = bRange.location + bRange.length;
-
-	if (maxA < bRange.location || maxB < aRange.location)
-		return TMMakeAxisRange(0, 0);
-
-	CGFloat maxLoc = MAX(aRange.location, bRange.location);
-	return TMMakeAxisRange(maxLoc, MIN(maxA, maxB) - maxLoc);
-}
-
-
 
 @implementation TMPortCell (Internal)
 
@@ -555,7 +523,8 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 				NSRect strRect;
 				strRect.size = [attrStr size];
-				strRect.origin = NSMakePoint(MIN_PORT_HEIGHT/4 + 2*BORDER_LINE_SIZE, NSHeight(cf) - MIN_PORT_HEIGHT/2 - NSHeight(strRect)/2);
+				strRect.origin.x = MIN_PORT_HEIGHT/4 + 2*BORDER_LINE_SIZE;
+				strRect.origin.y = NSHeight(cf) - MIN_PORT_HEIGHT/2 - NSHeight(strRect)/2;
 
 #ifdef SUPERFLUOUS
 				{
@@ -690,6 +659,31 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		DPSsetlinewidth(ctxt, BORDER_LINE_SIZE);
 		[_borderColor set];
 		DPSstroke(ctxt);
+
+		/* connect wire color to the cell color */
+		if ([_pairCells count] > 0)
+		{
+			[_backgroundColor set];
+			DPSsetlinecap(ctxt, 0);
+			DPSsetlinewidth(ctxt, WIRE_WIDTH);
+			DPSmoveto(ctxt, NSWidth(cf) + MIN_PORT_HEIGHT/2 - BORDER_LINE_SIZE * 2,
+					NSHeight(cf) - MIN_PORT_HEIGHT/2);
+			DPSlineto(ctxt, NSWidth(cf) + MIN_PORT_HEIGHT/2 + BORDER_LINE_SIZE * 2,
+					NSHeight(cf) - MIN_PORT_HEIGHT/2);
+			DPSstroke(ctxt);
+#ifdef SUPERFLUOUS
+			/* specular */
+			[[NSColor whiteColor] set];
+			DPSsetalpha(ctxt, WIRE_SPECULAR_ALPHA);
+			DPSsetlinewidth(ctxt, WIRE_WIDTH/3);
+			DPSmoveto(ctxt, NSWidth(cf) + MIN_PORT_HEIGHT/2 - BORDER_LINE_SIZE * 2,
+					NSHeight(cf) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3);
+			DPSlineto(ctxt, NSWidth(cf) + MIN_PORT_HEIGHT/2 + BORDER_LINE_SIZE * 2,
+					NSHeight(cf) - MIN_PORT_HEIGHT/2 + WIRE_WIDTH/3);
+			DPSstroke(ctxt);
+#endif
+		}
+
 
 		__draw_handle_line(ctxt, cf, _handleMode?_hilightColor:_backgroundColor, +5
 #ifdef SUPERFLUOUS

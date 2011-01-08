@@ -14,15 +14,7 @@
 */
 
 #import <AppKit/AppKit.h>
-
-typedef struct _TMAxisRange
-{
-	CGFloat location;
-	CGFloat length;
-} TMAxisRange;
-
-TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length);
-TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
+#import "TMGraphics.h"
 
 @interface TMPortCell : NSCell
 {

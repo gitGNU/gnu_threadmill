@@ -1,7 +1,7 @@
 == TODOs ==
 
 === Looks & Feels ===
-* Content scaler
+* Content view scaler
 * Group / Ungroup support : this will be implemented using the TMView as
   a node's content view 
 * Drag content switcher to show a pie menu of alternate operations.
@@ -13,12 +13,15 @@
 	# Hide : draw wire dash indicating hidden nodes.
 	# Pin : prevent Graphviz auto adjust.
 * Graphviz support.
+* Round top corners to support the pie menu.
+* Replace current drop down with a pie menu for expanding connection slot 
 * When expanding connection slot, should glow light when mouse is over port
   and set up and alarmer so the expansion don't collapse as soon as mouse left
   tracking area.
-* Adjust the initial and final stroke's length based on pair's distance
+* Adjust and average the initial and final wire stroke's length based on pair's distance.
+  eg., the initial and final straights should be 0.1 of the total distance.
 * Drag port handle left-right will change direction.
-* When pressing on port cell, the connected cables could also be lighten up.
+* When pressing on port cell, the connected wires could also be lighten up.
 * Trace intersecting node frame to draw nice drop shadow by sortng all rects'
   edges as NSPoint->NSPoint vectors, trace the edge by following intersected
   vectors' origins.
