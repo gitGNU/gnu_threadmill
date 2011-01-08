@@ -23,4 +23,4 @@ typedef struct _TMAxisRange
 TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length);
 TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
 
-void TMFillImageAtPointInRect(NSImage *image, NSPoint p, NSRect r);
+void TMFillPatternInRect(NSImage *image, NSRect r);

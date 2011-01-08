@@ -189,7 +189,7 @@ NSImage *im;
 	NSRectFill(r);
 	NSRect bounds = [self bounds];
 
-	TMFillImageAtPointInRect(im, NSZeroPoint, r);
+	TMFillPatternInRect(im, r);
 
 	NSEnumerator *en = [[self subviews] objectEnumerator];
 	TMNodeView *view;

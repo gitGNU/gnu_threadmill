@@ -5,26 +5,29 @@
 NSString * TMPasteboardTypeImportLink = @"TMPasteboardTypeImportLink";
 NSString * TMPasteboardTypeExportLink = @"TMPasteboardTypeExportLink";
 
-void TMFillImageAtPointInRect(NSImage *image, NSPoint p, NSRect r)
+void TMFillPatternInRect(NSImage *image, NSRect r)
 {
-	NSRect imRect;
-	imRect.origin = NSZeroPoint;
-	imRect.size = [image size];
+	NSSize imSize = [image size];
 
+	NSPoint p;
 	NSPoint dp;
 
-	p.x = NSMinX(r) - fmod(NSMinX(r) - p.x, NSWidth(imRect));
-	p.y = NSMinY(r) - fmod(NSMinY(r) - p.y, NSHeight(imRect));
+	p.x = NSMinX(r) - fmod(NSMinX(r), imSize.width);
+	p.y = NSMinY(r) - fmod(NSMinY(r), imSize.height);
 	
-	[[NSColor redColor] set];
-	int blocks = 0;
-	for (dp.y = p.y; dp.y < NSMaxY(r); dp.y += NSHeight(imRect))
-	for (dp.x = p.x; dp.x < NSMaxX(r); dp.x += NSWidth(imRect))
+	for (dp.y = p.y; dp.y < NSMaxY(r); dp.y += imSize.height)
+	for (dp.x = p.x; dp.x < NSMaxX(r); dp.x += imSize.width)
 	{
-		NSRect drawRect = [
+		NSRect drawRect;
 
+		drawRect.origin = dp;
+		drawRect.size = imSize;
 
-		[image compositeToPoint:dp fromRect:imRect operation:NSCompositeSourceOver];
+		drawRect = NSIntersectionRect(r, drawRect);
+
+		[image compositeToPoint:drawRect.origin
+			fromRect:NSOffsetRect(drawRect, -dp.x, -dp.y)
+			operation:NSCompositeSourceOver];
 	}
 }
 

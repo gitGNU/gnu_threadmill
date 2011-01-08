@@ -12,6 +12,8 @@
 	# Delete : remove node permanently.
 	# Hide : draw wire dash indicating hidden nodes.
 	# Pin : prevent Graphviz auto adjust.
+	# Proxy : just forward all ports with same names.
+	# Suspend : freeze itself.
 * Graphviz support.
 * Round top corners to support the pie menu.
 * Replace current drop down with a pie menu for expanding connection slot 
