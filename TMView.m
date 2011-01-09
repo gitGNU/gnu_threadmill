@@ -56,6 +56,11 @@
 	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.82 green:0.10 blue:0.26 alpha:1.0]
 		forExport:@"test export 2"];
 
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.71 green:0.26 blue:0.66 alpha:1.0]
+		forExport:@"test import 1"];
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36 green:0.26 blue:0.71 alpha:1.0]
+		forExport:@"test import 3"];
+
 	[self addSubview:newNodeView];
 //	[_nodes addObject:newNodeView];
 

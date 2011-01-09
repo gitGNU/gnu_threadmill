@@ -3,7 +3,8 @@
 === Looks & Feels ===
 * Content view scaler
 * Group / Ungroup support : this will be implemented using the TMView as
-  a node's content view 
+  a node's content view.
+* Display optimizations.
 * Drag content switcher to show a pie menu of alternate operations.
 	# Compact : smallest display possible that still support connection
           changing, dragging something near should show name.

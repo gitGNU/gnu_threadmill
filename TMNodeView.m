@@ -385,7 +385,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRect fiberRect;
 	fiberRect.origin = NSMakePoint(10,10);
 	fiberRect.size = r.size;
-	[[NSImage imageNamed:@"FiberPattern.tiff"] drawAtPoint:r.origin fromRect:fiberRect operation:NSCompositeSourceOver fraction:1];
+	TMFillPatternInRect([NSImage imageNamed:@"FiberPattern.tiff"], r);
 
 	/* frame */
 	NSGraphicsContext *ctxt=GSCurrentContext();

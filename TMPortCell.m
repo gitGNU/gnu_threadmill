@@ -367,10 +367,11 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		/* fill fiber pattern */
 		DPSgsave(ctxt); {
 			DPSclip(ctxt);
-			NSRect fiberRect;
-			fiberRect.origin = NSMakePoint(10, 10);
-			fiberRect.size = cellFrame.size;
-			[__background_pattern compositeToPoint:NSZeroPoint fromRect:fiberRect operation:NSCompositeSourceOver];
+			TMAxisRange range = [self expandedRange];
+			NSRect fiberRect = NSMakeRect(- MIN_PORT_HEIGHT/2, range.location - NSMinY(cf) , NSWidth(cf) + MIN_PORT_HEIGHT/2, range.length);
+
+			TMFillPatternInRect(__background_pattern, fiberRect);
+//			[__background_pattern compositeToPoint:NSZeroPoint fromRect:fiberRect operation:NSCompositeSourceOver];
 
 			/* draw light frame */
 			[[NSColor whiteColor] set];
