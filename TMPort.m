@@ -13,68 +13,75 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import "TMPort.h"
-#import "TMNodeInternal.h"
-
-@interface TMPort (Protected)
-- (void) __setConnection:(TMPort *)aPair;
-@end
+#import "TMPortInternal.h"
 
 @implementation TMPort (Protected)
-- (void) __setConnection:(TMPort *)aPair
+
++ (id) portForNode:(TMNode *)aNode
 {
-	__pair = aPair;
+	TMPort *retPort = [[TMPort alloc] init];
+
+	AUTORELEASE(retPort);
+	retPort->__node = aNode;
+
+	return retPort;
 }
 
++ (id) portForNode:(TMNode *)aNode
+	withName:(NSString *)name
+{
+	TMNamedPort *retPort = [[TMNamedPort alloc] init];
+
+	AUTORELEASE(retPort);
+	ASSIGN(retPort->_name, name);
+	retPort->__node = aNode;
+
+	return retPort;
+}
+
+- (BOOL) connect:(TMPort *)aPair
+{
+	if ([_pairs containsObject:aPair]) return YES;
+
+	[_pairs addObject:aPair];
+	if (![aPair connect: self])
+	{
+		[_pairs removeObject:aPair];
+		return NO;
+	}
+
+	return YES;
+}
 @end
 
 @implementation TMPort
-+ (id) portWithNode:(TMNode *)aNode
+- (id) init
 {
-	return AUTORELEASE([[self alloc] initWithNode:aNode]);
-}
-
-- (id) copyWithZone:(NSZone *)zone
-{
-	return RETAIN(self);
-}
-
-- (id) initWithNode:(TMNode *)aNode
-{
-	[self init];
-
-	__node = aNode;
-
+	_pairs = [[NSHashTable alloc] init];
 	return self;
-}
-
-- (NSString *) name
-{
-	return [__node nameForPort:self];
 }
 
 - (void) dealloc
 {
-	[self disconnect];
+	DESTROY(_pairs);
 	[super dealloc];
 }
 
-- (void) connect:(TMPort *)aPair
+- (NSString *) name
 {
-	__pair = aPair;
-	[__pair __setConnection:self];
+	return @"TMPort";
 }
 
-- (void) disconnect
+- (void) dealloc
 {
-	[__pair __setConnection:nil];
-	__pair = nil;
+	RELEASE(_connection);
+	[super dealloc];
 }
-
 @end
 
-@implementation TMImport
-@end
-
-@implementation TMExport
+@implementation TMNamedPort
+- (NSString *) name
+{
+	return _name;
+}
 @end

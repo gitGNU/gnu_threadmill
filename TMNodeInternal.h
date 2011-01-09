@@ -14,7 +14,7 @@
 */
 
 #import "TMNode.h"
-#import "TMPort.h"
+#import "TMPortInternal.h"
 
 @interface TMNode (Internal)
 
@@ -25,6 +25,7 @@
 	   forName:(NSString *)aName;
 */
 
-- (BOOL) setExport:(TMExport *)aPort
+- (BOOL) setExport:(TMPort *)aPort
 	forImportName:(NSString *)aName;
+//- (TMPortDirection) directionOfPort:(TMPort *)aPort;
 @end

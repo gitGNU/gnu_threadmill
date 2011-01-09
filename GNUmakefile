@@ -1,13 +1,13 @@
 include $(GNUSTEP_MAKEFILES)/common.make
 
-PACKAGE_NAME = TestMill
+PACKAGE_NAME = Threadmill
 VERSION = 0.0.1
-APP_NAME = TestMill
+APP_NAME = Threadmill
 
-TestMill_MAIN_MODEL_FILE=TestMill.gorm
-TestMill_APPLICATION_ICON=Threadmill.tiff
+Threadmill_MAIN_MODEL_FILE=Threadmill.gorm
+Threadmill_APPLICATION_ICON=Threadmill.tiff
 
-TestMill_OBJC_FILES = main.m \
+Threadmill_OBJC_FILES = main.m \
 		TMNode.m \
 		TMPort.m \
 		TMView.m \
@@ -16,6 +16,8 @@ TestMill_OBJC_FILES = main.m \
 		externs.m \
 
 
-TestMill_RESOURCE_FILES = TestMill.gorm Threadmill.tiff Threadmill-Logo.tiff Plug.tiff FiberPattern.tiff
+Threadmill_RESOURCE_FILES = Threadmill.gorm Threadmill.tiff Threadmill-Logo.tiff Plug.tiff FiberPattern.tiff
+
+ADDITIONAL_OBJC_LIBS = -lTimeUI
 
 include $(GNUSTEP_MAKEFILES)/application.make

@@ -18,6 +18,9 @@
 #import "TMNodeView.h"
 #import "TMPortCellInternal.h"
 
+#import <TimeUI/TimeUI.h>
+
+
 #import "TMNode.h" //Toy only
 @interface TMView (Private)
 - (void) drawWiresForNodeView:(TMNodeView *)nodeView;
@@ -34,7 +37,8 @@
 	TMNode *newNode;
 	newNode = AUTORELEASE([[TMNode alloc] init]);
 
-	NSLog(@"%d", [sender tag]);
+	int tag = [sender tag];
+
 
 /* create some ports */
 	[newNode createImportWithName:@"test import 1"];
@@ -69,11 +73,19 @@
 		name:NSViewFrameDidChangeNotification object:newNodeView];
 
 /* FIXME make node to create control view */
-	NSImageView *imageView = AUTORELEASE([[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, size, size)]);
-	[imageView setImage:[NSImage imageNamed:@"Threadmill-Logo.tiff"]];
-	[imageView setImageScaling:NSScaleToFit];
-	[newNodeView setContentView:imageView];
-	size *= 2;
+	if (tag == 1)
+
+	{
+		[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
+	}
+	else
+	{
+		NSImageView *imageView = AUTORELEASE([[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, size, size)]);
+		[imageView setImage:[NSImage imageNamed:@"Threadmill-Logo.tiff"]];
+		[imageView setImageScaling:NSScaleToFit];
+		[newNodeView setContentView:imageView];
+	}
+	size *= 1.5;
 }
 
 - (void) drawWiresForNodeView:(TMNodeView *)nodeView
@@ -189,11 +201,12 @@ NSImage *im;
 
 - (void) drawRect:(NSRect)r
 {
-	[[NSColor brownColor] set];
-//	[[NSColor blackColor] set];
+//	[[NSColor brownColor] set];
+	[[NSColor blackColor] set];
 	NSRectFill(r);
 	NSRect bounds = [self bounds];
 
+	TMFillPatternInRect(im, r);
 	TMFillPatternInRect(im, r);
 
 	NSEnumerator *en = [[self subviews] objectEnumerator];

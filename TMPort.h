@@ -16,27 +16,13 @@
 #import <Foundation/Foundation.h>
 
 @class TMNode;
-@class TMImport;
-@class TMExport;
+@class TMPair;
 
-@interface TMPort : NSObject <NSCopying>
+@interface TMPort : NSObject
 {
-	@public
-	TMPort *__pair;
 	TMNode *__node;
+	NSHashTable *_pairs;
 }
 
-+ (id) portWithNode:(TMNode *)aNode;
-- (id) initWithNode:(TMNode *)aNode;
-- (void) connect:(TMPort *)aPair;
-- (void) disconnect;
-- (TMPort *) pair;
 - (NSString *) name;
-
-@end
-
-@interface TMImport : TMPort
-@end
-
-@interface TMExport : TMPort
 @end
