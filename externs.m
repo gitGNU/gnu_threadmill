@@ -18,7 +18,6 @@ void TMFillPatternInRect(NSImage *image, NSRect r)
 	for (dp.y = p.y; dp.y < NSMaxY(r); dp.y += imSize.height)
 	for (dp.x = p.x; dp.x < NSMaxX(r); dp.x += imSize.width)
 	{
-	NSLog(NSStringFromPoint(dp));
 		NSRect drawRect;
 
 		drawRect.origin = dp;

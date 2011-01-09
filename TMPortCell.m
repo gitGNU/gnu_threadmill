@@ -368,10 +368,8 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		DPSgsave(ctxt); {
 			DPSclip(ctxt);
 			TMAxisRange range = [self expandedRange];
-			NSRect fiberRect = NSMakeRect(- MIN_PORT_HEIGHT/2, range.location - NSMinY(cf) , NSWidth(cf) + MIN_PORT_HEIGHT/2, range.length);
 
-			TMFillPatternInRect(__background_pattern, fiberRect);
-//			[__background_pattern compositeToPoint:NSZeroPoint fromRect:fiberRect operation:NSCompositeSourceOver];
+			TMFillPatternInRect(__background_pattern, NSMakeRect(0, range.location - NSMinY(cf) , NSWidth(cf) + MIN_PORT_HEIGHT/2, range.length));
 
 			/* draw light frame */
 			[[NSColor whiteColor] set];
@@ -627,10 +625,8 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 #ifdef SUPERFLUOUS
 		DPSgsave(ctxt); {
 			DPSclip(ctxt);
-			NSRect fiberRect;
-			fiberRect.origin = NSMakePoint(10, 10);
-			fiberRect.size = cellFrame.size;
-			[__background_pattern compositeToPoint:NSZeroPoint fromRect:fiberRect operation:NSCompositeSourceOver];
+			TMAxisRange range = [self expandedRange];
+			TMFillPatternInRect(__background_pattern, NSMakeRect(- MIN_PORT_HEIGHT/2, range.location - NSMinY(cf) , NSWidth(cf) + MIN_PORT_HEIGHT/2, range.length));
 			DPSsetlinewidth(ctxt, BORDER_LINE_SIZE + 2);
 
 			DPSnewpath(ctxt);
