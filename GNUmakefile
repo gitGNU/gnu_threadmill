@@ -5,7 +5,7 @@ include $(GNUSTEP_MAKEFILES)/common.make
 
 include ./Version
 
-SUBPROJECTS = TMLib
+SUBPROJECTS = TMLib TMKit
 
 #
 # Threadmill Application
@@ -18,8 +18,6 @@ Threadmill_APPLICATION_ICON=Threadmill.tiff
 Threadmill_RESOURCE_FILES = \
 			    Images/Threadmill.tiff \
 			    Images/Threadmill-Logo.tiff \
-			    Images/Plug.tiff \
-			    Images/FiberPattern.tiff \
 
 Threadmill_LOCALIZED_RESOURCE_FILES = Threadmill.gorm
 
@@ -31,6 +29,8 @@ Threadmill_HEADERS =
 
 Threadmill_OBJC_FILES = main.m \
 			Threadmill.m \
+
+-include GNUmakefile.preamble
 
 include $(GNUSTEP_MAKEFILES)/aggregate.make
 include $(GNUSTEP_MAKEFILES)/application.make
