@@ -18,6 +18,8 @@ Threadmill_APPLICATION_ICON=Threadmill.tiff
 Threadmill_RESOURCE_FILES = \
 			    Images/Threadmill.tiff \
 			    Images/Threadmill-Logo.tiff \
+			    TMKit/FiberPattern.tiff \
+			    TMKit/Plug.tiff \
 
 Threadmill_LOCALIZED_RESOURCE_FILES = Threadmill.gorm
 

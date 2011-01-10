@@ -30,6 +30,9 @@ libTMillGUI_OBJC_FILES=   \
 			TMNodeView.m \
 			TMPortCell.m \
 			TMView.m \
+			QSTimeClockCell.m \
+			QSTimeControl.m \
+
 
 libTMillGUI_RESOURCE_FILES = \
 			FiberPattern.tiff \

@@ -2,7 +2,6 @@ ADDITIONAL_GUI_LIBS += \
 		-lTMill \
 		-lTMillGUI \
 
-#		-lTimeUI \
 
 ADDITIONAL_INCLUDE_DIRS += \
 		-ITMKit \

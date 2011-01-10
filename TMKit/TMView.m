@@ -18,7 +18,7 @@
 #import "TMNodeView.h"
 #import "TMPortCellInternal.h"
 
-//#import <TimeUI/TimeUI.h>
+#import <TimeUI/TimeUI.h>
 
 
 #import <Threadmill/TMNode.h> //Toy only
@@ -76,9 +76,9 @@
 	if (tag == 1)
 
 	{
-	//	[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
+		[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
 	}
-//	else
+	else
 	{
 		NSImageView *imageView = AUTORELEASE([[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, size, size)]);
 		[imageView setImage:[NSImage imageNamed:@"Threadmill-Logo.tiff"]];
@@ -206,7 +206,6 @@ NSImage *im;
 	NSRectFill(r);
 	NSRect bounds = [self bounds];
 
-	TMFillPatternInRect(im, r);
 	TMFillPatternInRect(im, r);
 
 	NSEnumerator *en = [[self subviews] objectEnumerator];
