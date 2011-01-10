@@ -27,10 +27,15 @@
 	NSMutableArray *_pairCells;
 	BOOL _connectorsAreExpanded;
 	
+	NSString *_portName;
 	
 //	NSView *_cellContent;
 }
-- (id) initWithName:(NSString *)aName;
+- (id) initWithPortName:(NSString *)aName;
+- (id) initWithTitle:(NSString *)aTitle
+	portName:(NSString *)portName;
+- (NSString *) portName;
+
 - (void) expandConnectors:(BOOL)shouldExpand;
 - (BOOL) connectorsAreExpanded;
 - (TMAxisRange) expandedRange;

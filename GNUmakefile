@@ -1,23 +1,36 @@
+PACKAGE_NAME = threadmill
+export PACKAGE_NAME
+
 include $(GNUSTEP_MAKEFILES)/common.make
 
-PACKAGE_NAME = Threadmill
-VERSION = 0.0.1
+include ./Version
+
+SUBPROJECTS = TMLib
+
+#
+# Threadmill Application
+#
+
 APP_NAME = Threadmill
 
-Threadmill_MAIN_MODEL_FILE=Threadmill.gorm
+Threadmill_PRINCIPAL_CLASS=Threadmill
 Threadmill_APPLICATION_ICON=Threadmill.tiff
+Threadmill_RESOURCE_FILES = \
+			    Images/Threadmill.tiff \
+			    Images/Threadmill-Logo.tiff \
+			    Images/Plug.tiff \
+			    Images/FiberPattern.tiff \
+
+Threadmill_LOCALIZED_RESOURCE_FILES = Threadmill.gorm
+
+Threadmill_MAIN_MODEL_FILE=Threadmill.gorm
+
+Threadmill_LANGUAGES = English
+
+Threadmill_HEADERS = 
 
 Threadmill_OBJC_FILES = main.m \
-		TMNode.m \
-		TMPort.m \
-		TMView.m \
-		TMNodeView.m \
-		TMPortCell.m \
-		externs.m \
+			Threadmill.m \
 
-
-Threadmill_RESOURCE_FILES = Threadmill.gorm Threadmill.tiff Threadmill-Logo.tiff Plug.tiff FiberPattern.tiff
-
-ADDITIONAL_OBJC_LIBS = -lTimeUI
-
+include $(GNUSTEP_MAKEFILES)/aggregate.make
 include $(GNUSTEP_MAKEFILES)/application.make

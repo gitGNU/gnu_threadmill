@@ -315,20 +315,20 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 */
 
 	id cell;
-	en = [[[[_node importNames] allObjects] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
+	en = [[[_node importList] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
-		cell = AUTORELEASE([[TMImportCell alloc] initWithName:aName]);
+		cell = AUTORELEASE([[TMImportCell alloc] initWithPortName:aName]);
 		[cell setRepresentedObject:self];
 		[_portCells addObject:cell];
 	}
 
 	/* exports */
 
-	en = [[[[_node exportNames] allObjects] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
+	en = [[[_node exportList] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
-		cell = AUTORELEASE([[TMExportCell alloc] initWithName:aName]);
+		cell = AUTORELEASE([[TMExportCell alloc] initWithPortName:aName]);
 		[cell setRepresentedObject:self];
 		[_portCells addObject:cell];
 	}
@@ -989,15 +989,15 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	if ([types containsObject:TMPasteboardTypeImportLink])
 	{
-		[_node setExportName:[targetPort title]
-			toNode:sourceView->_node
-			forImportName:[pb stringForType:TMPasteboardTypeImportLink]];
+		[_node setExport:[targetPort portName]
+			forImport:[pb stringForType:TMPasteboardTypeImportLink]
+			onNode:sourceView->_node];
 	}
 	else if ([types containsObject:TMPasteboardTypeExportLink])
 	{
-		[sourceView->_node setExportName:[pb stringForType:TMPasteboardTypeImportLink]
-			toNode:_node
-			forImportName:[targetPort title]];
+		[sourceView->_node setExport:[pb stringForType:TMPasteboardTypeImportLink]
+			forImport:[targetPort portName]
+			onNode:_node];
 	}
 
 	[sourcePort addConnection:targetPort];
@@ -1023,6 +1023,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	return [_node exportNames];
 }
 
+/*
 - (NSRect) frameForPortCellOfClass:(Class)class
 	withName:(NSString *)aName
 {
@@ -1048,6 +1049,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	return NSZeroRect;
 
 }
+*/
 
 - (NSArray *) portCells
 {
@@ -1105,13 +1107,14 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 }
 
 - (void) setBackgroundColor:(NSColor *)aColor
-	forExport:(NSString *)exportName
+	forImport:(NSString *)importName
 {
 	NSEnumerator *en = [_portCells reverseObjectEnumerator];
 	TMPortCell *port;
 	while ((port = [en nextObject]))
 	{
-		if ([[port title] isEqualToString:exportName])
+		if ([port isKindOfClass:[TMImportCell class]] && 
+				[[port portName] isEqualToString:importName])
 		{
 			[port setBackgroundColor:aColor];
 			[self setNeedsDisplay:YES];
@@ -1119,6 +1122,24 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		}
 	}
 }
+
+- (void) setBackgroundColor:(NSColor *)aColor
+	forExport:(NSString *)exportName
+{
+	NSEnumerator *en = [_portCells reverseObjectEnumerator];
+	TMPortCell *port;
+	while ((port = [en nextObject]))
+	{
+		if ([port isKindOfClass:[TMExportCell class]] && 
+				[[port portName] isEqualToString:exportName])
+		{
+			[port setBackgroundColor:aColor];
+			[self setNeedsDisplay:YES];
+			return;
+		}
+	}
+}
+
 
 @end
 

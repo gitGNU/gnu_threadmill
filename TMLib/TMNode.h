@@ -17,29 +17,28 @@
 
 @interface TMNode : NSObject
 {
-	NSMutableArray *_imports;
-	NSMutableArray *_exports;
 }
 
 - (NSString *) name;
-- (NSSet *) importNames;
-- (NSSet *) exportNames;
+- (NSArray *) importList;
+- (NSArray *) exportList;
 
-- (BOOL) setExport:(NSString *)export
-		forImport:(NSString *)import
+- (BOOL) setExport:(NSString *)exportName
+		forImport:(NSString *)importName
 		onNode:(TMNode *)aNode;
 
-- (BOOL) removeExport:(NSString *)export
-		forImport:(NSString *)import
+- (BOOL) removeExport:(NSString *)exportName
+		forImport:(NSString *)importName
 		onNode:(TMNode *)aNode;
 
+@end
 
-/*
+@interface TMSimpleNode : TMNode
+{
+	NSMutableDictionary *_imports;
+	NSMutableDictionary *_exports;
+}
+
 - (BOOL) createImportWithName:(NSString *)importName;
 - (BOOL) createExportWithName:(NSString *)exportName;
-
-- (BOOL) setExportName:(NSString *)exportName
-	toNode:(TMNode *)aNode
-	forImportName:(NSString *)importName;
-*/
 @end

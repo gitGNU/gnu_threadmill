@@ -62,5 +62,10 @@
 /* FIXME */
 - (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell
 			toImportCell:(TMImportCell *)importCell;
+
+- (void) setBackgroundColor:(NSColor *)aColor
+	forImport:(NSString *)importName;
+- (void) setBackgroundColor:(NSColor *)aColor
+	forExport:(NSString *)exportName;
 @end
 

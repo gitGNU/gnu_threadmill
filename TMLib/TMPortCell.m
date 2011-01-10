@@ -87,17 +87,27 @@ NSImage *__background_pattern;
 
 @implementation TMPortCell
 
-- (id) initWithName:(NSString *)aName
+- (id) initWithPortName:(NSString *)aName
 {
-	[self initTextCell:aName];
+	return [self initWithTitle:[@"title>" stringByAppendingString:aName] portName:aName];
+}
+
+- (id) initWithTitle:(NSString *)aTitle
+	portName:(NSString *)portName
+{
+	ASSIGN(_portName, portName);
+	[self initTextCell:aTitle];
 	[self setAlignment:NSCenterTextAlignment];
 	[self setHighlightColor:[NSColor whiteColor]];
 
 	_pairCells = [NSMutableArray new];
-
 	return self;
 }
 
+- (NSString *) portName
+{
+	return _portName;
+}
 
 - (void) dealloc
 {
@@ -105,6 +115,7 @@ NSImage *__background_pattern;
 	DESTROY(_borderColor);
 	DESTROY(_backgroundColor);
 	DESTROY(_hilightColor);
+	DESTROY(_portName);
 	[super dealloc];
 }
 
@@ -216,9 +227,9 @@ NSImage *__background_pattern;
 @end
 
 @implementation TMImportCell
-- (id) initWithName:(NSString *)aName
+- (id) initWithPortName:(NSString *)aName
 {
-	[super initWithName:aName];
+	[super initWithPortName:aName];
 	[self setBackgroundColor:[NSColor orangeColor]];
 
 	return self;
@@ -369,7 +380,7 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 			DPSclip(ctxt);
 			TMAxisRange range = [self expandedRange];
 
-			TMFillPatternInRect(__background_pattern, NSMakeRect(0, range.location - NSMinY(cf) , NSWidth(cf) + MIN_PORT_HEIGHT/2, range.length));
+			TMFillPatternInRect(__background_pattern, NSMakeRect(-MIN_PORT_HEIGHT/2, range.location - NSMinY(cf) , NSWidth(cf) + MIN_PORT_HEIGHT/2, range.length));
 
 			/* draw light frame */
 			[[NSColor whiteColor] set];
@@ -590,9 +601,9 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 @end
 
 @implementation TMExportCell
-- (id) initWithName:(NSString *)aName
+- (id) initWithPortName:(NSString *)aName
 {
-	[super initWithName:aName];
+	[super initWithPortName:aName];
 	[self setBackgroundColor:[NSColor greenColor]];
 	return self;
 }

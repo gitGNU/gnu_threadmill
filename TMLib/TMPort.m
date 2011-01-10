@@ -15,28 +15,24 @@
 
 #import "TMPortInternal.h"
 
-@implementation TMPort (Protected)
+@implementation TMPort (Internal)
 
 + (id) portForNode:(TMNode *)aNode
 {
 	TMPort *retPort = [[TMPort alloc] init];
-
 	AUTORELEASE(retPort);
+
 	retPort->__node = aNode;
 
 	return retPort;
 }
 
-+ (id) portForNode:(TMNode *)aNode
-	withName:(NSString *)name
+- (void) disconnect:(TMPort *)aPair
 {
-	TMNamedPort *retPort = [[TMNamedPort alloc] init];
+	if (![_pairs containsObject:aPair]) return;
 
-	AUTORELEASE(retPort);
-	ASSIGN(retPort->_name, name);
-	retPort->__node = aNode;
-
-	return retPort;
+	[_pairs removeObject:aPair];
+	[aPair disconnect: self];
 }
 
 - (BOOL) connect:(TMPort *)aPair
@@ -67,21 +63,15 @@
 	[super dealloc];
 }
 
-- (NSString *) name
+- (NSString *) description
 {
-	return @"TMPort";
+	return [self name];
 }
 
-- (void) dealloc
-{
-	RELEASE(_connection);
-	[super dealloc];
-}
-@end
-
-@implementation TMNamedPort
 - (NSString *) name
 {
-	return _name;
+	return [__node nameOfPort:self];
 }
+
 @end
+

@@ -13,19 +13,11 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import "TMNode.h"
-#import "TMPortInternal.h"
+#import "TMNodeInternal.h"
+#import "TMPort.h"
 
-@interface TMNode (Internal)
-
-/*
-- (void) setImport:(TMPort *)aPort
-	   forName:(NSString *)aName;
-- (void) setExport:(TMPort *)aPort
-	   forName:(NSString *)aName;
-*/
-
-- (BOOL) setExport:(TMPort *)aPort
-	forImportName:(NSString *)aName;
-//- (TMPortDirection) directionOfPort:(TMPort *)aPort;
+@interface TMPort (Internal)
++ (id) portForNode:(TMNode *)aNode;
+- (BOOL) connect:(TMPort *)aPair;
 @end
+
