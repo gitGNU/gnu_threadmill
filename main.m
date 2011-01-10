@@ -1,7 +1,7 @@
 /*
 	do What The Fuck you want to Public License
 
-	Version 1.1, March 2010
+	Version 1.0, March 2010
 	Copyright (C) 2010 Banlu Kemiyatorn.
 	136 Nives 7 Jangwattana 14 Laksi Bangkok
 	Everyone is permitted to copy and distribute verbatim copies
@@ -13,11 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import <Threadmill/TMNodeInternal.h>
-#import <Threadmill/TMPort.h>
+#import <Cocoa/Cocoa.h>
 
-@interface TMPort (Internal)
-+ (id) portForNode:(TMNode *)aNode;
-- (BOOL) connect:(TMPort *)aPair;
-@end
-
+int main(int argc, char *argv[])
+{
+	return NSApplicationMain(argc,  (const char **) argv);
+}

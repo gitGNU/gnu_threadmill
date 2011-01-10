@@ -1,0 +1,14 @@
+ADDITIONAL_GUI_LIBS += \
+		-lTMill \
+		-lTMillGUI \
+
+#		-lTimeUI \
+
+ADDITIONAL_INCLUDE_DIRS += \
+		-ITMKit \
+
+
+ADDITIONAL_LIB_DIRS += \
+		-LTMLib/$(GNUSTEP_OBJ_DIR) \
+		-LTMKit/$(GNUSTEP_OBJ_DIR) \
+

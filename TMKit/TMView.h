@@ -13,11 +13,18 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import <Threadmill/TMNodeInternal.h>
-#import <Threadmill/TMPort.h>
+#import <AppKit/AppKit.h>
 
-@interface TMPort (Internal)
-+ (id) portForNode:(TMNode *)aNode;
-- (BOOL) connect:(TMPort *)aPair;
+@class TMNode;
+
+@interface TMView : NSView
+{
+	NSArray *_nodes;
+}
+
+- (void) addNode:(TMNode *)aNode;
 @end
 
+@interface TMView (Toy)
+- (void) addTestNode:(id)sender;
+@end

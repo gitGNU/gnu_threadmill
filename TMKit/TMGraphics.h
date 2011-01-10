@@ -13,11 +13,15 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import <Threadmill/TMNodeInternal.h>
-#import <Threadmill/TMPort.h>
+#import <AppKit/AppKit.h>
 
-@interface TMPort (Internal)
-+ (id) portForNode:(TMNode *)aNode;
-- (BOOL) connect:(TMPort *)aPair;
-@end
+typedef struct _TMAxisRange
+{
+	CGFloat location;
+	CGFloat length;
+} TMAxisRange;
 
+TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length);
+TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
+
+void TMFillPatternInRect(NSImage *image, NSRect r);

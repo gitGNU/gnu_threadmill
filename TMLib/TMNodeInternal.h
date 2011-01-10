@@ -13,7 +13,7 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import "TMNode.h"
+#import <Threadmill/TMNode.h>
 
 @class TMPort;
 

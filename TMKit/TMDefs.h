@@ -13,11 +13,13 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import <Threadmill/TMNodeInternal.h>
-#import <Threadmill/TMPort.h>
-
-@interface TMPort (Internal)
-+ (id) portForNode:(TMNode *)aNode;
-- (BOOL) connect:(TMPort *)aPair;
-@end
-
+#define MIN_TITLE_HEIGHT 20.0
+#define MIN_PORT_HEIGHT 20.0
+#define BORDER_SIZE 30.0
+#define BORDER_LINE_SIZE 2.0
+#define TEXT_OFFSET 5.0
+#define PORT_HANDLE_SIZE 20.0
+#define DRAW_DASH_HANDLE
+#define SUPERFLUOUS 
+#define WIRE_WIDTH 3.0
+#define WIRE_SPECULAR_ALPHA 0.8

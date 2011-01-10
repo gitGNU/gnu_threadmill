@@ -13,11 +13,14 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import <Threadmill/TMNodeInternal.h>
-#import <Threadmill/TMPort.h>
+#import <Threadmill/TMPortCell.h>
 
-@interface TMPort (Internal)
-+ (id) portForNode:(TMNode *)aNode;
-- (BOOL) connect:(TMPort *)aPair;
+@interface TMPortCell (Internal)
+- (void) addConnection:(TMPortCell *)aPortCell;
+- (void) deleteConnection:(TMPortCell *)aPortCell;
+- (TMAxisRange) range;
+- (void) setRange:(TMAxisRange)aRange;
 @end
 
+extern NSString * TMPasteboardTypeImportLink;
+extern NSString * TMPasteboardTypeExportLink;
