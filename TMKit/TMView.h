@@ -13,18 +13,26 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMKit_Included_TMView_h
+#define _TMKit_Included_TMView_h
+
 #import <AppKit/AppKit.h>
 
 @class TMNode;
+@class TMNodeView;
+
+@protocol TMNodeViewManager
+- (Class) viewClassForNode:(TMNode *)aNode;
+@end
 
 @interface TMView : NSView
 {
 	NSArray *_nodes;
+	id __delegate;
 }
 
-- (void) addNode:(TMNode *)aNode;
+- (TMNodeView *) addNode:(TMNode *)aNode;
+- (void) setDelegate:(id <TMNodeViewManager>)manager;
 @end
 
-@interface TMView (Toy)
-- (void) addTestNode:(id)sender;
-@end
+#endif

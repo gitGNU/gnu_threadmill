@@ -8,10 +8,18 @@
     };
     TMView = {
 	Actions = (
-	    "addTestNode:"
 	);
 	Outlets = (
 	);
 	Super = NSView;
+    };
+    Threadmill = {
+	Actions = (
+	    "addTestNode:"
+	);
+	Outlets = (
+	    _mainView
+	);
+	Super = NSApplication;
     };
 }

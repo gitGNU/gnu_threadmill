@@ -315,7 +315,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 */
 
 	id cell;
-	en = [[[_node importList] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
+	en = [[[_node imports] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
 		cell = AUTORELEASE([[TMImportCell alloc] initWithPortName:aName]);
@@ -325,7 +325,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	/* exports */
 
-	en = [[[_node exportList] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
+	en = [[[_node exports] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
 		cell = AUTORELEASE([[TMExportCell alloc] initWithPortName:aName]);
@@ -334,6 +334,8 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	}
 
 	[self registerForDraggedTypes:[NSArray arrayWithObjects:TMPasteboardTypeImportLink, TMPasteboardTypeExportLink, nil]];
+
+	[self _recalculateFrame];
 
 	return self;
 }
@@ -416,6 +418,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	textTitleRect.origin.y = NSMinY(r);
 	textTitleRect.size.width = NSWidth(r) - _titleHeight;
 	textTitleRect.size.height = NSHeight(r);
+
 	[_titleCell drawWithFrame:textTitleRect inView:self];
 #if 0
 	NSDictionary* blackattr;
@@ -481,7 +484,10 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	r.size.width = r.size.height;
 	
-	[_contentButtonCell drawWithFrame:r inView:self];
+	if (__contentView != nil)
+	{
+		[_contentButtonCell drawWithFrame:r inView:self];
+	}
 }
 
 - (void) drawRect:(NSRect)r
@@ -594,7 +600,6 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 - (void) setContentView:(NSView *)aView
 {
-
 	if (aView == nil)
 		[self removeSubview:__contentView];
 	else if (__contentView == nil)
@@ -1066,18 +1071,19 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	return [self convertRect:portRect toView:aView];
 }
 
-/* fix me */
+/* FIXME */
 - (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell
 			toImportCell:(TMImportCell *)importCell
 {
-//	NSLog(@"check %d", [_portCells indexOfObject:importCell]);
-
 	return [importCell connectionHeightForExportCell:exportCell];
 }
 
 
 - (TMPortCell *) portCellAtPoint:(NSPoint)p
 {
+	if ([_portCells count] == 0)
+		return nil;
+
 	NSRect portRect;
 	TMPortCell *hitPort = [_portCells objectAtIndex:__hitSearchIndex];
 

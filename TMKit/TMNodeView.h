@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMKit_Included_TMNodeView_h
+#define _TMKit_Included_TMNodeView_h
+
 #import <AppKit/AppKit.h>
 #import <Threadmill/TMPortCell.h>
 
@@ -69,3 +72,4 @@
 	forExport:(NSString *)exportName;
 @end
 
+#endif

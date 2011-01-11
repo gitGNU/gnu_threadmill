@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMLib_Included_TMNodeInternal_h
+#define _TMLib_Included_TMNodeInternal_h
+
 #import <Threadmill/TMNode.h>
 
 @class TMPort;
@@ -37,3 +40,5 @@
 - (TMPort *) importForName:(NSString *)importName;
 - (TMPort *) exportForName:(NSString *)exportName;
 @end
+
+#endif

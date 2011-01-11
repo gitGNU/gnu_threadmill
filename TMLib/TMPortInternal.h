@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMLib_Included_TMPortInternal_h
+#define _TMLib_Included_TMPortInternal_h
+
 #import <Threadmill/TMNodeInternal.h>
 #import <Threadmill/TMPort.h>
 
@@ -21,3 +24,4 @@
 - (BOOL) connect:(TMPort *)aPair;
 @end
 
+#endif

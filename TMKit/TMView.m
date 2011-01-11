@@ -18,10 +18,8 @@
 #import "TMNodeView.h"
 #import "TMPortCellInternal.h"
 
-#import <TimeUI/TimeUI.h>
+#import <Threadmill/TMNode.h>
 
-
-#import <Threadmill/TMNode.h> //Toy only
 @interface TMView (Private)
 - (void) drawWiresForNodeView:(TMNodeView *)nodeView;
 @end
@@ -29,65 +27,7 @@
 @class TMImportCell;
 @class TMExportCell;
 
-@implementation TMView (Toy)
-- (void) addTestNode:(id)sender
-{
-	static CGFloat size = 60;
-
-	TMSimpleNode *newNode;
-	newNode = AUTORELEASE([[TMSimpleNode alloc] init]);
-
-	int tag = [sender tag];
-
-
-/* create some ports */
-	[newNode createImportWithName:@"test import 1"];
-	[newNode createImportWithName:@"TEST \n   import 2"];
-	[newNode createImportWithName:@"test import 3"];
-
-	[newNode createExportWithName:@"test export 1"];
-	[newNode createExportWithName:@"test export 2"];
-	[newNode createExportWithName:@"test \noh yeh\n my export 3"];
-
-/* create node view */
-	TMNodeView *newNodeView;
-	newNodeView = AUTORELEASE([[TMNodeView alloc] initWithNode:newNode]);
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36 green:0.54 blue:0.66 alpha:1.0]
-		forExport:@"test export 1"];
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.55 green:0.71 blue:0.00 alpha:1.0]
-		forExport:@"test \noh yeh\n my export 3"];
-
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.82 green:0.10 blue:0.26 alpha:1.0]
-		forExport:@"test export 2"];
-
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.71 green:0.26 blue:0.66 alpha:1.0]
-		forImport:@"test import 1"];
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36 green:0.26 blue:0.71 alpha:1.0]
-		forImport:@"test import 3"];
-
-	[self addSubview:newNodeView];
-//	[_nodes addObject:newNodeView];
-
-	[[NSNotificationCenter defaultCenter] addObserver:self
-		selector:@selector(viewChanged:)
-		name:NSViewFrameDidChangeNotification object:newNodeView];
-
-/* FIXME make node to create control view */
-	if (tag == 1)
-
-	{
-		[newNodeView setContentView:[[QSTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
-	}
-	else
-	{
-		NSImageView *imageView = AUTORELEASE([[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, size, size)]);
-		[imageView setImage:[NSImage imageNamed:@"Threadmill-Logo.tiff"]];
-		[imageView setImageScaling:NSScaleToFit];
-		[newNodeView setContentView:imageView];
-	}
-	size *= 1.5;
-}
-
+@implementation TMView (Private)
 - (void) drawWiresForNodeView:(TMNodeView *)nodeView
 {
 	NSPoint a,b;
@@ -199,6 +139,42 @@ NSImage *im;
 	[super dealloc];
 }
 
+- (TMNodeView *) addNode:(TMNode *)aNode
+{
+	Class viewClass = Nil;
+
+	if (__delegate != nil)
+	{
+		viewClass = [__delegate viewClassForNode:aNode];
+	}
+
+	if (viewClass == Nil)
+	{
+		viewClass = NSClassFromString([NSStringFromClass([aNode class]) stringByAppendingString:@"View"]);
+	}
+
+	if (viewClass == Nil)
+	{
+		viewClass = [TMNodeView class];
+	}
+
+	TMNodeView *newNodeView = AUTORELEASE([[viewClass alloc] initWithNode:aNode]);
+
+	[self addSubview:newNodeView];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+		selector:@selector(viewChanged:)
+		name:NSViewFrameDidChangeNotification object:newNodeView];
+
+
+	return newNodeView;
+}
+
+- (void) setDelegate:(id <TMNodeViewManager>)manager
+{
+	__delegate = manager;
+}
+
+
 - (void) drawRect:(NSRect)r
 {
 //	[[NSColor brownColor] set];
@@ -219,20 +195,6 @@ NSImage *im;
 
 }
 
-
-- (void) addNode:(TMNode *)aNode
-{
-	/* TODO aNode should be able to specify view class */
-	/*
-	id nodeView = [[TMNodeView alloc] init];
-
-	[nodeView setNode:aNode];
-	[_nodes addObject:viewNode];
-	[self setNeedsDisplay:YES];
-	*/
-	NSLog(@"NYI");
-	exit(0);
-}
 
 - (void) viewChanged:(NSNotification *)aNotification
 {

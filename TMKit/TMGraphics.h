@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMKit_Included_TMGraphics_h
+#define _TMKit_Included_TMGraphics_h
+
 #import <AppKit/AppKit.h>
 
 typedef struct _TMAxisRange
@@ -25,3 +28,5 @@ TMAxisRange TMMakeAxisRange(CGFloat location, CGFloat length);
 TMAxisRange TMIntersectionAxisRange(TMAxisRange aRange, TMAxisRange bRange);
 
 void TMFillPatternInRect(NSImage *image, NSRect r);
+
+#endif

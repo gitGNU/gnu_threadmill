@@ -13,9 +13,12 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMLib_Included_TMPort_h
+#define _TMLib_Included_TMPort_h
+
 #import <Foundation/Foundation.h>
 
-@class TMNode;
+@class TMAbstractNode;
 @class TMPair;
 
 @interface TMPort : NSObject
@@ -26,3 +29,5 @@
 
 - (NSString *) name;
 @end
+
+#endif

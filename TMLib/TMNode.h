@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMLib_Included_TMNode_h
+#define _TMLib_Included_TMNode_h
+
 #import <Foundation/Foundation.h>
 
 @interface TMNode : NSObject
@@ -20,8 +23,8 @@
 }
 
 - (NSString *) name;
-- (NSArray *) importList;
-- (NSArray *) exportList;
+- (NSArray *) imports;
+- (NSArray *) exports;
 
 - (BOOL) setExport:(NSString *)exportName
 		forImport:(NSString *)importName
@@ -31,6 +34,8 @@
 		forImport:(NSString *)importName
 		onNode:(TMNode *)aNode;
 
++ (id) nodeWithImports:(NSArray *)importList
+		exports:(NSArray *)exportList;
 @end
 
 @interface TMSimpleNode : TMNode
@@ -41,4 +46,8 @@
 
 - (BOOL) createImportWithName:(NSString *)importName;
 - (BOOL) createExportWithName:(NSString *)exportName;
+- (id) initWithImports:(NSArray *)importList
+		exports:(NSArray *)exportList;
 @end
+
+#endif

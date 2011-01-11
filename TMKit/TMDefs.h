@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMKit_Included_TMDefs_h
+#define _TMKit_Included_TMDefs_h
+
 #define MIN_TITLE_HEIGHT 20.0
 #define MIN_PORT_HEIGHT 20.0
 #define BORDER_SIZE 30.0
@@ -23,3 +26,5 @@
 #define SUPERFLUOUS 
 #define WIRE_WIDTH 3.0
 #define WIRE_SPECULAR_ALPHA 0.8
+
+#endif

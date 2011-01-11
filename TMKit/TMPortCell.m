@@ -89,7 +89,7 @@ NSImage *__background_pattern;
 
 - (id) initWithPortName:(NSString *)aName
 {
-	return [self initWithTitle:[@"title>" stringByAppendingString:aName] portName:aName];
+	return [self initWithTitle:aName portName:aName];
 }
 
 - (id) initWithTitle:(NSString *)aTitle

@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMKit_Included_TMPortCellInternal_h
+#define _TMKit_Included_TMPortCellInternal_h
+
 #import <Threadmill/TMPortCell.h>
 
 @interface TMPortCell (Internal)
@@ -24,3 +27,5 @@
 
 extern NSString * TMPasteboardTypeImportLink;
 extern NSString * TMPasteboardTypeExportLink;
+
+#endif

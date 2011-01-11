@@ -1,28 +1,19 @@
 /*
- *        .::!!!!::.       *     +               .              *      .
- *     .:!' .:::::. ':                *                    .
- *    :!: ::'      ': !        .                  .          .
- *   .!! .::         : !            *                                     +
- *   :!! C O S M E T I C    +       .      +             * .        .
- * 
- *   TimeUI - Time and Calendar UI framework for GNUstep
- *   Copyright © 2006 Banlu Kemiyatorn <object@gmail.com>
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
-#include "QSTimeClockCell.h"
+	do What The Fuck you want to Public License
+
+	Version 1.1, March 2010
+	Copyright (C) 2010 Banlu Kemiyatorn.
+	136 Nives 7 Jangwattana 14 Laksi Bangkok
+	Everyone is permitted to copy and distribute verbatim copies
+	of this license document, but changing it is not allowed.
+
+	Ok, the purpose of this license is simple
+	and you just
+
+	DO WHAT THE FUCK YOU WANT TO.
+*/
+
+#include "TMTimeClockCell.h"
 #include <Foundation/NSAffineTransform.h>
 #include <Foundation/NSRunLoop.h>
 #include <AppKit/NSGraphics.h>
@@ -31,12 +22,12 @@
 #include <AppKit/DPSOperators.h>
 #include <math.h>
 
-#define QSTIMECLOCKCELL_FACTOR_H 0.3
-#define QSTIMECLOCKCELL_FACTOR_M 0.42
-#define QSTIMECLOCKCELL_FACTOR_S 0.462
-#define QSTIMECLOCKCELL_FACTOR_W 0.04
+#define TMTIMECLOCKCELL_FACTOR_H 0.3
+#define TMTIMECLOCKCELL_FACTOR_M 0.42
+#define TMTIMECLOCKCELL_FACTOR_S 0.462
+#define TMTIMECLOCKCELL_FACTOR_W 0.04
 
-@implementation QSTimeClockCell
+@implementation TMTimeClockCell
 NSDate   *theDistantFuture;
 + (void) initialize
 {
@@ -167,7 +158,7 @@ NSDate   *theDistantFuture;
 }
 @end
 
-@implementation QSTimeAnalogClockCell
+@implementation TMTimeAnalogClockCell
 + (BOOL) prefersTrackingUntilMouseUp
 {
   return YES;
@@ -232,7 +223,7 @@ NSDate   *theDistantFuture;
       hand *= -1;
     }
 
-  float w = QSTIMECLOCKCELL_FACTOR_W;
+  float w = TMTIMECLOCKCELL_FACTOR_W;
   if (w * scale < 2.0)
     {
       w = 2.0/scale;
@@ -245,10 +236,10 @@ NSDate   *theDistantFuture;
   p = [htr transformPoint:ep];
   RELEASE(htr);
 
-  if (fabs(p.x) < w && p.y < QSTIMECLOCKCELL_FACTOR_H && p.y > 0.)
+  if (fabs(p.x) < w && p.y < TMTIMECLOCKCELL_FACTOR_H && p.y > 0.)
     {
       rtime = 12 * 3600 / (2 * -M_PI);
-      _selectedHand_ = QSTimeAnalogClockHourHand;
+      _selectedHand_ = TMTimeAnalogClockHourHand;
     }
   else
     {
@@ -258,10 +249,10 @@ NSDate   *theDistantFuture;
       [htr translateXBy:-NSMidX(cellFrame) yBy:-NSMidY(cellFrame)];
       p = [htr transformPoint:ep];
       RELEASE(htr);
-      if (fabs(p.x) < w && p.y < QSTIMECLOCKCELL_FACTOR_M && p.y > 0.)
+      if (fabs(p.x) < w && p.y < TMTIMECLOCKCELL_FACTOR_M && p.y > 0.)
 	{
 	  rtime = 60 * 60 / (2 * -M_PI);
-	  _selectedHand_ = QSTimeAnalogClockMinuteHand;
+	  _selectedHand_ = TMTimeAnalogClockMinuteHand;
 	}
       else
 	{
@@ -272,10 +263,10 @@ NSDate   *theDistantFuture;
 	  p = [htr transformPoint:ep];
 	  RELEASE(htr);
 
-	  if (fabs(p.x) < w && p.y < QSTIMECLOCKCELL_FACTOR_S && p.y > 0.)
+	  if (fabs(p.x) < w && p.y < TMTIMECLOCKCELL_FACTOR_S && p.y > 0.)
 	    {
 	      rtime = 60 / (2 * -M_PI);
-	      _selectedHand_ = QSTimeAnalogClockSecondHand;
+	      _selectedHand_ = TMTimeAnalogClockSecondHand;
 	    }
 	}
     }
@@ -326,7 +317,7 @@ NSDate   *theDistantFuture;
       eventType = [theEvent type];
     }
 
-  _selectedHand_ = QSTimeAnalogClockNoHand;
+  _selectedHand_ = TMTimeAnalogClockNoHand;
   return YES;
 }
 
@@ -399,7 +390,7 @@ NSDate   *theDistantFuture;
     }
 
   [[NSColor blackColor] set];
-  DPSsetlinewidth(ctxt, QSTIMECLOCKCELL_FACTOR_W/2);
+  DPSsetlinewidth(ctxt, TMTIMECLOCKCELL_FACTOR_W/2);
   for (imark = 0, rmark = 0.; imark < 12; imark++, rmark += M_PI/6.)
     {
       x = sin(rmark);
@@ -419,10 +410,10 @@ NSDate   *theDistantFuture;
     }
   DPSstroke(ctxt);
 
-  x = sin(hand) * QSTIMECLOCKCELL_FACTOR_H;
-  y = cos(hand) * QSTIMECLOCKCELL_FACTOR_H;
+  x = sin(hand) * TMTIMECLOCKCELL_FACTOR_H;
+  y = cos(hand) * TMTIMECLOCKCELL_FACTOR_H;
 
-  if (_selectedHand_ == QSTimeAnalogClockHourHand)
+  if (_selectedHand_ == TMTimeAnalogClockHourHand)
     {
       [[NSColor blueColor] set];
     }
@@ -430,16 +421,16 @@ NSDate   *theDistantFuture;
     {
       [[NSColor blackColor] set];
     }
-  DPSsetlinewidth(ctxt, QSTIMECLOCKCELL_FACTOR_W * 2);
+  DPSsetlinewidth(ctxt, TMTIMECLOCKCELL_FACTOR_W * 2);
   DPSmoveto(ctxt, x, y);
   DPSrlineto(ctxt, x * -1.3, y * -1.3);
   DPSstroke(ctxt);
 
   hand *= 12;
-  x = sin(hand) * QSTIMECLOCKCELL_FACTOR_M;
-  y = cos(hand) * QSTIMECLOCKCELL_FACTOR_M;
+  x = sin(hand) * TMTIMECLOCKCELL_FACTOR_M;
+  y = cos(hand) * TMTIMECLOCKCELL_FACTOR_M;
 
-  if (_selectedHand_ == QSTimeAnalogClockMinuteHand)
+  if (_selectedHand_ == TMTimeAnalogClockMinuteHand)
     {
       [[NSColor blueColor] set];
     }
@@ -447,21 +438,21 @@ NSDate   *theDistantFuture;
     {
       [[NSColor blackColor] set];
     }
-  DPSsetlinewidth(ctxt, QSTIMECLOCKCELL_FACTOR_W * 1.2);
+  DPSsetlinewidth(ctxt, TMTIMECLOCKCELL_FACTOR_W * 1.2);
   DPSmoveto(ctxt, x, y);
   DPSrlineto(ctxt, x * -1.4, y * -1.4);
   DPSstroke(ctxt);
 
   hand *= 60;
-  x = sin(hand) * QSTIMECLOCKCELL_FACTOR_S;
-  y = cos(hand) * QSTIMECLOCKCELL_FACTOR_S;
+  x = sin(hand) * TMTIMECLOCKCELL_FACTOR_S;
+  y = cos(hand) * TMTIMECLOCKCELL_FACTOR_S;
 
 
-  if (_selectedHand_ > QSTimeAnalogClockSecondHand)
+  if (_selectedHand_ > TMTimeAnalogClockSecondHand)
     {
       goto restore;
     }
-  else if (_selectedHand_ == QSTimeAnalogClockSecondHand)
+  else if (_selectedHand_ == TMTimeAnalogClockSecondHand)
     {
       [[NSColor blueColor] set];
     }
@@ -470,7 +461,7 @@ NSDate   *theDistantFuture;
       [[NSColor redColor] set];
     }
 
-  DPSsetlinewidth(ctxt, QSTIMECLOCKCELL_FACTOR_W * 0.4);
+  DPSsetlinewidth(ctxt, TMTIMECLOCKCELL_FACTOR_W * 0.4);
   DPSmoveto(ctxt, x, y);
   DPSrlineto(ctxt, x * -1.4, y * -1.4);
   DPSstroke(ctxt);

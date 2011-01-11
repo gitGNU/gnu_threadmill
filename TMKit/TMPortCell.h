@@ -13,6 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#ifndef _TMKit_Included_TMPortCell_h
+#define _TMKit_Included_TMPortCell_h
+
 #import <AppKit/AppKit.h>
 #import <Threadmill/TMGraphics.h>
 
@@ -59,3 +62,4 @@
 - (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell;
 @end
 
+#endif

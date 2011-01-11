@@ -41,18 +41,26 @@
 
 @implementation TMNode
 
++ (id) nodeWithImports:(NSArray *)importList
+		exports:(NSArray *)exportList
+{
+	if ([self isMemberOfClass:[TMNode class]])
+		return AUTORELEASE([[TMSimpleNode alloc] initWithImports:importList exports:exportList]);
+	else return AUTORELEASE([[self alloc] initWithImports:importList exports:exportList]);
+}
+
 - (NSString *) name
 {
 	return [NSString stringWithFormat:@"Simple Node (%x)", self];
 }
 
-- (NSArray *) importList
+- (NSArray *) imports
 {
 	[self subclassResponsibility: _cmd];
 	return [NSArray array];
 }
 
-- (NSArray *) exportList
+- (NSArray *) exports
 {
 	[self subclassResponsibility: _cmd];
 	return [NSArray array];
@@ -83,6 +91,29 @@
 	_exports = [[NSMutableDictionary alloc] init];
 
 	return [super init];
+}
+
+- (id) initWithImports:(NSArray *)importList
+		exports:(NSArray *)exportList
+{
+	[self init];
+
+	NSEnumerator *en = [importList objectEnumerator];
+	NSString *portName;
+
+	while ((portName = [en nextObject]))
+	{
+		[self createImportWithName:portName];
+	}
+
+	en = [exportList objectEnumerator];
+
+	while ((portName = [en nextObject]))
+	{
+		[self createExportWithName:portName];
+	}
+
+	return self;
 }
 
 - (void) dealloc
@@ -126,12 +157,12 @@
 	return [_exports objectForKey:exportName];
 }
 
-- (NSArray *) importList
+- (NSArray *) imports
 {
 	return [_imports allKeys];
 }
 
-- (NSArray *) exportList
+- (NSArray *) exports
 {
 	return [_exports allKeys];
 }
