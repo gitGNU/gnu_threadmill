@@ -39,6 +39,9 @@
 - (void) addTestNode:(id)sender;
 @end
 
+
+#define RR (0.3 + 0.7 * (float)rand() / RAND_MAX)
+
 @implementation Threadmill
 - (void) addTestNode:(id)sender
 {
@@ -72,31 +75,33 @@
 
 	TMNodeView *newNodeView = [_mainView addNode:newNode];
 
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36 green:0.54 blue:0.66 alpha:1.0]
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36*RR green:0.54*RR blue:0.66*RR alpha:1.0]
 		forExport:@"test export 1"];
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.55 green:0.71 blue:0.00 alpha:1.0]
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.55*RR green:0.71*RR blue:0.00*RR alpha:1.0]
 		forExport:@"test \noh yeh\n my export 3"];
 
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.82 green:0.10 blue:0.26 alpha:1.0]
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.82*RR green:0.10*RR blue:0.26*RR alpha:1.0]
 		forExport:@"test export 2"];
 
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.71 green:0.26 blue:0.66 alpha:1.0]
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.71*RR green:0.26*RR blue:0.66*RR alpha:1.0]
 		forImport:@"test import 1"];
-	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36 green:0.26 blue:0.71 alpha:1.0]
+	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36*RR green:0.26*RR blue:0.71*RR alpha:1.0]
 		forImport:@"test import 3"];
 
 	static CGFloat size = 60;
 	if ([sender tag] == 1)
 	{
+		size *= 1.5;
 		[newNodeView setContentView:[[TMTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
 	}
 	else
 	{
+		size /= 1.5;
 		NSImageView *imageView = AUTORELEASE([[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, size, size)]);
 		[imageView setImage:[NSImage imageNamed:@"Threadmill-Logo.tiff"]];
 		[imageView setImageScaling:NSScaleToFit];
 		[newNodeView setContentView:imageView];
 	}
-	size *= 1.5;
+	if (size < 60) size = 60;
 }
 @end

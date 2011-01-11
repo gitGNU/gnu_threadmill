@@ -178,7 +178,8 @@ NSImage *im;
 - (void) drawRect:(NSRect)r
 {
 //	[[NSColor brownColor] set];
-	[[NSColor blackColor] set];
+//	[[NSColor blackColor] set];
+	[[NSColor colorWithDeviceRed:0.36 green:0.54 blue:0.66 alpha:1.0] set];
 	NSRectFill(r);
 	NSRect bounds = [self bounds];
 

@@ -5,7 +5,7 @@ include $(GNUSTEP_MAKEFILES)/common.make
 
 include ./Version
 
-SUBPROJECTS = TMLib TMKit
+SUBPROJECTS = TMLib TMKit TMPaletteKit
 
 #
 # Threadmill Application

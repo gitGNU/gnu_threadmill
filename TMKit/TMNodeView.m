@@ -355,11 +355,11 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	{
 		NSGraphicsContext *ctxt=GSCurrentContext();
 
-		[[NSColor cyanColor] set];
 		NSRect r = NSInsetRect([self bounds],BORDER_SIZE ,BORDER_SIZE );
 		DPSsetlinejoin(ctxt, 1);
 
-		DPSsetrgbcolor(ctxt,0.3,0.8,1.0);
+//		DPSsetrgbcolor(ctxt,0.3,0.8,1.0);
+		[[NSColor whiteColor] set];
 #ifdef SUPERFLUOUS
 		DPSsetalpha(ctxt, 0.1);
 		DPSsetlinewidth(ctxt, 16);
@@ -527,11 +527,8 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRectFill(NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE,
 			       	_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
 #ifdef SUPERFLUOUS
-	[[NSImage imageNamed:@"FiberPattern.tiff"]
-	       	drawAtPoint:NSMakePoint(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE)
-		fromRect:NSMakeRect(0,0,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2)
-	       	operation:NSCompositeSourceOver
-		fraction:1];
+	/* blank space during port handle dragging FIXME should only fill the empty range */
+	TMFillPatternInRect([NSImage imageNamed:@"FiberPattern.tiff"],NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
 #endif
 
 	/* draw ports */
@@ -724,7 +721,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 			if (setDragColor)
 			{
-				[self setBorderColor:[NSColor cyanColor]];
+				[self setBorderColor:[NSColor whiteColor]]; //FIXME define drag border color
 				setDragColor = NO;
 			}
 

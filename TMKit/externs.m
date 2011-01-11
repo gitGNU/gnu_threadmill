@@ -12,6 +12,8 @@ void TMFillPatternInRect(NSImage *image, NSRect r)
 	NSPoint p = NSZeroPoint;
 	NSPoint dp;
 
+	r = NSIntegralRect(r);
+
 	p.x = imSize.width * floor(NSMinX(r) / imSize.width);
 	p.y = imSize.height * floor(NSMinY(r) / imSize.height);
 	
