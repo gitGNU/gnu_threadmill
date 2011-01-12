@@ -4,25 +4,32 @@
 
 === Looks & Feels ===
 * Content view scaler
+* Working area implementation.
+	* The working area should be scaled automatically based on node's layout.
+	* A navigation system, a small map that you can drag around the view to perform the navigation.
+	  You don't drag this map's contents but the map itself to navigate. eg. putting the
+	  map on the top left of the main screen view would show the top left area of the working area.
+	* kinetic dragging.
 * Group / Ungroup support : this will be implemented using the TMView as
   a node's content view.
 * Change BORDER_SIZE to 2 NSRects to allow freely extending edges for port expandable, pie menus and etc.
 * Display optimizations.
 * Drag content switcher to show a pie menu of alternate operations.
 	* Compact : smallest display possible that still support connection
-          changing, dragging something near should show name.
+	  changing, dragging something near should show name.
 	* Lock : smallest display, port only show name over wires on mouse
-          over node.
+	  over node.
 	* Delete : remove node permanently.
 	* Hide : draw wire dash indicating hidden nodes.
+	* Connected : only show connected ports.
 	* Pin : prevent Graphviz auto adjust.
 	* Proxy : just forward all ports with same names.
 	* Suspend : freeze itself.
 	* Wire : some nodes can just be on-the-wire without having a static
-          location and represented by a circle. The location of nodes will
-          be calculated with mesh smoothing algorithm. To make this nice,
-          the wire-wire connection should define a tangent for stroking a
-          straight line.
+	  location and represented by a circle. The location of nodes will
+	  be calculated with mesh smoothing algorithm. To make this nice,
+	  the wire-wire connection should define a tangent for stroking a
+	  straight line.
 * Graphviz support.
 * Round top corners to support the pie menu.
 * Replace current drop down with a pie menu for expanding connection slot 
@@ -39,6 +46,7 @@
   edges as NSPoint->NSPoint vectors, trace the edge by following intersected
   vectors' origins, fill an image then blur the pixel.
 * Allow runtime choice superfluous, may be useful when drawing in zooming mode.
+* Allow sorting ports above content view 
 
 === Object Model ===
 * TMNode should not be retained by a TMNodeView but by a non-GUI manager

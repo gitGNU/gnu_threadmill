@@ -23,12 +23,19 @@
 @class TMTimeControl;
 
 @interface MyNode : TMSimpleNode
+{
+}
 @end
 
 @implementation MyNode
 - (NSString *) name
 {
 	return @"My node";
+}
+
+- (void) setDate:(id)sender
+{
+	NSLog(@"setDate");
 }
 @end
 
@@ -39,7 +46,6 @@
 - (void) addTestNode:(id)sender;
 @end
 
-
 #define RR (0.3 + 0.7 * (float)rand() / RAND_MAX)
 
 @implementation Threadmill
@@ -48,7 +54,7 @@
 	TMNode *newNode;
 	if ([sender tag] == 1)
 	{
-		newNode  = [TMNode nodeWithImports:[NSArray arrayWithObjects:
+		newNode  = [MyNode nodeWithImports:[NSArray arrayWithObjects:
 					@"test import 1",
 					@"TEST \n   import 2",
 					@"test import 3",
@@ -61,7 +67,7 @@
 	}
 	else
 	{
-		newNode  = [MyNode nodeWithImports:[NSArray arrayWithObjects:
+		newNode  = [TMNode nodeWithImports:[NSArray arrayWithObjects:
 					@"test import 1",
 					@"TEST \n   import 2",
 					@"test import 3",
@@ -92,7 +98,10 @@
 	if ([sender tag] == 1)
 	{
 		size *= 1.5;
-		[newNodeView setContentView:[[TMTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]];
+		TMTimeControl *control = AUTORELEASE([[TMTimeControl alloc] initWithFrame:NSMakeRect(0,0,size,size)]);
+		[control setTarget:newNode];
+		[control setAction:@selector(setDate:)];
+		[newNodeView setContentView:control];
 	}
 	else
 	{
