@@ -23,8 +23,12 @@
 
 @interface TMPort : NSObject
 {
+@public
 	TMNode *__node;
-	NSHashTable *_pairs;
+	NSUInteger _priority;
+	NSUInteger _pairCount;
+	id *_pairs;
+	BOOL _isPreparing;
 }
 
 - (NSString *) name;

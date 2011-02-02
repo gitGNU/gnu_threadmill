@@ -39,6 +39,8 @@
 - (NSString *) nameOfPort:(TMPort *)aPort;
 - (TMPort *) importForName:(NSString *)importName;
 - (TMPort *) exportForName:(NSString *)exportName;
+- (NSArray *) importPorts; /* TMPort array */
+- (NSArray *) exportPorts; /* TMPort array */
 @end
 
 #endif

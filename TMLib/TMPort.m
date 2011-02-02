@@ -29,43 +29,101 @@
 
 - (void) disconnect:(TMPort *)aPair
 {
-	if (![_pairs containsObject:aPair]) return;
+	int i = 0, j = 0;
+	while (i < _pairCount)
+	{
+		if (_pairs[i] != aPair)
+		{
+			_pairs[j] = _pairs[i];
+			j++;
+		}
+		i++;
+	}
 
-	[_pairs removeObject:aPair];
-	[aPair disconnect: self];
+	if (j < _pairCount)
+	{
+		_pairCount = j;
+		[aPair disconnect: self];
+	}
+
 }
 
 - (BOOL) connect:(TMPort *)aPair
 {
-	if ([_pairs containsObject:aPair]) return YES;
+	int i = 0;
+	while (i < _pairCount)
+	{
+		if (_pairs[i] == aPair)
+		       	return YES;
+		i++;
+	}
 
-	[_pairs addObject:aPair];
+	_pairCount++;
+	_pairs = realloc(_pairs, sizeof(id) * _pairCount);
+	_pairs[_pairCount - 1] = aPair;
+
 	if (![aPair connect: self])
 	{
-		[_pairs removeObject:aPair];
+		_pairCount--;
+		_pairs = realloc(_pairs, sizeof(id) * _pairCount);
 		return NO;
 	}
 
 	return YES;
 }
+
+- (BOOL) prepareWithPriority: (NSInteger)priority
+{
+	if (_isPreparing)
+	{
+		NSLog(@"cyclic %@",self);
+		return NO;
+	}
+
+	_isPreparing = YES;
+
+	int i;
+	BOOL ret = NO;
+	for (i = 0; i < _pairCount; i++)
+	{
+		ret |= [_pairs[i] prepareWithPriority:priority + _priority];
+	}
+
+	_isPreparing = NO;
+
+	return ret;
+}
+
 @end
 
 @implementation TMPort
+- (id) initWithPriority:(NSInteger)priority
+{
+	[self init];
+	_priority = priority;
+	return self;
+}
+
 - (id) init
 {
-	_pairs = [[NSHashTable alloc] init];
 	return self;
 }
 
 - (void) dealloc
 {
-	DESTROY(_pairs);
+	free(_pairs);
 	[super dealloc];
 }
 
+- (NSUInteger) priority
+{
+	return _priority;
+}
+
+
 - (NSString *) description
 {
-	return [self name];
+	return [NSString sringWithFormat:@"%@ on %@ priority:%d", [self name], __node, _priority];
 }
 
 - (NSString *) name

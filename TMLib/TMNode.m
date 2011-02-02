@@ -36,6 +36,18 @@
 	return nil;
 }
 
+- (NSArray *) importPorts
+{
+	[self subclassResponsibility: _cmd];
+	return nil;
+}
+
+- (NSArray *) exportPorts
+{
+	[self subclassResponsibility: _cmd];
+	return nil;
+}
+
 @end
 
 
@@ -80,6 +92,44 @@
 {
 	[self subclassResponsibility: _cmd];
 	return NO;
+}
+
+- (NSUInteger) priority
+{
+	[self subclassResponsibility: _cmd];
+	return 0;
+}
+
+/* data may already be stored or can be self generated */
+- (BOOL) needsImportFromPort:(TMPort *)importPort
+{
+	[self subclassResponsibility: _cmd];
+	return 0;
+}
+
+- (BOOL) prepareWithPriority: (NSInteger)priority
+{
+	NSInteger majorPriority = [self priority];
+	NSEnumerator *en = [[self importPorts] objectEnumerator];
+	TMPort *import;
+
+	while ((import = [en nextObject]))
+	{
+		if ([self needsImportFromPort:import] &&
+			       	![import prepareWithPriority:majorPriority + priority])
+		{
+			return NO;
+		}
+	}
+
+	return YES; /* node is fully prepared */
+}
+
+- (void) receivedResult: (void *)result
+		 ofType: (NSString *)type
+	       fromPort: (TMPort *)importPort
+{
+	[self subclassResponsibility: _cmd];
 }
 
 @end
@@ -184,4 +234,15 @@
 	TMPort *import = [aNode importForName:importName];
 	return [export connect:import];
 }
+
+- (NSArray *) importPorts
+{
+	return [_imports allValues];
+}
+
+- (NSArray *) exportPorts
+{
+	return [_exports allValues];
+}
+
 @end

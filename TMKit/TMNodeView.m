@@ -704,6 +704,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 					_titleHeight)))
 	{
 		BOOL setDragColor = YES;
+		NSPoint oldP = frameDragOrigin; //experiment to prevent subpixel dragging
 		while (YES)
 		{
 			anEvent = [NSApp nextEventMatchingMask:
@@ -726,6 +727,9 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 			}
 
 			NSPoint p = [[self superview] convertPointFromBase:[anEvent locationInWindow]];
+			if (fabs(oldP.x - p.x) + fabs(oldP.y - p.y) < 10) continue;
+			oldP = p;
+
 			p.x = NSMinX(originFrame) + p.x - frameDragOrigin.x;
 			p.y = NSMinY(originFrame) + p.y - frameDragOrigin.y;
 

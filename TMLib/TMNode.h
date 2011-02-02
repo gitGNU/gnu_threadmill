@@ -36,6 +36,8 @@
 
 + (id) nodeWithImports:(NSArray *)importList
 		exports:(NSArray *)exportList;
+
+- (void) run;
 @end
 
 @interface TMSimpleNode : TMNode
