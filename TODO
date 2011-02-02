@@ -2,7 +2,7 @@
 
 # means deciding
 
-=== Looks & Feels ===
+=== TMKit ===
 * Content view scaler
 * Working area implementation.
 	* The working area should be scaled automatically based on node's layout.
@@ -40,6 +40,7 @@
   eg., the initial and final straights should be 0.1 of the total distance.
 * Drag port handle left-right will change direction.
 * When pressing on port cell, the connected wires could also be lighten up.
+* Popup on wire for refining connection type or delete.
 # Make port cell to allow content view mapping from the pair so you can edit the pair directly
   within the current port display.
 * Trace intersecting node frame to draw nice drop shadow by sortng all rects'
@@ -48,7 +49,9 @@
 * Allow runtime choice superfluous, may be useful when drawing in zooming mode.
 * Allow sorting ports above content view 
 
-=== Object Model ===
+=== TMLib ===
 * TMNode should not be retained by a TMNodeView but by a non-GUI manager
   retained by TMView so the mill can works in non-GUI mode.
+* Method to match default connection policy, based on quality and speed.
 
+=== TMPaletteKit ===

@@ -18,6 +18,13 @@
 
 #import <Foundation/Foundation.h>
 
+typedef enum _TMDirection
+{
+	TMBothDirection = 0,
+	TMForwardDirection = 1,
+	TMBackwardDirection = 2,
+} TMDirection;
+
 @interface TMNode : NSObject
 {
 }

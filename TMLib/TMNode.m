@@ -107,16 +107,21 @@
 	return 0;
 }
 
-- (BOOL) prepareWithPriority: (NSInteger)priority
+- (NSOperation *) prepareDirection: (TMDirection)direction
+	     withPriority: (NSInteger)priority
 {
 	NSInteger majorPriority = [self priority];
 	NSEnumerator *en = [[self importPorts] objectEnumerator];
 	TMPort *import;
 
+	NSInvocationOperation *operation;
+	
+
 	while ((import = [en nextObject]))
 	{
-		if ([self needsImportFromPort:import] &&
-			       	![import prepareWithPriority:majorPriority + priority])
+		if (![import prepareDirection:direction
+				 withPriority:majorPriority + priority]) &&
+			[self needsImportFromPort:import]
 		{
 			return NO;
 		}

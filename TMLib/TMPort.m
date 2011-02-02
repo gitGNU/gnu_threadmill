@@ -72,7 +72,8 @@
 	return YES;
 }
 
-- (BOOL) prepareWithPriority: (NSInteger)priority
+- (NSOperation *) prepareDirection: (TMDirection)direction
+             	      withPriority: (NSInteger)priority
 {
 	if (_isPreparing)
 	{
