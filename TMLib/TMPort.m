@@ -30,7 +30,7 @@
 - (void) disconnect:(TMPort *)aPair
 {
 	int i = 0, j = 0;
-	while (i < _pairCount)
+	while (i < _pairs_n)
 	{
 		if (_pairs[i] != aPair)
 		{
@@ -40,59 +40,79 @@
 		i++;
 	}
 
-	if (j < _pairCount)
+	if (j < _pairs_n)
 	{
-		_pairCount = j;
+		_pairs_n = j;
 		[aPair disconnect: self];
 	}
 
 }
 
-- (BOOL) connect:(TMPort *)aPair
+- (BOOL) connect: (TMPort *)aPair
 {
 	int i = 0;
-	while (i < _pairCount)
+	while (i < _pairs_n)
 	{
 		if (_pairs[i] == aPair)
 		       	return YES;
 		i++;
 	}
 
-	_pairCount++;
-	_pairs = realloc(_pairs, sizeof(id) * _pairCount);
-	_pairs[_pairCount - 1] = aPair;
+	_pairs_n++;
+	_pairs = realloc(_pairs, sizeof(id) * _pairs_n);
+	_pairs[_pairs_n - 1] = aPair;
 
-	if (![aPair connect: self])
+	if (![aPair connect:self])
 	{
-		_pairCount--;
-		_pairs = realloc(_pairs, sizeof(id) * _pairCount);
+		_pairs_n--;
+		_pairs = realloc(_pairs, sizeof(id) * _pairs_n);
 		return NO;
 	}
 
 	return YES;
 }
 
-- (NSOperation *) prepareDirection: (TMDirection)direction
-             	      withPriority: (NSInteger)priority
+- (void) finishPreparation
 {
-	if (_isPreparing)
+	[__node finishPreparation];
+}
+
+- (void) finishPreparationDependency
+{
+	int i = 0;
+	while (i < _pairs_n)
 	{
-		NSLog(@"cyclic %@",self);
-		return NO;
+		[[_pairs[i] finishPreparation];
+		i++;
 	}
+}
 
-	_isPreparing = YES;
-
-	int i;
-	BOOL ret = NO;
-	for (i = 0; i < _pairCount; i++)
+/* for export port only */
+- (BOOL) addDependant: (NSOperation *)dependant
+		 info: (NSDictionary *)operationInfo
+{
+	NSOperation *exportOp = [__node operationForExportingToPort:self];
+	if (![[dependant dependencies] containsObject:exportOp])
 	{
-		ret |= [_pairs[i] prepareWithPriority:priority + _priority];
+		[dependant addDependency:exportOp
+			info:operationInfo];
+		return YES;
 	}
+	return NO;
+}
 
-	_isPreparing = NO;
 
-	return ret;
+/* set and assign */
+/* for import port only */
+- (void) setDependency: (NSOperation *)dependant
+		  info: (NSDictionary *)operationInfo
+{
+	int i = 0;
+	while (i < _pairs_n)
+	{
+		[[_pairs[i] addDependant:dependant info:operationInfo];
+		i++;
+	}
 }
 
 @end

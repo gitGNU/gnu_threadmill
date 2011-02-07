@@ -18,15 +18,11 @@
 
 #import <Foundation/Foundation.h>
 
-typedef enum _TMDirection
-{
-	TMBothDirection = 0,
-	TMForwardDirection = 1,
-	TMBackwardDirection = 2,
-} TMDirection;
+@class NSOperation;
 
 @interface TMNode : NSObject
 {
+	NSOperation *_centralOperation;
 }
 
 - (NSString *) name;
@@ -42,9 +38,11 @@ typedef enum _TMDirection
 		onNode:(TMNode *)aNode;
 
 + (id) nodeWithImports:(NSArray *)importList
-		exports:(NSArray *)exportList;
+	       exports:(NSArray *)exportList;
 
-- (void) run;
++ (void) setDependant: (NSOperation *)operation
+	     forNodes: (NSArray *)nodeList
+	         info: (NSDictionary *)operationInfo;
 @end
 
 @interface TMSimpleNode : TMNode

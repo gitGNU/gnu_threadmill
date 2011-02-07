@@ -22,6 +22,8 @@
 @interface TMPort (Internal)
 + (id) portForNode:(TMNode *)aNode;
 - (BOOL) connect:(TMPort *)aPair;
+- (void) finishPreparationDependency;
+- (void) finishPreparationNode;
 @end
 
 #endif

@@ -23,11 +23,11 @@
 
 @interface TMPort : NSObject
 {
+	NSUInteger _pairs_n;
+	id *_pairs;
 @public
 	TMNode *__node;
 	NSUInteger _priority;
-	NSUInteger _pairCount;
-	id *_pairs;
 	BOOL _isPreparing;
 }
 

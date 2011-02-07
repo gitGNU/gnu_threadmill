@@ -61,6 +61,24 @@
 	else return AUTORELEASE([[self alloc] initWithImports:importList exports:exportList]);
 }
 
++ (void) setDependant: (NSOperation *)operation
+	     forNodes: (NSArray *)nodeList
+	         info: (NSDictionary *)operationInfo
+{
+	NSEnumerator *en = [nodeList objectEnumerator];
+	TMNode *node;
+	while ((node = [en nextObject]))
+	{
+		[operation addDependency:[node operationForExportingToPort:nil] info:info];
+	}
+
+	en = [nodeList objectEnumerator];
+	while ((node = [en nextObject]))
+	{
+		[node finishPreparation];
+	}
+}
+
 - (NSString *) name
 {
 	return [NSString stringWithFormat:@"Simple Node (%x)", self];
@@ -94,48 +112,80 @@
 	return NO;
 }
 
+/*
 - (NSUInteger) priority
 {
 	[self subclassResponsibility: _cmd];
 	return 0;
 }
+*/
 
-/* data may already be stored or can be self generated */
-- (BOOL) needsImportFromPort:(TMPort *)importPort
+
+/* Remove all properties in preparation processes. */
+/* If operationForExportingToPort:info: is overridden,
+   make sure you override this to free all data used in preparation process */
+- (void) finishPreparation
 {
-	[self subclassResponsibility: _cmd];
-	return 0;
+	if (_centralOperation != nil)
+	{
+		DESTROY(_centralOperation);
+
+		TMPort *port;
+		NSEnumerator *en;
+
+		en = [[self importPorts] objectEnumerator];
+		while ((port = [en nextObject]))
+		{
+			[port finishPreparationDependency];
+		}
+	}
 }
 
-- (NSOperation *) prepareDirection: (TMDirection)direction
-	     withPriority: (NSInteger)priority
+/* Override this to implement subdependencies, eg. eA,eB depend on iA
+   and eC depends on iB or define an export that isn't depending on any import.
+   This method may be invoked more than once. To prevent cyclic dependencies
+   it must make sure each import call -setDependency: only once.
+
+   nodeA operationForExportingToPort:info: ->
+   for (nodeA->imports) import setDependency:info: ->
+      for (import->exports) export addDependant:info: ->
+        export->nodeN operationForExportingToPort:info: -> and so on
+
+   Note: a single port may be connected with more than one port,
+   All linked exports will be added as dependencies for each import. */
+
+- (NSOperation *) operationForExportingToPort: (TMPort *)aPort
+					 info: (NSDictionary *)operationInfo
 {
-	NSInteger majorPriority = [self priority];
-	NSEnumerator *en = [[self importPorts] objectEnumerator];
-	TMPort *import;
+	NSOperation *retOp = nil;
 
-	NSInvocationOperation *operation;
-	
-
-	while ((import = [en nextObject]))
+	if (_centralOperation == nil)
 	{
-		if (![import prepareDirection:direction
-				 withPriority:majorPriority + priority]) &&
-			[self needsImportFromPort:import]
+		_centralOperation = [[NSInvocationOperation alloc] init]; //FIXME
+		TMPort *port;
+		NSEnumerator *en;
+
+		en = [[self importPorts] objectEnumerator];
+		while ((port = [en nextObject]))
 		{
-			return NO;
+			[port setDependency:_centralOperation
+				       info:operationInfo];
 		}
 	}
 
-	return YES; /* node is fully prepared */
+	return _centralOperation;
 }
 
+
+
+/*
 - (void) receivedResult: (void *)result
 		 ofType: (NSString *)type
 	       fromPort: (TMPort *)importPort
 {
 	[self subclassResponsibility: _cmd];
 }
+*/
 
 @end
 
@@ -223,8 +273,8 @@
 }
 
 - (BOOL) setExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode
+	 forImport:(NSString *)importName
+	    onNode:(TMNode *)aNode
 {
 	TMPort *export = [_exports objectForKey:exportName];
 	TMPort *import = [aNode importForName:importName];
@@ -232,12 +282,12 @@
 }
 
 - (BOOL) removeExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode
+	    forImport:(NSString *)importName
+	       onNode:(TMNode *)aNode
 {
 	TMPort *export = [_exports objectForKey:exportName];
 	TMPort *import = [aNode importForName:importName];
-	return [export connect:import];
+	[export disconnect:import];
 }
 
 - (NSArray *) importPorts

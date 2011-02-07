@@ -29,12 +29,13 @@
 	   forName:(NSString *)aName;
 */
 
-//- (TMPortDirection) directionOfPort:(TMPort *)aPort;
-
 	/*
 - (void) addImport:(TMPort *)import;
 - (void) addExport:(TMPort *)export;
 */
+
+- (NSOperation *) operationForExportingToPort: (TMPort *)aPort
+					 info: (NSDictionary *)operationInfo
 
 - (NSString *) nameOfPort:(TMPort *)aPort;
 - (TMPort *) importForName:(NSString *)importName;
