@@ -13,9 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
-#import "TMPortInternal.h"
+#import "TMPort.h"
 
-@implementation TMPort (Internal)
+@implementation TMPort
 
 + (id) portForNode:(TMNode *)aNode
 {
@@ -115,9 +115,6 @@
 	}
 }
 
-@end
-
-@implementation TMPort
 - (id) initWithPriority:(NSInteger)priority
 {
 	[self init];

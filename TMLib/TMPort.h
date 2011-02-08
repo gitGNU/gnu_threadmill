@@ -32,6 +32,15 @@
 }
 
 - (NSString *) name;
++ (id) portForNode:(TMNode *)aNode;
+- (BOOL) connect:(TMPort *)aPair;
+- (void) disconnect:(TMPort *)aPair;
+- (void) finishPreparationDependency;
+- (void) finishPreparationNode;
+- (void) setDependency: (NSOperation *)dependant
+		  info: (NSDictionary *)operationInfo;
+- (BOOL) addDependant: (NSOperation *)dependant
+		 info: (NSDictionary *)operationInfo;
 @end
 
 #endif

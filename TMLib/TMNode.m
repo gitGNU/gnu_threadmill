@@ -13,8 +13,9 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#import <Foundation/NSOperation.h>
 #import "TMNodeInternal.h"
-#import "TMPortInternal.h"
+#import "TMPort.h"
 
 @implementation TMNode (Internal)
 
@@ -47,79 +48,6 @@
 	[self subclassResponsibility: _cmd];
 	return nil;
 }
-
-@end
-
-
-@implementation TMNode
-
-+ (id) nodeWithImports:(NSArray *)importList
-		exports:(NSArray *)exportList
-{
-	if ([self isMemberOfClass:[TMNode class]])
-		return AUTORELEASE([[TMSimpleNode alloc] initWithImports:importList exports:exportList]);
-	else return AUTORELEASE([[self alloc] initWithImports:importList exports:exportList]);
-}
-
-+ (void) setDependant: (NSOperation *)operation
-	     forNodes: (NSArray *)nodeList
-	         info: (NSDictionary *)operationInfo
-{
-	NSEnumerator *en = [nodeList objectEnumerator];
-	TMNode *node;
-	while ((node = [en nextObject]))
-	{
-		[operation addDependency:[node operationForExportingToPort:nil] info:info];
-	}
-
-	en = [nodeList objectEnumerator];
-	while ((node = [en nextObject]))
-	{
-		[node finishPreparation];
-	}
-}
-
-- (NSString *) name
-{
-	return [NSString stringWithFormat:@"Simple Node (%x)", self];
-}
-
-- (NSArray *) imports
-{
-	[self subclassResponsibility: _cmd];
-	return [NSArray array];
-}
-
-- (NSArray *) exports
-{
-	[self subclassResponsibility: _cmd];
-	return [NSArray array];
-}
-
-- (BOOL) setExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode
-{
-	[self subclassResponsibility: _cmd];
-	return NO;
-}
-
-- (BOOL) removeExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode
-{
-	[self subclassResponsibility: _cmd];
-	return NO;
-}
-
-/*
-- (NSUInteger) priority
-{
-	[self subclassResponsibility: _cmd];
-	return 0;
-}
-*/
-
 
 /* Remove all properties in preparation processes. */
 /* If operationForExportingToPort:info: is overridden,
@@ -175,6 +103,81 @@
 
 	return _centralOperation;
 }
+
+@end
+
+
+@implementation TMNode
+
++ (id) nodeWithImports:(NSArray *)importList
+		exports:(NSArray *)exportList
+{
+	if ([self isMemberOfClass:[TMNode class]])
+		return AUTORELEASE([[TMSimpleNode alloc] initWithImports:importList exports:exportList]);
+	else return AUTORELEASE([[self alloc] initWithImports:importList exports:exportList]);
+}
+
++ (void) setDependant: (NSOperation *)operation
+	     forNodes: (NSArray *)nodeList
+	         info: (NSDictionary *)operationInfo
+{
+	NSEnumerator *en = [nodeList objectEnumerator];
+	TMNode *node;
+	while ((node = [en nextObject]))
+	{
+		[operation addDependency:
+			[node operationForExportingToPort:nil
+						     info:operationInfo]];
+	}
+
+	en = [nodeList objectEnumerator];
+	while ((node = [en nextObject]))
+	{
+		[node finishPreparation];
+	}
+}
+
+- (NSString *) name
+{
+	return [NSString stringWithFormat:@"Simple Node (%x)", self];
+}
+
+- (NSArray *) imports
+{
+	[self subclassResponsibility: _cmd];
+	return [NSArray array];
+}
+
+- (NSArray *) exports
+{
+	[self subclassResponsibility: _cmd];
+	return [NSArray array];
+}
+
+- (BOOL) setExport:(NSString *)exportName
+		forImport:(NSString *)importName
+		onNode:(TMNode *)aNode
+{
+	[self subclassResponsibility: _cmd];
+	return NO;
+}
+
+- (BOOL) removeExport:(NSString *)exportName
+		forImport:(NSString *)importName
+		onNode:(TMNode *)aNode
+{
+	[self subclassResponsibility: _cmd];
+	return NO;
+}
+
+/*
+- (NSUInteger) priority
+{
+	[self subclassResponsibility: _cmd];
+	return 0;
+}
+*/
+
 
 
 

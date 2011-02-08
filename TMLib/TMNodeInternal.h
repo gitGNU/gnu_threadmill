@@ -35,7 +35,8 @@
 */
 
 - (NSOperation *) operationForExportingToPort: (TMPort *)aPort
-					 info: (NSDictionary *)operationInfo
+					 info: (NSDictionary *)operationInfo;
+- (void) finishPreparation;
 
 - (NSString *) nameOfPort:(TMPort *)aPort;
 - (TMPort *) importForName:(NSString *)importName;

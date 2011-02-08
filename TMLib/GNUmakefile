@@ -21,7 +21,6 @@ libTMill_HEADER_FILES= \
 			TMNode.h \
 			TMNodeInternal.h \
 			TMPort.h \
-			TMPortInternal.h \
 
 libTMill_OBJC_FILES=   \
 			externs.m \
