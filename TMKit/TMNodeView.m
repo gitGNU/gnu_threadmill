@@ -315,7 +315,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 */
 
 	id cell;
-	en = [[[_node imports] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
+	en = [[[_node allImports] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
 		cell = AUTORELEASE([[TMImportCell alloc] initWithPortName:aName]);
@@ -325,7 +325,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 	/* exports */
 
-	en = [[[_node exports] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
+	en = [[[_node allExports] sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] objectEnumerator];
 	while ((aName = [en nextObject]))
 	{
 		cell = AUTORELEASE([[TMExportCell alloc] initWithPortName:aName]);
@@ -747,7 +747,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 		portRect.origin.x = BORDER_SIZE - BORDER_LINE_SIZE;
 		portRect.origin.y = BORDER_SIZE - BORDER_LINE_SIZE*1.5;
 
-		NSEnumerator *en = [_portCells reverseObjectEnumerator];
+		//NSEnumerator *en = [_portCells reverseObjectEnumerator];
 
 		/* mouse down on handle - track sorting handle */
 		if ((mouseDownPoint.x - BORDER_SIZE < PORT_HANDLE_SIZE && [mouseDownPort isKindOfClass:[TMExportCell class]])
@@ -981,7 +981,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 {
 
 	NSPasteboard *pb = [sender draggingPasteboard];
-	NSDragOperation opMask = [sender draggingSourceOperationMask];
+//	NSDragOperation opMask = [sender draggingSourceOperationMask];
 	NSArray *types = [pb types];
 
 	TMPortCell *sourcePort = [sender draggingSource];
@@ -1016,14 +1016,14 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 }
 
-- (NSSet *) importNames
+- (NSArray *) allImports
 {
-	return [_node importNames];
+	return [_node allImports];
 }
 
-- (NSSet *) exportNames
+- (NSArray *) allExports
 {
-	return [_node exportNames];
+	return [_node allExports];
 }
 
 /*

@@ -14,6 +14,10 @@
 */
 
 #import "TMConnector.h"
+@interface TMConnector (Private)
+- (void) finishPreparation;
+- (NSOperation *) dependencyWithInfo: (NSDictionary *)operationInfo;
+@end
 
 @implementation TMConnector
 
@@ -77,12 +81,12 @@
 	[__node finishPreparation];
 }
 
-- (void) finishPreparationDependency
+- (void) finishDependencyPreparation
 {
 	int i = 0;
 	while (i < _pairs_n)
 	{
-		[[_pairs[i] finishPreparation];
+		[_pairs[i] finishPreparation];
 		i++;
 	}
 }
@@ -94,30 +98,31 @@
 
 /* set and assign */
 /* for import connector only */
-- (void) setDependency: (NSOperation *)dependant
-		  info: (NSDictionary *)operationInfo
+- (void) setDependant: (NSOperation *)dependant
+		 info: (NSDictionary *)operationInfo
 {
 	NSArray *dependencies = [dependant dependencies];
 	int i = 0;
 	while (i < _pairs_n)
 	{
 		NSOperation *exportOp = [_pairs[i] dependencyWithInfo:operationInfo];
-		if (![dependencies containsObject:exportOp])
+		if (exportOp != nil && ![dependencies containsObject:exportOp])
 		{
-			[dependant addDependency:exportOp
-				info:operationInfo];
+			[dependant addDependency:exportOp];
 			dependencies = [dependant dependencies];
 		}
 		i++;
 	}
 }
 
+/*
 - (id) initWithPriority:(NSInteger)priority
 {
 	[self init];
 	_priority = priority;
 	return self;
 }
+*/
 
 - (id) init
 {
@@ -130,15 +135,10 @@
 	[super dealloc];
 }
 
-- (NSUInteger) priority
-{
-	return _priority;
-}
-
-
 - (NSString *) description
 {
-	return [NSString sringWithFormat:@"%@ on %@ priority:%d", [self name], __node, _priority];
+	return [NSString stringWithFormat:@"%@ on %@", [self name], __node];
+//	return [NSString stringWithFormat:@"%@ on %@ priority:%d", [self name], __node, _priority];
 }
 
 - (NSString *) name

@@ -22,18 +22,21 @@
 
 @interface TMNode : NSObject
 {
-	NSOperation *_centralOperation;
+	BOOL _isPreparingDependencies;
+	NSOperation *_nodeOperation;
 }
 
 - (NSString *) name;
-- (NSArray *) imports;
-- (NSArray *) exports;
+
+/* array of name strings */
+- (NSArray *) allImports;
+- (NSArray *) allExports;
 
 - (BOOL) setExport:(NSString *)exportName
 		forImport:(NSString *)importName
 		onNode:(TMNode *)aNode;
 
-- (BOOL) removeExport:(NSString *)exportName
+- (void) removeExport:(NSString *)exportName
 		forImport:(NSString *)importName
 		onNode:(TMNode *)aNode;
 

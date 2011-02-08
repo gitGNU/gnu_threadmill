@@ -53,8 +53,8 @@
 - (void) drawDropShadow;
 
 /*
-- (NSSet *) importsName;
-- (NSSet *) exportsName;
+- (NSSet *) allImports;
+- (NSSet *) allExports;
 - (NSRect) frameForPortCellOfClass:(Class)class
 	withName:(NSString *)aName;
 	*/

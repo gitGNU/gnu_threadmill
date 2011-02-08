@@ -17,8 +17,9 @@
 #define _TMLib_Included_TMConnector_h
 
 #import <Foundation/Foundation.h>
+#import <TMLib/TMNodeInternal.h>
 
-@class TMAbstractNode;
+@class TMNode;
 @class TMPair;
 
 @interface TMConnector : NSObject
@@ -26,20 +27,16 @@
 	NSUInteger _pairs_n;
 	id *_pairs;
 @public
+/* @package to TMNode */
 	TMNode *__node;
-	NSUInteger _priority;
-	BOOL _isPreparing;
 }
 
 - (NSString *) name;
 + (id) connectorForNode:(TMNode *)aNode;
 - (BOOL) connect:(TMConnector *)aPair;
 - (void) disconnect:(TMConnector *)aPair;
-- (void) finishPreparationDependency;
-- (void) finishPreparationNode;
-- (void) setDependency: (NSOperation *)dependant
-		  info: (NSDictionary *)operationInfo;
-- (BOOL) addDependant: (NSOperation *)dependant
+- (void) finishDependencyPreparation;
+- (void) setDependant: (NSOperation *)dependant
 		 info: (NSDictionary *)operationInfo;
 @end
 

@@ -36,13 +36,15 @@
 
 - (NSOperation *) connectorDependency: (TMConnector *)aConnector
 				 info: (NSDictionary *)operationInfo;
+- (BOOL) isPreparingDependency: (TMConnector *)aConnector
+			  info: (NSDictionary *)operationInfo;
 - (void) finishPreparation;
 
-- (NSString *) nameOfPort:(TMPort *)aPort;
-- (TMPort *) importForName:(NSString *)importName;
-- (TMPort *) exportForName:(NSString *)exportName;
-- (NSArray *) importPorts; /* TMPort array */
-- (NSArray *) exportPorts; /* TMPort array */
+- (NSString *) nameOfConnector:(TMConnector *)aConnector;
+- (TMConnector *) connectorForImport:(NSString *)importName;
+- (TMConnector *) connectorForExport:(NSString *)exportName;
+- (NSArray *) allImportConnectors; /* TMConnector array */
+- (NSArray *) allExportConnectors; /* TMConnector array */
 @end
 
 #endif

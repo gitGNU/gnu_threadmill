@@ -17,6 +17,7 @@
 #define _TMKit_Included_TMView_h
 
 #import <AppKit/AppKit.h>
+#import <Threadmill/TMNodeView.h>
 
 @class TMNode;
 @class TMNodeView;

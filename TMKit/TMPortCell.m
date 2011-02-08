@@ -331,9 +331,9 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 		DPSlineto(ctxt, 0, NSHeight(cf));
 
 		int pCount = _pairCells != nil?[_pairCells count]:0;
-		CGFloat downHigh;
-		CGFloat xOnArc;
-		CGFloat angleOfX;
+		CGFloat downHigh = 0;
+		CGFloat xOnArc = 0;
+		CGFloat angleOfX = 0;
 
 		if (_connectorsAreExpanded && pCount > 1)
 		{

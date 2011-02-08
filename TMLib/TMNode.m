@@ -15,64 +15,67 @@
 
 #import <Foundation/NSOperation.h>
 #import "TMNodeInternal.h"
-#import "TMPort.h"
+#import "TMConnector.h"
 
 @implementation TMNode (Internal)
 
-- (NSString *) nameOfPort:(TMPort *)aPort
+- (NSString *) nameOfConnector:(TMConnector *)aConnector
 {
 	[self subclassResponsibility: _cmd];
 	return nil;
 }
 
-- (TMPort *) importForName:(NSString *)importName
+- (TMConnector *) connectorForImport:(NSString *)importName
 {
 	[self subclassResponsibility: _cmd];
 	return nil;
 }
 
-- (TMPort *) exportForName:(NSString *)exportName
+- (TMConnector *) connectorForExport:(NSString *)exportName
 {
 	[self subclassResponsibility: _cmd];
 	return nil;
 }
 
-- (NSArray *) importPorts
+- (NSArray *) allImportConnectors
 {
 	[self subclassResponsibility: _cmd];
 	return nil;
 }
 
-- (NSArray *) exportPorts
+- (NSArray *) allExportConnectors
 {
 	[self subclassResponsibility: _cmd];
 	return nil;
 }
 
 /* Remove all properties in preparation processes. */
-/* If operationForExportingToPort:info: is overridden,
+/* If connectorDependency:info: is overridden,
    make sure you override this to free all data used in preparation process */
 - (void) finishPreparation
 {
-	if (_centralOperation != nil)
+	if (_nodeOperation != nil)
 	{
-		DESTROY(_centralOperation);
+		DESTROY(_nodeOperation);
 
-		TMPort *port;
+		TMConnector *iconn;
 		NSEnumerator *en;
 
-		en = [[self importPorts] objectEnumerator];
-		while ((port = [en nextObject]))
+		en = [[self allImportConnectors] objectEnumerator];
+		while ((iconn = [en nextObject]))
 		{
-			[port finishPreparationDependency];
+			[iconn finishDependencyPreparation];
 		}
 	}
 }
 
-/* Override this to implement subdependencies, eg. eA,eB depend on iA
-   and eC depends on iB or define an export that isn't depending on any import.
-   This method may be invoked more than once. To prevent cyclic dependencies
-   it must make sure each import call -setDependency: only once.
+/* Override connectorDependency:info: and isPreparingDependency:info:
+   to implement subdependencies, eg. eA,eB depend on iA and eC depends on iB
+   or define an export that isn't depending on any import.
+
+   This method may be invoked more than once. To prevent cyclic dependencies,
+   it makes sure that the method won't be invoked while fetching dependencies
+   using -isPreparingDependencies:info:.
 
    nodeA connectorDependency:info: ->
    for (nodeA->imports) import setDependant:info: ->
@@ -85,24 +88,38 @@
 - (NSOperation *) connectorDependency: (TMConnector *)aConnector
 				 info: (NSDictionary *)operationInfo
 {
-	NSOperation *retOp = nil;
-
-	if (_centralOperation == nil)
+	if (_nodeOperation == nil)
 	{
-		_centralOperation = [[NSInvocationOperation alloc] init]; //FIXME
+		_isPreparingDependencies = YES;
+
+		_nodeOperation = [[NSOperation alloc] init]; //FIXME
 		TMConnector *conn;
 		NSEnumerator *en;
 
-		en = [[self importConnectors] objectEnumerator];
+		en = [[self allImportConnectors] objectEnumerator];
 		while ((conn = [en nextObject]))
 		{
-			[conn setDependant:_centralOperation
-				      info:operationInfo];
+			[conn setDependant:_nodeOperation
+				info:operationInfo];
 		}
+
+		_isPreparingDependencies = NO;
 	}
 
-	return _centralOperation;
+	if ([self isPreparingDependency:aConnector info:operationInfo])
+	{
+		return nil;
+	}
+
+	return _nodeOperation;
 }
+
+- (BOOL) isPreparingDependency: (TMConnector *)aConnector
+			  info: (NSDictionary *)operationInfo
+{
+	return _isPreparingDependencies;
+}
+
 
 @end
 
@@ -125,9 +142,9 @@
 	TMNode *node;
 	while ((node = [en nextObject]))
 	{
-		[operation addDependency:
-			[node operationForExportingToPort:nil
-						     info:operationInfo]];
+		NSOperation *nodeOp = [node connectorDependency:nil info:operationInfo];
+
+		if (nodeOp != nil) [operation addDependency:nodeOp];
 	}
 
 	en = [nodeList objectEnumerator];
@@ -142,13 +159,13 @@
 	return [NSString stringWithFormat:@"Simple Node (%x)", self];
 }
 
-- (NSArray *) imports
+- (NSArray *) allImports
 {
 	[self subclassResponsibility: _cmd];
 	return [NSArray array];
 }
 
-- (NSArray *) exports
+- (NSArray *) allExports
 {
 	[self subclassResponsibility: _cmd];
 	return [NSArray array];
@@ -162,12 +179,11 @@
 	return NO;
 }
 
-- (BOOL) removeExport:(NSString *)exportName
+- (void) removeExport:(NSString *)exportName
 		forImport:(NSString *)importName
 		onNode:(TMNode *)aNode
 {
 	[self subclassResponsibility: _cmd];
-	return NO;
 }
 
 /*
@@ -181,7 +197,7 @@
 /*
 - (void) receivedResult: (void *)result
 		 ofType: (NSString *)type
-	       fromPort: (TMPort *)importPort
+	       fromPort: (TMConnector *)importPort
 {
 	[self subclassResponsibility: _cmd];
 }
@@ -223,6 +239,7 @@
 
 - (void) dealloc
 {
+	DESTROY(_nodeOperation);
 	DESTROY(_imports);
 	DESTROY(_exports);
 
@@ -231,43 +248,43 @@
 
 - (BOOL) createImportWithName:(NSString *)importName
 {
-	[_imports setObject:[TMPort portForNode:self]
-		forKey:importName];
+	[_imports setObject:[TMConnector connectorForNode:self]
+		     forKey:importName];
 	return YES;
 }
 
 - (BOOL) createExportWithName:(NSString *)exportName
 {
-	[_exports setObject:[TMPort portForNode:self]
-		forKey:exportName];
+	[_exports setObject:[TMConnector connectorForNode:self]
+		     forKey:exportName];
 	return YES;
 }
 
-- (NSString *) nameOfPort:(TMPort *)aPort
+- (NSString *) nameOfConnector:(TMConnector *)aConnector
 {
 	NSString *ret = nil;
-	ret = [[_imports allKeysForObject:aPort] lastObject];
+	ret = [[_imports allKeysForObject:aConnector] lastObject];
 	if (ret == nil)
-		ret = [[_exports allKeysForObject:aPort] lastObject];
+		ret = [[_exports allKeysForObject:aConnector] lastObject];
 	return ret;
 }
 
-- (TMPort *) importForName:(NSString *)importName
+- (TMConnector *) importConnector:(NSString *)importName
 {
 	return [_imports objectForKey:importName];
 }
 
-- (TMPort *) exportForName:(NSString *)exportName
+- (TMConnector *) exportConnector:(NSString *)exportName
 {
 	return [_exports objectForKey:exportName];
 }
 
-- (NSArray *) imports
+- (NSArray *) allImports
 {
 	return [_imports allKeys];
 }
 
-- (NSArray *) exports
+- (NSArray *) allExports
 {
 	return [_exports allKeys];
 }
@@ -276,26 +293,26 @@
 	 forImport:(NSString *)importName
 	    onNode:(TMNode *)aNode
 {
-	TMPort *export = [_exports objectForKey:exportName];
-	TMPort *import = [aNode importForName:importName];
+	TMConnector *export = [_exports objectForKey:exportName];
+	TMConnector *import = [aNode connectorForImport:importName];
 	return [export connect:import];
 }
 
-- (BOOL) removeExport:(NSString *)exportName
+- (void) removeExport:(NSString *)exportName
 	    forImport:(NSString *)importName
 	       onNode:(TMNode *)aNode
 {
-	TMPort *export = [_exports objectForKey:exportName];
-	TMPort *import = [aNode importForName:importName];
+	TMConnector *export = [_exports objectForKey:exportName];
+	TMConnector *import = [aNode connectorForImport:importName];
 	[export disconnect:import];
 }
 
-- (NSArray *) importPorts
+- (NSArray *) allImportConnectors
 {
 	return [_imports allValues];
 }
 
-- (NSArray *) exportPorts
+- (NSArray *) allExportConnectors
 {
 	return [_exports allValues];
 }

@@ -20,12 +20,12 @@ libTMill_LIBRARIES_DEPEND_UPON += -l$(FOUNDATION_LIBRARY_NAME)
 libTMill_HEADER_FILES= \
 			TMNode.h \
 			TMNodeInternal.h \
-			TMPort.h \
+			TMConnector.h \
 
 libTMill_OBJC_FILES=   \
 			externs.m \
 			TMNode.m \
-			TMPort.m \
+			TMConnector.m \
 
 HEADERS_INSTALL = $(libTMill_HEADER_FILES)
 
