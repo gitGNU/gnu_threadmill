@@ -18,24 +18,24 @@
 
 #import <Threadmill/TMNode.h>
 
-@class TMPort;
+@class TMConnector;
 
 @interface TMNode (Internal)
 
 /*
-- (void) setImport:(TMPort *)aPort
-	   forName:(NSString *)aName;
-- (void) setExport:(TMPort *)aPort
-	   forName:(NSString *)aName;
+- (void) setImportConnector:(TMConnector *)aConnector
+	      	    forName:(NSString *)aName;
+- (void) setExportConnector:(TMConnector *)aConnector
+	   	    forName:(NSString *)aName;
 */
 
 	/*
-- (void) addImport:(TMPort *)import;
-- (void) addExport:(TMPort *)export;
+- (void) addImportConnector:(TMConnector *)aConnector;
+- (void) addExportConnector:(TMConnector *)aConnector;
 */
 
-- (NSOperation *) operationForExportingToPort: (TMPort *)aPort
-					 info: (NSDictionary *)operationInfo;
+- (NSOperation *) connectorDependency: (TMConnector *)aConnector
+				 info: (NSDictionary *)operationInfo;
 - (void) finishPreparation;
 
 - (NSString *) nameOfPort:(TMPort *)aPort;

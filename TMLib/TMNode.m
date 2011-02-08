@@ -74,30 +74,30 @@
    This method may be invoked more than once. To prevent cyclic dependencies
    it must make sure each import call -setDependency: only once.
 
-   nodeA operationForExportingToPort:info: ->
-   for (nodeA->imports) import setDependency:info: ->
-      for (import->exports) export addDependant:info: ->
-        export->nodeN operationForExportingToPort:info: -> and so on
+   nodeA connectorDependency:info: ->
+   for (nodeA->imports) import setDependant:info: ->
+      for (import->exports) export depencyWithInfo: ->
+        export->nodeN connectorDependency:info: -> and so on
 
    Note: a single port may be connected with more than one port,
    All linked exports will be added as dependencies for each import. */
 
-- (NSOperation *) operationForExportingToPort: (TMPort *)aPort
-					 info: (NSDictionary *)operationInfo
+- (NSOperation *) connectorDependency: (TMConnector *)aConnector
+				 info: (NSDictionary *)operationInfo
 {
 	NSOperation *retOp = nil;
 
 	if (_centralOperation == nil)
 	{
 		_centralOperation = [[NSInvocationOperation alloc] init]; //FIXME
-		TMPort *port;
+		TMConnector *conn;
 		NSEnumerator *en;
 
-		en = [[self importPorts] objectEnumerator];
-		while ((port = [en nextObject]))
+		en = [[self importConnectors] objectEnumerator];
+		while ((conn = [en nextObject]))
 		{
-			[port setDependency:_centralOperation
-				       info:operationInfo];
+			[conn setDependant:_centralOperation
+				      info:operationInfo];
 		}
 	}
 
@@ -110,7 +110,7 @@
 @implementation TMNode
 
 + (id) nodeWithImports:(NSArray *)importList
-		exports:(NSArray *)exportList
+	       exports:(NSArray *)exportList
 {
 	if ([self isMemberOfClass:[TMNode class]])
 		return AUTORELEASE([[TMSimpleNode alloc] initWithImports:importList exports:exportList]);
@@ -178,9 +178,6 @@
 }
 */
 
-
-
-
 /*
 - (void) receivedResult: (void *)result
 		 ofType: (NSString *)type
@@ -202,7 +199,7 @@
 }
 
 - (id) initWithImports:(NSArray *)importList
-		exports:(NSArray *)exportList
+	       exports:(NSArray *)exportList
 {
 	[self init];
 
