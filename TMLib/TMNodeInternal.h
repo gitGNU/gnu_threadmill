@@ -34,8 +34,6 @@
 - (NSArray *) allImportConnectors; /* TMConnector array */
 - (NSArray *) allExportConnectors; /* TMConnector array */
 
-- (void) setDelegate: (id <TMNodeDelegate>)newDelegate;
-- (id <TMNodeDelegate>) delegate;
 @end
 
 #endif
