@@ -25,7 +25,7 @@
 @interface TMConnector : NSObject
 {
 	NSUInteger _pairs_n;
-	id *_pairs;
+	TMConnector **_pairs;
 @public
 /* @package to TMNode */
 	TMNode *__node;

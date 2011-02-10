@@ -22,22 +22,10 @@
 
 @interface TMNode (Internal)
 
-/*
-- (void) setImportConnector:(TMConnector *)aConnector
-	      	    forName:(NSString *)aName;
-- (void) setExportConnector:(TMConnector *)aConnector
-	   	    forName:(NSString *)aName;
-*/
-
-	/*
-- (void) addImportConnector:(TMConnector *)aConnector;
-- (void) addExportConnector:(TMConnector *)aConnector;
-*/
-
-- (NSOperation *) connectorDependency: (TMConnector *)aConnector
-				 info: (NSDictionary *)operationInfo;
 - (BOOL) isPreparingDependency: (TMConnector *)aConnector
 			  info: (NSDictionary *)operationInfo;
+- (NSOperation *) connectorDependency: (TMConnector *)aConnector
+				 info: (NSDictionary *)operationInfo;
 - (void) finishPreparation;
 
 - (NSString *) nameOfConnector:(TMConnector *)aConnector;
@@ -45,6 +33,9 @@
 - (TMConnector *) connectorForExport:(NSString *)exportName;
 - (NSArray *) allImportConnectors; /* TMConnector array */
 - (NSArray *) allExportConnectors; /* TMConnector array */
+
+- (void) setDelegate: (id <TMNodeDelegate>)newDelegate;
+- (id <TMNodeDelegate>) delegate;
 @end
 
 #endif

@@ -42,6 +42,7 @@
 @interface Threadmill : NSApplication
 {
 	TMView *_mainView;
+	NSMutableArray *_buttonList;
 }
 - (void) addTestNode:(id)sender;
 @end
@@ -51,6 +52,8 @@
 @implementation Threadmill
 - (void) addTestNode:(id)sender
 {
+	if (_buttonList == nil) _buttonList = [NSMutableArray new];
+
 	TMNode *newNode;
 	if ([sender tag] == 1)
 	{
@@ -65,7 +68,20 @@
 					@"test \noh yeh\n my export 3",
 					nil]];
 	}
-	else
+	else if ([sender tag] == 2)
+	{
+		newNode  = [TMNode nodeWithImports:[NSArray arrayWithObjects:
+					@"test import 1",
+					@"TEST \n   import 2",
+					@"test import 3",
+					nil]
+				exports:[NSArray arrayWithObjects:
+					@"test export 1",
+					@"test export 2",
+					@"test \noh yeh\n my export 3",
+					nil]];
+	}
+	else if ([sender tag] == 3)
 	{
 		newNode  = [TMNode nodeWithImports:[NSArray arrayWithObjects:
 					@"test import 1",
@@ -81,6 +97,7 @@
 
 	TMNodeView *newNodeView = [_mainView addNode:newNode];
 
+/*
 	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36*RR green:0.54*RR blue:0.66*RR alpha:1.0]
 		forExport:@"test export 1"];
 	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.55*RR green:0.71*RR blue:0.00*RR alpha:1.0]
@@ -91,8 +108,11 @@
 
 	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.71*RR green:0.26*RR blue:0.66*RR alpha:1.0]
 		forImport:@"test import 1"];
+	[newNodeView setBackgroundColor:[NSColor lightGrayColor]
+		forImport:@"TEST \n   import 2"];
 	[newNodeView setBackgroundColor:[NSColor colorWithDeviceRed:0.36*RR green:0.26*RR blue:0.71*RR alpha:1.0]
 		forImport:@"test import 3"];
+*/
 
 	static CGFloat size = 60;
 	if ([sender tag] == 1)
@@ -103,7 +123,7 @@
 		[control setAction:@selector(setDate:)];
 		[newNodeView setContentView:control];
 	}
-	else
+	else if ([sender tag] == 2)
 	{
 		size /= 1.5;
 		NSImageView *imageView = AUTORELEASE([[NSImageView alloc] initWithFrame:NSMakeRect(0, 0, size, size)]);
@@ -111,6 +131,18 @@
 		[imageView setImageScaling:NSScaleToFit];
 		[newNodeView setContentView:imageView];
 	}
+	else if ([sender tag] == 3)
+	{
+		NSButton *button = AUTORELEASE([[NSButton alloc] initWithFrame:NSMakeRect(0,0,size * 2,size)]);
+		[button setImage:[NSImage imageNamed:@"Threadmill.tiff"]];
+		[button setTarget:newNodeView];
+		[button setAction:@selector(queue:)];
+
+		[newNodeView setContentView:button];
+
+		[_buttonList addObject:newNodeView];
+	}
 	if (size < 60) size = 60;
 }
+
 @end

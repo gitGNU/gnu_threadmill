@@ -34,10 +34,10 @@
 	
 //	NSView *_cellContent;
 }
-- (id) initWithPortName:(NSString *)aName;
-- (id) initWithTitle:(NSString *)aTitle
-	portName:(NSString *)portName;
-- (NSString *) portName;
+- (id) initWithName:(NSString *)aName;
+- (id) initWithName:(NSString *)aTitle
+	description:(NSString *)portName;
+- (NSString *) name;
 
 - (void) expandConnectors:(BOOL)shouldExpand;
 - (BOOL) connectorsAreExpanded;

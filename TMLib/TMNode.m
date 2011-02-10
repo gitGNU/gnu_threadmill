@@ -70,8 +70,8 @@
 }
 
 /* Override connectorDependency:info: and isPreparingDependency:info:
-   to implement subdependencies, eg. eA,eB depend on iA and eC depends on iB
-   or define an export that isn't depending on any import.
+   or use the delegate to implement subdependencies, eg. eA,eB depend
+   on iA and eC depends on iB or define an export that isn't depending on any import.
 
    This method may be invoked more than once. To prevent cyclic dependencies,
    it makes sure that the method won't be invoked while fetching dependencies
@@ -126,8 +126,8 @@
 
 @implementation TMNode
 
-+ (id) nodeWithImports:(NSArray *)importList
-	       exports:(NSArray *)exportList
++ (id) nodeWithImports: (NSArray *)importList
+	       exports: (NSArray *)exportList
 {
 	if ([self isMemberOfClass:[TMNode class]])
 		return AUTORELEASE([[TMSimpleNode alloc] initWithImports:importList exports:exportList]);
@@ -171,17 +171,17 @@
 	return [NSArray array];
 }
 
-- (BOOL) setExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode
+- (BOOL) setExport: (NSString *)exportName
+	 forImport: (NSString *)importName
+	    onNode: (TMNode *)aNode
 {
 	[self subclassResponsibility: _cmd];
 	return NO;
 }
 
-- (void) removeExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode
+- (void) removeExport: (NSString *)exportName
+	    forImport: (NSString *)importName
+	       onNode: (TMNode *)aNode
 {
 	[self subclassResponsibility: _cmd];
 }
@@ -269,12 +269,12 @@
 	return ret;
 }
 
-- (TMConnector *) importConnector:(NSString *)importName
+- (TMConnector *) connectorForImport:(NSString *)importName
 {
 	return [_imports objectForKey:importName];
 }
 
-- (TMConnector *) exportConnector:(NSString *)exportName
+- (TMConnector *) connectorForExport:(NSString *)exportName
 {
 	return [_exports objectForKey:exportName];
 }
@@ -293,8 +293,8 @@
 	 forImport:(NSString *)importName
 	    onNode:(TMNode *)aNode
 {
-	TMConnector *export = [_exports objectForKey:exportName];
 	TMConnector *import = [aNode connectorForImport:importName];
+	TMConnector *export = [_exports objectForKey:exportName];
 	return [export connect:import];
 }
 

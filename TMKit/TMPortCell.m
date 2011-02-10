@@ -87,24 +87,25 @@ NSImage *__background_pattern;
 
 @implementation TMPortCell
 
-- (id) initWithPortName:(NSString *)aName
+- (id) initWithName:(NSString *)aName
 {
-	return [self initWithTitle:aName portName:aName];
+	return [self initWithName:aName description:aName];
 }
 
-- (id) initWithTitle:(NSString *)aTitle
-	portName:(NSString *)portName
+- (id) initWithName:(NSString *)aName
+	description:(NSString *)description
 {
-	ASSIGN(_portName, portName);
-	[self initTextCell:aTitle];
+	ASSIGN(_portName, aName);
+	[self initTextCell:description];
 	[self setAlignment:NSCenterTextAlignment];
 	[self setHighlightColor:[NSColor whiteColor]];
+	[self setBackgroundColor:[NSColor lightGrayColor]];
 
 	_pairCells = [NSMutableArray new];
 	return self;
 }
 
-- (NSString *) portName
+- (NSString *) name
 {
 	return _portName;
 }

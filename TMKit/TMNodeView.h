@@ -46,7 +46,9 @@
 }
 
 - (id) initWithNode:(TMNode *)aNode;
+- (TMNode *) node;
 - (void) setContentView:(NSView *)aView;
+- (NSView *) contentView;
 - (void) toggleContent:(id)sender;
 
 //FIXME 

@@ -137,8 +137,7 @@
 
 - (NSString *) description
 {
-	return [NSString stringWithFormat:@"%@ on %@", [self name], __node];
-//	return [NSString stringWithFormat:@"%@ on %@ priority:%d", [self name], __node, _priority];
+	return [self name];
 }
 
 - (NSString *) name

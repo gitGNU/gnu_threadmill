@@ -32,16 +32,16 @@
 - (NSArray *) allImports;
 - (NSArray *) allExports;
 
-- (BOOL) setExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode;
+- (BOOL) setExport: (NSString *)exportName
+	 forImport: (NSString *)importName
+	    onNode: (TMNode *)aNode;
 
-- (void) removeExport:(NSString *)exportName
-		forImport:(NSString *)importName
-		onNode:(TMNode *)aNode;
+- (void) removeExport: (NSString *)exportName
+	    forImport: (NSString *)importName
+	       onNode: (TMNode *)aNode;
 
-+ (id) nodeWithImports:(NSArray *)importList
-	       exports:(NSArray *)exportList;
++ (id) nodeWithImports: (NSArray *)importList
+	       exports: (NSArray *)exportList;
 
 + (void) setDependant: (NSOperation *)operation
 	     forNodes: (NSArray *)nodeList
@@ -54,10 +54,10 @@
 	NSMutableDictionary *_exports;
 }
 
-- (BOOL) createImportWithName:(NSString *)importName;
-- (BOOL) createExportWithName:(NSString *)exportName;
-- (id) initWithImports:(NSArray *)importList
-		exports:(NSArray *)exportList;
+- (BOOL) createImportWithName: (NSString *)importName;
+- (BOOL) createExportWithName: (NSString *)exportName;
+- (id) initWithImports: (NSArray *)importList
+	       exports: (NSArray *)exportList;
 @end
 
 #endif
