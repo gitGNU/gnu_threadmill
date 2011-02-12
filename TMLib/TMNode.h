@@ -20,10 +20,42 @@
 
 @class NSOperation;
 
+typedef enum _TMConnectingType
+{
+	TMConnectingTypeSetExport,
+	TMConnectingTypeRemoveExport,
+} TMConnectingType;
+
+/* This is mainly used for "try" as it helps querying
+   the set result before the actually setting, this help
+   the UI to display the result before setting */
+
+@class TMNode;
+
+@interface TMConnecting : NSObject
+{
+	@public
+	TMNode *exporter;
+	NSString *export;
+	TMConnectingType type;
+	TMNode *importer;
+	NSString *import;
+}
++ (id) connectingWithExporter: (TMNode *)exporter
+		       export: (NSString *)export
+		     importer: (TMNode *)importer
+		       import: (NSString *)import
+		         type: (TMConnectingType)type;
+@end
+
+@protocol TMNodeDelegate
+@end
+
 @interface TMNode : NSObject
 {
 	BOOL _isPreparingDependencies;
 	NSOperation *_nodeOperation;
+	id <TMNodeDelegate> _delegate;
 }
 
 - (NSString *) name;
@@ -32,13 +64,18 @@
 - (NSArray *) allImports;
 - (NSArray *) allExports;
 
-- (BOOL) setExport: (NSString *)exportName
-	 forImport: (NSString *)importName
-	    onNode: (TMNode *)aNode;
+- (void) setDelegate;
+- (id <TMNodeDelegate>) delegate;
 
-- (void) removeExport: (NSString *)exportName
-	    forImport: (NSString *)importName
-	       onNode: (TMNode *)aNode;
+- (NSArray *) setExport: (NSString *)exportName
+	      forImport: (NSString *)importName
+	         onNode: (TMNode *)aNode
+	            try: (BOOL)try;
+
+- (NSArray *) removeExport: (NSString *)exportName
+		 forImport: (NSString *)importName
+		    onNode: (TMNode *)aNode
+		       try: (BOOL)try;
 
 + (id) nodeWithImports: (NSArray *)importList
 	       exports: (NSArray *)exportList;

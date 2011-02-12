@@ -1005,13 +1005,15 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	{
 		[_node setExport:[targetPort name]
 			forImport:[pb stringForType:TMPasteboardTypeImportLink]
-			onNode:sourceView->_node];
+			onNode:sourceView->_node
+			try:NO];
 	}
 	else if ([types containsObject:TMPasteboardTypeExportLink])
 	{
 		[sourceView->_node setExport:[pb stringForType:TMPasteboardTypeExportLink]
 			forImport:[targetPort name]
-			onNode:_node];
+			onNode:_node
+			try:NO];
 	}
 
 	[sourcePort addConnection:targetPort];

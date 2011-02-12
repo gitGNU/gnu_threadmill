@@ -17,6 +17,27 @@
 #import "TMNodeInternal.h"
 #import "TMConnector.h"
 
+@implementation TMConnecting
++ (id) connectingWithExporter: (TMNode *)exporter
+		       export: (NSString *)export
+		     importer: (TMNode *)importer
+		       import: (NSString *)import
+		         type: (TMConnectingType)type
+{
+	TMConnecting *ret = NSAllocateObject (self, 0, NSDefaultMallocZone());
+	[ret autorelease];
+
+	ret->exporter = exporter;
+	ret->importer = importer;
+	ret->export = export;
+	ret->import = import;
+	ret->type = type;
+
+	return ret;
+}
+
+@end
+
 @implementation TMNode (Internal)
 
 - (NSString *) nameOfConnector:(TMConnector *)aConnector
@@ -171,17 +192,29 @@
 	return [NSArray array];
 }
 
-- (BOOL) setExport: (NSString *)exportName
-	 forImport: (NSString *)importName
-	    onNode: (TMNode *)aNode
+- (void) setDelegate: (id <TMNodeDelegate>)delegate
 {
-	[self subclassResponsibility: _cmd];
-	return NO;
+	ASSIGN(_delegate, delegate);
 }
 
-- (void) removeExport: (NSString *)exportName
-	    forImport: (NSString *)importName
-	       onNode: (TMNode *)aNode
+- (id <TMNodeDelegate>) delegate
+{
+	return _delegate;
+}
+
+- (NSArray *) setExport: (NSString *)exportName
+	      forImport: (NSString *)importName
+	         onNode: (TMNode *)aNode
+	            try: (BOOL)try
+{
+	[self subclassResponsibility: _cmd];
+	return [NSArray array];
+}
+
+- (NSArray *) removeExport: (NSString *)exportName
+		 forImport: (NSString *)importName
+		    onNode: (TMNode *)aNode
+		       try: (BOOL)try
 {
 	[self subclassResponsibility: _cmd];
 }
@@ -239,6 +272,7 @@
 
 - (void) dealloc
 {
+	DESTROY(_delegate);
 	DESTROY(_nodeOperation);
 	DESTROY(_imports);
 	DESTROY(_exports);
@@ -289,22 +323,57 @@
 	return [_exports allKeys];
 }
 
-- (BOOL) setExport:(NSString *)exportName
-	 forImport:(NSString *)importName
-	    onNode:(TMNode *)aNode
+- (NSArray *) setExport: (NSString *)exportName
+	      forImport: (NSString *)importName
+	         onNode: (TMNode *)aNode
+	            try: (BOOL)try
 {
+
+	if (try)
+	{
+		return [NSArray arrayWithObject:[TMConnecting connectingWithExporter:self
+                                                			      export:exportName
+                                                			    importer:aNode
+                                                			      import:importName
+                                                			        type:TMConnectingTypeSetExport]];
+	}
+
 	TMConnector *import = [aNode connectorForImport:importName];
 	TMConnector *export = [_exports objectForKey:exportName];
-	return [export connect:import];
+	if ([export connect:import])
+	{
+		return [NSArray arrayWithObject:[TMConnecting connectingWithExporter:self
+                                                			      export:exportName
+                                                			    importer:aNode
+                                                			      import:importName
+                                                			        type:TMConnectingTypeSetExport]];
+	}
+	else return [NSArray array];
 }
 
-- (void) removeExport:(NSString *)exportName
-	    forImport:(NSString *)importName
-	       onNode:(TMNode *)aNode
+- (NSArray *) removeExport: (NSString *)exportName
+		 forImport: (NSString *)importName
+		    onNode: (TMNode *)aNode
+		       try: (BOOL)try
 {
+	if (try)
+	{
+		return [NSArray arrayWithObject:[TMConnecting connectingWithExporter:self
+                                                			      export:exportName
+                                                			    importer:aNode
+                                                			      import:importName
+                                                			        type:TMConnectingTypeRemoveExport]];
+	}
+
 	TMConnector *export = [_exports objectForKey:exportName];
 	TMConnector *import = [aNode connectorForImport:importName];
 	[export disconnect:import];
+
+	return [NSArray arrayWithObject:[TMConnecting connectingWithExporter:self
+								      export:exportName
+								    importer:aNode
+								      import:importName
+									type:TMConnectingTypeRemoveExport]];
 }
 
 - (NSArray *) allImportConnectors
