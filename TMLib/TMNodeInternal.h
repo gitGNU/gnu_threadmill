@@ -22,9 +22,7 @@
 
 @interface TMNode (Internal)
 
-- (BOOL) isPreparingDependency: (TMConnector *)aConnector
-			  info: (NSDictionary *)operationInfo;
-- (NSOperation *) connectorDependency: (TMConnector *)aConnector
+- (NSOperation *) connectorDependency: (TMConnector *)exportConnector
 				 info: (NSDictionary *)operationInfo;
 - (void) finishPreparation;
 

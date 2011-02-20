@@ -32,6 +32,10 @@ typedef enum _TMConnectingType
 
 @class TMNode;
 
+/* Connecting objects are used to determine the result of connecting process,
+   eg. if the setting did remove existing connections and also help the UI to
+   display the result of connection before the actual connection (ie. using try: flag).
+*/
 @interface TMConnecting : NSObject
 {
 	@public
@@ -53,8 +57,8 @@ typedef enum _TMConnectingType
 
 @interface TMNode : NSObject
 {
-	BOOL _isPreparingDependencies;
-	NSOperation *_nodeOperation;
+	NSMutableArray *_preparingOps;
+	NSMutableDictionary *_opInfos;
 }
 
 - (NSString *) name;
@@ -63,6 +67,7 @@ typedef enum _TMConnectingType
 - (NSArray *) allImports;
 - (NSArray *) allExports;
 
+/* return series of TMConnecting */
 - (NSArray *) setExport: (NSString *)exportName
 	      forImport: (NSString *)importName
 	         onNode: (TMNode *)aNode

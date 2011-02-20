@@ -38,7 +38,18 @@
 
 @end
 
+static NSMutableDictionary *tmDefaultOpInfo = nil;
+
 @implementation TMNode (Internal)
++ (void) initialize
+{
+	if (self == [TMNode class])
+	{
+		tmDefaultOpInfo = [NSMutableDictionary dictionary];
+		[tmDefaultOpInfo retain];
+	}
+}
+
 
 - (NSString *) nameOfConnector:(TMConnector *)aConnector
 {
@@ -70,6 +81,7 @@
 	return nil;
 }
 
+#if 0
 /* Remove all properties in preparation processes. */
 /* If connectorDependency:info: is overridden,
    make sure you override this to free all data used in preparation process */
@@ -89,14 +101,13 @@
 		}
 	}
 }
+#endif
 
-/* Override connectorDependency:info: and isPreparingDependency:info:
-   or subclass to implement subdependencies, eg. eA,eB depend on iA
+/* Override connectorDependency:info: to implement subdependencies, eg. eA,eB depend on iA
    and eC depends on iB or define an export that isn't depending on any import.
 
    This method may be invoked more than once. To prevent cyclic dependencies,
-   it makes sure that the method won't be invoked while fetching dependencies
-   using -isPreparingDependencies:info:.
+   it makes sure that the method won't be invoked while fetching dependencies.
 
    nodeA connectorDependency:info: ->
    for (nodeA->imports) import setDependant:info: ->
@@ -106,39 +117,45 @@
    Note: a single port may be connected with more than one port,
    All linked exports will be added as dependencies for each import. */
 
-- (NSOperation *) connectorDependency: (TMConnector *)aConnector
+- (NSOperation *) connectorDependency: (TMConnector *)exportConnector
 				 info: (NSDictionary *)operationInfo
 {
-	if (_nodeOperation == nil)
-	{
-		_isPreparingDependencies = YES;
+	if (operationInfo == nil) operationInfo = tmDefaultOpInfo;
 
-		_nodeOperation = [[NSOperation alloc] init]; //FIXME
+	NSOperation *op = [_opInfos objectForKey:operationInfo];
+
+	/* no op is being prepared, so create one */
+	if (op  == nil)
+	{
+		op = [[NSOperation alloc] init]; //FIXME
+
+		[_preparingOps addObject:op];
+		[_opInfos setObject:op forKey:operationInfo];
+
+		/* FIXME synchronize a current search with operation info */
 		TMConnector *conn;
 		NSEnumerator *en;
 
 		en = [[self allImportConnectors] objectEnumerator];
 		while ((conn = [en nextObject]))
 		{
-			[conn setDependant:_nodeOperation
-				info:operationInfo];
+			[conn setDependant:op
+				      info:operationInfo];
 		}
 
-		_isPreparingDependencies = NO;
+		[_preparingOps removeObject:op];
 	}
 
-	if ([self isPreparingDependency:aConnector info:operationInfo])
+	/* Block cyclic dependency, if an op is being prepared, just don't return it. */
+	/* TODO Design specific APIs for this. -setPreparing:(BOOL) forOp:(Op), -isPreparingOp:(Op), +(Op) op,
+	   may be superclass AbstractNode later. */
+
+	if ([_preparingOps containsObject:op])
 	{
 		return nil;
 	}
 
-	return _nodeOperation;
-}
-
-- (BOOL) isPreparingDependency: (TMConnector *)aConnector
-			  info: (NSDictionary *)operationInfo
-{
-	return _isPreparingDependencies;
+	return op;
 }
 
 
@@ -173,6 +190,20 @@
 	{
 		[node finishPreparation];
 	}
+}
+
+- (id) init
+{
+	_opInfos = [[NSMutableDictionary alloc] init];
+	_preparingOps = [[NSMutableSet alloc] init];
+	return self;
+}
+
+- (void) dealloc
+{
+	DESTROY(_opInfos);
+	DESTROY(_preparingOps);
+	[super dealloc];
 }
 
 - (NSString *) name
@@ -231,10 +262,11 @@
 @implementation TMGenericNode
 - (id) init
 {
+	[super init];
 	_imports = [[NSMutableDictionary alloc] init];
 	_exports = [[NSMutableDictionary alloc] init];
 
-	return [super init];
+	return self;
 }
 
 - (id) initWithImports:(NSArray *)importList
@@ -262,7 +294,6 @@
 
 - (void) dealloc
 {
-	DESTROY(_nodeOperation);
 	DESTROY(_imports);
 	DESTROY(_exports);
 
