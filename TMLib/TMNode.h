@@ -53,9 +53,7 @@ typedef enum _TMConnectingType
 
 @interface TMNode : NSObject
 {
-	BOOL _isPreparingDependencies;
-	NSOperation *_nodeOperation;
-	id <TMNodeDelegate> _delegate;
+	NSMutableDictionary * _opInfo;
 }
 
 - (NSString *) name;

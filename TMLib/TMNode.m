@@ -109,11 +109,13 @@
 - (NSOperation *) connectorDependency: (TMConnector *)aConnector
 				 info: (NSDictionary *)operationInfo
 {
-	if (_nodeOperation == nil)
+	NSOperation *op = [_opInfo objectForKey:operationInfo];
+	if (op  == nil)
 	{
 		_isPreparingDependencies = YES;
 
 		_nodeOperation = [[NSOperation alloc] init]; //FIXME
+		/* FIXME synchronize a current search with operation info */
 		TMConnector *conn;
 		NSEnumerator *en;
 
@@ -138,6 +140,7 @@
 - (BOOL) isPreparingDependency: (TMConnector *)aConnector
 			  info: (NSDictionary *)operationInfo
 {
+	NSOperation *op = [_opInfo objectForKey:operationInfo];
 	return _isPreparingDependencies;
 }
 
