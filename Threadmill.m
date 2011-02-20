@@ -22,7 +22,7 @@
 
 @class TMTimeControl;
 
-@interface MyNode : TMSimpleNode
+@interface MyNode : TMGenericNode
 {
 }
 @end

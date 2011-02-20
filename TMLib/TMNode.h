@@ -55,7 +55,6 @@ typedef enum _TMConnectingType
 {
 	BOOL _isPreparingDependencies;
 	NSOperation *_nodeOperation;
-	id <TMNodeDelegate> _delegate;
 }
 
 - (NSString *) name;
@@ -63,9 +62,6 @@ typedef enum _TMConnectingType
 /* array of name strings */
 - (NSArray *) allImports;
 - (NSArray *) allExports;
-
-- (void) setDelegate;
-- (id <TMNodeDelegate>) delegate;
 
 - (NSArray *) setExport: (NSString *)exportName
 	      forImport: (NSString *)importName
@@ -85,7 +81,7 @@ typedef enum _TMConnectingType
 	         info: (NSDictionary *)operationInfo;
 @end
 
-@interface TMSimpleNode : TMNode
+@interface TMGenericNode : TMNode
 {
 	NSMutableDictionary *_imports;
 	NSMutableDictionary *_exports;

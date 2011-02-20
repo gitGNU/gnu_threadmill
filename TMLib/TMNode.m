@@ -91,8 +91,8 @@
 }
 
 /* Override connectorDependency:info: and isPreparingDependency:info:
-   or use the delegate to implement subdependencies, eg. eA,eB depend
-   on iA and eC depends on iB or define an export that isn't depending on any import.
+   or subclass to implement subdependencies, eg. eA,eB depend on iA
+   and eC depends on iB or define an export that isn't depending on any import.
 
    This method may be invoked more than once. To prevent cyclic dependencies,
    it makes sure that the method won't be invoked while fetching dependencies
@@ -151,7 +151,7 @@
 	       exports: (NSArray *)exportList
 {
 	if ([self isMemberOfClass:[TMNode class]])
-		return AUTORELEASE([[TMSimpleNode alloc] initWithImports:importList exports:exportList]);
+		return AUTORELEASE([[TMGenericNode alloc] initWithImports:importList exports:exportList]);
 	else return AUTORELEASE([[self alloc] initWithImports:importList exports:exportList]);
 }
 
@@ -177,7 +177,7 @@
 
 - (NSString *) name
 {
-	return [NSString stringWithFormat:@"Simple Node (%x)", self];
+	return [NSString stringWithFormat:@"Generic Node (%x)", self];
 }
 
 - (NSArray *) allImports
@@ -190,16 +190,6 @@
 {
 	[self subclassResponsibility: _cmd];
 	return [NSArray array];
-}
-
-- (void) setDelegate: (id <TMNodeDelegate>)delegate
-{
-	ASSIGN(_delegate, delegate);
-}
-
-- (id <TMNodeDelegate>) delegate
-{
-	return _delegate;
 }
 
 - (NSArray *) setExport: (NSString *)exportName
@@ -238,7 +228,7 @@
 
 @end
 
-@implementation TMSimpleNode
+@implementation TMGenericNode
 - (id) init
 {
 	_imports = [[NSMutableDictionary alloc] init];
@@ -272,7 +262,6 @@
 
 - (void) dealloc
 {
-	DESTROY(_delegate);
 	DESTROY(_nodeOperation);
 	DESTROY(_imports);
 	DESTROY(_exports);
