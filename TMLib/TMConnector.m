@@ -15,8 +15,10 @@
 
 #import "TMConnector.h"
 @interface TMConnector (Private)
-- (void) finishPreparation;
-- (NSOperation *) dependencyWithInfo: (NSDictionary *)operationInfo;
+- (NSOperation *) dependencyForQueue: (NSOperationQueue *)queue
+			       order: (NSDictionary *)operationInfo;
+- (void) finishNodeForOrder: (NSDictionary *)opOrder;
+- (void) finishOrder: (NSDictionary *)opOrder;
 @end
 
 @implementation TMConnector
@@ -76,36 +78,38 @@
 	return YES;
 }
 
-- (void) finishPreparation
+- (void) finishNodeForOrder: (NSDictionary *)opOrder
 {
-	[__node finishPreparation];
+	[__node finishOrder:opOrder];
 }
 
-- (void) finishDependencyPreparation
+- (void) finishOrder: (NSDictionary *)opOrder
 {
 	int i = 0;
 	while (i < _pairs_n)
 	{
-		[_pairs[i] finishPreparation];
+		[_pairs[i] finishNodeForOrder:opOrder];
 		i++;
 	}
 }
 
-- (NSOperation *) dependencyWithInfo: (NSDictionary *)operationInfo
+- (NSOperation *) dependencyForQueue: (NSOperationQueue *)queue
+			       order: (NSDictionary *)operationInfo
 {
-	return [__node connectorDependency:self info:operationInfo];
+	return [__node connectorDependency:self forQueue:queue order:operationInfo];
 }
 
 /* set and assign */
 /* for import connector only */
 - (void) setDependant: (NSOperation *)dependant
-		 info: (NSDictionary *)operationInfo
+	     forQueue: (NSOperationQueue *)queue
+		order: (NSDictionary *)opOrder
 {
 	NSArray *dependencies = [dependant dependencies];
 	int i = 0;
 	while (i < _pairs_n)
 	{
-		NSOperation *exportOp = [_pairs[i] dependencyWithInfo:operationInfo];
+		NSOperation *exportOp = [_pairs[i] dependencyForQueue:queue order:opOrder];
 		if (exportOp != nil && ![dependencies containsObject:exportOp])
 		{
 			[dependant addDependency:exportOp];

@@ -1161,9 +1161,10 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 - (void) queue: (id)sender
 {
 	NSOperation *op;
-	ASSIGN(op, [_node connectorDependency:nil info:nil]);
+//tmp FIXME
+	ASSIGN(op, [_node connectorDependency:nil forQueue:nil order:nil]);
 
-	[_node finishPreparation];
+	[_node finishOrder:nil];
 
 	RELEASE(op);
 }

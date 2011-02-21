@@ -35,9 +35,11 @@
 + (id) connectorForNode:(TMNode *)aNode;
 - (BOOL) connect:(TMConnector *)aPair;
 - (void) disconnect:(TMConnector *)aPair;
-- (void) finishDependencyPreparation;
+
 - (void) setDependant: (NSOperation *)dependant
-		 info: (NSDictionary *)operationInfo;
+	     forQueue: (NSOperationQueue *)queue
+		order: (NSDictionary *)opOrder;
+- (void) finishOrder: (NSDictionary *)opOrder;
 @end
 
 #endif

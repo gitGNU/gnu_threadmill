@@ -54,11 +54,12 @@ typedef enum _TMConnectingType
 
 @interface TMNode : NSObject
 {
-	NSMutableArray *_preparingOps;
-	NSMutableDictionary *_opInfos;
+	NSMutableSet *_preps;
+	NSMutableDictionary *_orders;
 }
 
 - (NSString *) name;
+- (Class) operationClass;
 
 /* array of name strings */
 - (NSArray *) allImports;
@@ -80,15 +81,18 @@ typedef enum _TMConnectingType
 
 + (void) setDependant: (NSOperation *)operation
 	     forNodes: (NSArray *)nodeList
-	         info: (NSDictionary *)operationInfo;
+	        queue: (NSOperationQueue *)queue
+	        order: (NSDictionary *)opOrder;
 @end
 
 @interface TMGenericNode : TMNode
 {
+	Class _opClass;
 	NSMutableDictionary *_imports;
 	NSMutableDictionary *_exports;
 }
 
+- (void) setOperationClass: (Class)aClass;
 - (BOOL) createImportWithName: (NSString *)importName;
 - (BOOL) createExportWithName: (NSString *)exportName;
 - (id) initWithImports: (NSArray *)importList
