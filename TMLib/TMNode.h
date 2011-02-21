@@ -52,9 +52,6 @@ typedef enum _TMConnectingType
 		         type: (TMConnectingType)type;
 @end
 
-@protocol TMNodeDelegate
-@end
-
 @interface TMNode : NSObject
 {
 	NSMutableArray *_preparingOps;
