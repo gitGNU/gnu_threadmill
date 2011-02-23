@@ -16,6 +16,7 @@
 #import <Foundation/NSOperation.h>
 #import "TMNodeInternal.h"
 #import "TMConnector.h"
+#import "TMOperation.h"
 
 @implementation TMConnecting
 + (id) connectingWithExporter: (TMNode *)exporter
@@ -198,6 +199,7 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	else return AUTORELEASE([[self alloc] initWithImports:importList exports:exportList]);
 }
 
+#if 0
 + (void) setDependant: (NSOperation *)operation
 	     forNodes: (NSArray *)nodeList
 	        queue: (NSOperationQueue *)queue
@@ -218,6 +220,7 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 		[node finishOrder:nil];
 	}
 }
+#endif
 
 - (void) pushQueue: (NSOperationQueue *)queue
 	  forOrder: (NSDictionary *)opOrder
@@ -257,7 +260,7 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 
 - (Class) operationClass
 {
-	return [NSOperation class];
+	return [TMOperation class];
 }
 
 - (NSArray *) allImports

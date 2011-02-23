@@ -1158,15 +1158,18 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	}
 }
 
+static NSOperationQueue * defaultNodeViewQueue = nil;
+
 - (void) queue: (id)sender
 {
-	NSOperation *op;
-//tmp FIXME
-	ASSIGN(op, [_node connectorDependency:nil forQueue:nil order:nil]);
+	/* FIXME the order should be associated with something like the NSEvent that caused it */
+	if (defaultNodeViewQueue == nil)
+	{
+		defaultNodeViewQueue = [[NSOperationQueue alloc] init];
+	}
 
+	[_node pushQueue:defaultNodeViewQueue forOrder:nil];
 	[_node finishOrder:nil];
-
-	RELEASE(op);
 }
 
 @end

@@ -30,7 +30,6 @@
 - (NSOperation *) connectorDependency: (TMConnector *)exportConnector
 			     forQueue: (NSOperationQueue *)queue
 				order: (NSDictionary *)opOrder;
-- (void) finishOrder: (NSDictionary *)opOrder;
 
 - (NSString *) nameOfConnector:(TMConnector *)aConnector;
 - (TMConnector *) connectorForImport:(NSString *)importName;
