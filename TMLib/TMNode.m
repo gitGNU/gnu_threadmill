@@ -224,14 +224,16 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 {
 	NSEnumerator *en = [[self allExportConnectors] objectEnumerator];
 	TMConnector *export;
-	while ((export = [en nextObject]))
-	{
+
+	export = [en nextObject];
+	do {
 		[self connectorDependency:export
 				 forQueue:queue
 				    order:opOrder];
-		[export pushQueue:queue
-			 forOrder:opOrder];
-	}
+		if (export != nil)
+			[export pushQueue:queue
+				 forOrder:opOrder];
+	} while ((export = [en nextObject]));
 }
 
 - (id) init
