@@ -38,15 +38,14 @@
 
 @end
 
-static NSMutableDictionary *tmDefaultOpInfo = nil;
+static NSMutableDictionary	*tmDefaultOpOrder = nil;
 
 @implementation TMNode (Internal)
 + (void) initialize
 {
 	if (self == [TMNode class])
 	{
-		tmDefaultOpInfo = [NSMutableDictionary dictionary];
-		[tmDefaultOpInfo retain];
+		tmDefaultOpOrder = [[NSMutableDictionary alloc] init];
 	}
 }
 
@@ -83,7 +82,7 @@ static NSMutableDictionary *tmDefaultOpInfo = nil;
 
 - (void) finishOrder: (NSDictionary *)opOrder
 {
-	if (opOrder == nil) opOrder = tmDefaultOpInfo;
+	if (opOrder == nil) opOrder = tmDefaultOpOrder;
 
 	NSOperation *op = [_orders objectForKey:opOrder];
 
@@ -108,6 +107,16 @@ static NSMutableDictionary *tmDefaultOpInfo = nil;
 	return [[[self operationClass] alloc] init];
 }
 
+- (void) queue: (NSOperationQueue *)queue
+     operation: (NSOperation *)op
+      forOrder: (NSDictionary *)opOrder
+{
+	if (queue != nil)
+	{
+		[queue addOperation:op];
+	}
+}
+
 /* Override connectorDependency:forQueue:order: to implement subdependencies, eg. eA,eB depend on iA
    and eC depends on iB or define an export that isn't depending on any import.
 
@@ -122,11 +131,12 @@ static NSMutableDictionary *tmDefaultOpInfo = nil;
    Note: a single port may be connected with more than one port,
    All linked exports will be added as dependencies for each import. */
 
+/* FIXME queue:forConnector:order:*/
 - (NSOperation *) connectorDependency: (TMConnector *)exportConnector
 			     forQueue: (NSOperationQueue *)queue
 				order: (NSDictionary *)opOrder
 {
-	if (opOrder == nil) opOrder = tmDefaultOpInfo;
+	if (opOrder == nil) opOrder = tmDefaultOpOrder;
 
 	NSOperation *op = [_orders objectForKey:opOrder];
 
@@ -152,15 +162,8 @@ static NSMutableDictionary *tmDefaultOpInfo = nil;
 
 		[_preps removeObject:op];
 
+		[self queue:queue operation:op forOrder:opOrder];
 
-		if (queue == nil)
-		{
-			[op start];
-		}
-		else
-		{
-			[queue addOperation:op];
-		}
 
 	}
 
@@ -213,6 +216,21 @@ static NSMutableDictionary *tmDefaultOpInfo = nil;
 	while ((node = [en nextObject]))
 	{
 		[node finishOrder:nil];
+	}
+}
+
+- (void) pushQueue: (NSOperationQueue *)queue
+	  forOrder: (NSDictionary *)opOrder
+{
+	NSEnumerator *en = [[self allExportConnectors] objectEnumerator];
+	TMConnector *export;
+	while ((export = [en nextObject]))
+	{
+		[self connectorDependency:export
+				 forQueue:queue
+				    order:opOrder];
+		[export pushQueue:queue
+			 forOrder:opOrder];
 	}
 }
 

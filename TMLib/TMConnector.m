@@ -78,7 +78,7 @@
 	return YES;
 }
 
-- (void) finishNodeForOrder: (NSDictionary *)opOrder
+- (void) nodeFinishOrder: (NSDictionary *)opOrder
 {
 	[__node finishOrder:opOrder];
 }
@@ -88,7 +88,24 @@
 	int i = 0;
 	while (i < _pairs_n)
 	{
-		[_pairs[i] finishNodeForOrder:opOrder];
+		[_pairs[i] nodeFinishOrder:opOrder];
+		i++;
+	}
+}
+
+- (void) nodePushQueue: (NSOperationQueue *)queue
+	      forOrder: (NSDictionary *)opOrder
+{
+	[__node pushQueue:queue forOrder:opOrder];
+}
+
+- (void) pushQueue: (NSOperationQueue *) queue
+	  forOrder: (NSDictionary *)opOrder
+{
+	int i = 0;
+	while (i < _pairs_n)
+	{
+		[_pairs[i] nodePushQueue:queue forOrder:opOrder];
 		i++;
 	}
 }

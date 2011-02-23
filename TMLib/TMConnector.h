@@ -40,6 +40,8 @@
 	     forQueue: (NSOperationQueue *)queue
 		order: (NSDictionary *)opOrder;
 - (void) finishOrder: (NSDictionary *)opOrder;
+- (void) pushQueue: (NSOperationQueue *) queue
+	  forOrder: (NSDictionary *)opOrder;
 @end
 
 #endif

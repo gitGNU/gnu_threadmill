@@ -23,6 +23,10 @@
 @interface TMNode (Internal)
 
 - (NSOperation *) operation;
+- (void) queue: (NSOperationQueue *)queue
+     operation: (NSOperation *)op
+      forOrder: (NSDictionary *)opOrder;
+
 - (NSOperation *) connectorDependency: (TMConnector *)exportConnector
 			     forQueue: (NSOperationQueue *)queue
 				order: (NSDictionary *)opOrder;
