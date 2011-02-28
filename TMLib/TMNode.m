@@ -47,6 +47,7 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	if (self == [TMNode class])
 	{
 		tmDefaultOpOrder = [[NSMutableDictionary alloc] init];
+		[tmDefaultOpOrder setObject:@"TMDefaultOperationOrder" forKey:@"Name"];
 	}
 }
 
@@ -81,31 +82,19 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	return nil;
 }
 
-- (void) finishOrder: (NSDictionary *)opOrder
-{
-	if (opOrder == nil) opOrder = tmDefaultOpOrder;
-
-	NSOperation *op = [_orders objectForKey:opOrder];
-
-	if (op != nil)
-	{
-		[_orders removeObjectForKey:opOrder];
-
-		TMConnector *imCon;
-		NSEnumerator *en;
-
-		en = [[self allImportConnectors] objectEnumerator];
-		while ((imCon = [en nextObject]))
-		{
-			[imCon finishOrder:opOrder];
-		}
-	}
-}
-
 /* This should setup KVO monitoring and such */
-- (NSOperation *) operation
+- (NSOperation *) operationForOrder: (NSDictionary *)order
 {
-	return [[[self operationClass] alloc] init];
+	Class opClass = [self operationClass];
+	TMOperation *retOp = [opClass alloc];
+	
+	if ([opClass isKindOfClass:[TMOperation class]])
+	{
+		[retOp initWithOrder:order];
+	}
+	else [retOp init];
+
+	return [retOp autorelease];
 }
 
 - (void) queue: (NSOperationQueue *)queue
@@ -139,12 +128,13 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 {
 	if (opOrder == nil) opOrder = tmDefaultOpOrder;
 
+	//NSOperation *op = [_orders objectForKey:opOrder];
 	NSOperation *op = [_orders objectForKey:opOrder];
 
 	/* no op is being prepared, so create one */
 	if (op  == nil)
 	{
-		op = [self operation];
+		op = [self operationForOrder:opOrder];
 
 		[_preps addObject:op];
 		[_orders setObject:op forKey:opOrder];
@@ -221,6 +211,34 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	}
 }
 #endif
+
+- (void) finishOrder: (NSDictionary *)opOrder
+{
+	if (opOrder == nil) opOrder = tmDefaultOpOrder;
+
+	NSOperation *op = [_orders objectForKey:opOrder];
+
+	if (op != nil)
+	{
+		[_orders removeObjectForKey:opOrder];
+
+		TMConnector *con;
+		NSEnumerator *en;
+
+		en = [[self allImportConnectors] objectEnumerator];
+		while ((con = [en nextObject]))
+		{
+			[con finishOrder:opOrder];
+		}
+
+		en = [[self allExportConnectors] objectEnumerator];
+		while ((con = [en nextObject]))
+		{
+			[con finishOrder:opOrder];
+		}
+	}
+}
+
 
 - (void) pushQueue: (NSOperationQueue *)queue
 	  forOrder: (NSDictionary *)opOrder
@@ -318,6 +336,7 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	[super init];
 	_imports = [[NSMutableDictionary alloc] init];
 	_exports = [[NSMutableDictionary alloc] init];
+	_opClass = [super operationClass];
 
 	return self;
 }

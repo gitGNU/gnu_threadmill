@@ -22,7 +22,7 @@
 
 @interface TMNode (Internal)
 
-- (NSOperation *) operation;
+- (NSOperation *) operationForOrder: (NSDictionary *)order;
 - (void) queue: (NSOperationQueue *)queue
      operation: (NSOperation *)op
       forOrder: (NSDictionary *)opOrder;

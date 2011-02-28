@@ -20,7 +20,11 @@
 
 @interface TMOperation : NSOperation
 {
+	NSDictionary *__order;
 }
++ (id) operationForOrder: (NSDictionary *)order;
+- (id) initWithOrder: (NSDictionary *)order;
+- (void) assignOrder: (NSDictionary *)order;
 @end
 
 #endif

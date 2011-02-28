@@ -1168,6 +1168,8 @@ static NSOperationQueue * defaultNodeViewQueue = nil;
 		defaultNodeViewQueue = [[NSOperationQueue alloc] init];
 	}
 
+	/* FIXME should define a higher API like pushOrder:after:
+	   to make the second order depends on the prior one */
 	[_node pushQueue:defaultNodeViewQueue forOrder:nil];
 	[_node finishOrder:nil];
 }

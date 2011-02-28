@@ -13,7 +13,27 @@
 	DO WHAT THE FUCK YOU WANT TO.
 */
 
+#import <Foundation/Foundation.h>
 #import "TMOperation.h"
 @implementation TMOperation
++ (id) operationForOrder: (NSDictionary *)order
+{
+	TMOperation *op = [[self alloc] initWithOrder:order];
+	[op autorelease];
+	return op;
+}
+
+- (id) initWithOrder: (NSDictionary *)order
+{
+	[self init];
+	[self assignOrder:order];
+	return self;
+}
+
+- (void) assignOrder: (NSDictionary *)order
+{
+	__order = order;
+}
+
 @end
 
