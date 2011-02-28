@@ -41,7 +41,7 @@
 
 static NSMutableDictionary	*tmDefaultOpOrder = nil;
 
-@implementation TMNode (Internal)
+@implementation TMNode
 + (void) initialize
 {
 	if (self == [TMNode class])
@@ -174,12 +174,6 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 
 	return op;
 }
-
-
-@end
-
-
-@implementation TMNode
 
 + (id) nodeWithImports: (NSArray *)importList
 	       exports: (NSArray *)exportList

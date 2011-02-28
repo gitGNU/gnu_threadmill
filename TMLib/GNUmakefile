@@ -21,12 +21,14 @@ libTMill_HEADER_FILES= \
 			TMNode.h \
 			TMNodeInternal.h \
 			TMOperation.h \
+			TMTaskNode.h \
 
 libTMill_OBJC_FILES=   \
 			externs.m \
 			TMNode.m \
 			TMConnector.m \
 			TMOperation.m \
+			TMTaskNode.m \
 
 HEADERS_INSTALL = $(libTMill_HEADER_FILES)
 
