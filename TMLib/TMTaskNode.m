@@ -79,6 +79,7 @@ NSString * const TMStandardErrorPort = @"stderr";
 	return _arguments;
 }
 
+/* connectors */
 - (TMConnector *) connectorForImport:(NSString *)importName
 {
 	if ([importName isEqualToString:TMStandardInputPort])

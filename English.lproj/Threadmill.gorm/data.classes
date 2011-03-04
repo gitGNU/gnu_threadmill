@@ -18,7 +18,7 @@
 	    "addTestNode:"
 	);
 	Outlets = (
-	    _mainView
+	    "_mainView"
 	);
 	Super = NSApplication;
     };

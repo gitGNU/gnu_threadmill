@@ -1160,6 +1160,7 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 
 static NSOperationQueue * defaultNodeViewQueue = nil;
 
+/* TEMP! */
 - (void) queue: (id)sender
 {
 	/* FIXME the order should be associated with something like the NSEvent that caused it */

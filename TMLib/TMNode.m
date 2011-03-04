@@ -105,7 +105,7 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	Class opClass = [self operationClass];
 	TMOperation *retOp = [opClass alloc];
 	
-	if ([opClass isKindOfClass:[TMOperation class]])
+	if ([retOp isKindOfClass:[TMOperation class]])
 	{
 		[retOp initForNode:self order:order];
 	}

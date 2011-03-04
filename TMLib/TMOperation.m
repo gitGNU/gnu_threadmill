@@ -30,8 +30,20 @@
 	[self init];
 	__node = node;
 	__order = order;
+
 	return self;
 }
 
+- (void) main
+{
+	NSLog(@"main %@ %@ %@",self, __node, __order);
+	NSLog(@"self->isa = %x", self->isa);
+}
+
+- (void) dealloc
+{
+	NSLog(@"out");
+	[super dealloc];
+}
 @end
 
