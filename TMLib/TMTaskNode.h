@@ -19,10 +19,24 @@
 #import <Foundation/Foundation.h>
 #import <TMLib/TMNodeInternal.h>
 
+extern NSString * const TMStandardInputPort;
+extern NSString * const TMStandardOutputPort;
+extern NSString * const TMStandardErrorPort;
+
 @interface TMTaskNode : TMNode
 {
-	NSTask *_task;
+	NSString *_launchPath;
+	NSArray *_arguments;
+
+	TMConnector *_inCon;
+	TMConnector *_outCon;
+	TMConnector *_errCon;
 }
+
+- (id) initWithLaunchPath: (NSString *)launchPath
+		arguments: (NSArray *)arguments;
+- (NSString *) launchPath;
+- (NSArray *) arguments;
 @end
 
 #endif

@@ -14,9 +14,93 @@
 */
 
 #import "TMTaskNode.h"
+#import "TMLib/TMOperation.h"
+
+NSString * const TMStandardInputPort = @"stdin";
+NSString * const TMStandardOutputPort = @"stdout";
+NSString * const TMStandardErrorPort = @"stderr";
+
+@interface TMTaskOperation : TMOperation
+{
+	NSTask * _task;
+}
+@end
+
+@implementation TMTaskOperation
+- (id) initWithTask: (NSTask *)aTask
+{
+	ASSIGN(_task, aTask);
+}
+
+- (void) dealloc
+{
+	DESTROY(_task);
+	[super dealloc];
+}
+
+- (void) main
+{
+	[_task launch];
+}
+@end
 
 @implementation TMTaskNode
+- (id) initWithLaunchPath: (NSString *)launchPath
+		arguments: (NSArray *)arguments
+{
+	[super init];
+	ASSIGN(_launchPath, launchPath);
+	ASSIGN(_arguments, arguments);
+	return self;
+}
 
+- (void) dealloc
+{
+	DESTROY(_launchPath);
+	DESTROY(_arguments);
+	DESTROY(_inCon);
+	DESTROY(_outCon);
+	DESTROY(_errCon);
+	[super dealloc];
+}
 
+- (NSString *) name
+{
+	return [NSString stringWithFormat:@"Task node (%x)", self];
+}
+
+- (NSString *) launchPath
+{
+	return _launchPath;
+}
+
+- (NSArray *) arguments
+{
+	return _arguments;
+}
+
+- (TMConnector *) connectorForImport:(NSString *)importName
+{
+	if ([importName isEqualToString:TMStandardInputPort])
+	       	return _inCon;
+}
+
+- (TMConnector *) connectorForExport:(NSString *)exportName
+{
+	if ([exportName isEqualToString:TMStandardOutputPort])
+	       	return _outCon;
+	if ([exportName isEqualToString:TMStandardErrorPort])
+	       	return _errCon;
+}
+
+- (NSArray *) allImportConnectors
+{
+	return [NSArray arrayWithObject:_inCon];
+}
+
+- (NSArray *) allExportConnectors
+{
+	return [NSArray arrayWithObjects:_outCon,_errCon,nil];
+}
 @end
 

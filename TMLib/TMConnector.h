@@ -24,15 +24,21 @@
 
 @interface TMConnector : NSObject
 {
+	NSUInteger _current_pair;
 	NSUInteger _pairs_n;
 	TMConnector **_pairs;
 @public
 /* @package to TMNode */
 	TMNode *__node;
+	NSString *__port;
 }
 
-- (NSString *) name;
-+ (id) connectorForNode:(TMNode *)aNode;
+- (NSString *) port;
+- (NSUInteger) count;
+
++ (id) connectorForNode: (TMNode *)aNode
+		   port: (NSString *)name;
+
 - (BOOL) connect:(TMConnector *)aPair;
 - (void) disconnect:(TMConnector *)aPair;
 

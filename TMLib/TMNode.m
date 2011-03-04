@@ -51,13 +51,6 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	}
 }
 
-
-- (NSString *) nameOfConnector:(TMConnector *)aConnector
-{
-	[self subclassResponsibility: _cmd];
-	return nil;
-}
-
 - (TMConnector *) connectorForImport:(NSString *)importName
 {
 	[self subclassResponsibility: _cmd];
@@ -82,7 +75,31 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	return nil;
 }
 
-/* This should setup KVO monitoring and such */
+- (NSArray *) nameOfConnectors: (NSArray *)conns
+{
+	NSEnumerator *en = [conns objectEnumerator];
+	TMConnector *conn;
+	NSMutableArray *retPorts = [NSMutableArray array];
+
+	while ((conn = [en nextObject]))
+	{
+		[retPorts addObject:[self nameOfConnector:conn]];
+	}
+
+	return retPorts;
+}
+
+- (NSArray *) allImports
+{
+	return [self nameOfConnectors:[self allImportConnectors]];
+}
+
+- (NSArray *) allExports
+{
+	return [self nameOfConnectors:[self allExportConnectors]];
+}
+
+/* the caller should setup KVO monitoring and such on the returned op */
 - (NSOperation *) operationForOrder: (NSDictionary *)order
 {
 	Class opClass = [self operationClass];
@@ -90,7 +107,7 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	
 	if ([opClass isKindOfClass:[TMOperation class]])
 	{
-		[retOp initWithOrder:order];
+		[retOp initForNode:self order:order];
 	}
 	else [retOp init];
 
@@ -275,18 +292,6 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	return [TMOperation class];
 }
 
-- (NSArray *) allImports
-{
-	[self subclassResponsibility: _cmd];
-	return [NSArray array];
-}
-
-- (NSArray *) allExports
-{
-	[self subclassResponsibility: _cmd];
-	return [NSArray array];
-}
-
 - (NSArray *) setExport: (NSString *)exportName
 	      forImport: (NSString *)importName
 	         onNode: (TMNode *)aNode
@@ -345,14 +350,14 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 
 	while ((portName = [en nextObject]))
 	{
-		[self createImportWithName:portName];
+		[self createImport:portName];
 	}
 
 	en = [exportList objectEnumerator];
 
 	while ((portName = [en nextObject]))
 	{
-		[self createExportWithName:portName];
+		[self createExport:portName];
 	}
 
 	return self;
@@ -381,16 +386,16 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	return [NSString stringWithFormat:@"Generic node (%x)", self];
 }
 
-- (BOOL) createImportWithName:(NSString *)importName
+- (BOOL) createImport: (NSString *)importName
 {
-	[_imports setObject:[TMConnector connectorForNode:self]
+	[_imports setObject:[TMConnector connectorForNode:self port:importName]
 		     forKey:importName];
 	return YES;
 }
 
-- (BOOL) createExportWithName:(NSString *)exportName
+- (BOOL) createExport: (NSString *)exportName
 {
-	[_exports setObject:[TMConnector connectorForNode:self]
+	[_exports setObject:[TMConnector connectorForNode:self port:exportName]
 		     forKey:exportName];
 	return YES;
 }

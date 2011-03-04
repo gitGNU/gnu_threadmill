@@ -16,23 +16,21 @@
 #import <Foundation/Foundation.h>
 #import "TMOperation.h"
 @implementation TMOperation
-+ (id) operationForOrder: (NSDictionary *)order
++ (id) operationForNode: (TMNode *)node
+		  order: (NSDictionary *)order
 {
-	TMOperation *op = [[self alloc] initWithOrder:order];
+	TMOperation *op = [[self alloc] initForNode:node order:order];
 	[op autorelease];
 	return op;
 }
 
-- (id) initWithOrder: (NSDictionary *)order
+- (id) initForNode: (TMNode *)node
+	     order: (NSDictionary *)order
 {
 	[self init];
-	[self assignOrder:order];
-	return self;
-}
-
-- (void) assignOrder: (NSDictionary *)order
-{
+	__node = node;
 	__order = order;
+	return self;
 }
 
 @end

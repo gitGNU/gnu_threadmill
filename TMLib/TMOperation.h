@@ -18,13 +18,17 @@
 
 #import <Foundation/NSOperation.h>
 
+@class TMNode;
+
 @interface TMOperation : NSOperation
 {
+	TMNode *__node;
 	NSDictionary *__order;
 }
-+ (id) operationForOrder: (NSDictionary *)order;
-- (id) initWithOrder: (NSDictionary *)order;
-- (void) assignOrder: (NSDictionary *)order;
++ (id) operationForNode: (TMNode *)node
+		  order: (NSDictionary *)order;
+- (id) initForNode: (TMNode *)node
+	     order: (NSDictionary *)order;
 @end
 
 #endif

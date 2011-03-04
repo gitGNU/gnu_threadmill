@@ -23,16 +23,24 @@
 
 @implementation TMConnector
 
-+ (id) connectorForNode:(TMNode *)aNode
++ (id) connectorForNode: (TMNode *)aNode
+		   port: (NSString *)name;
 {
 	TMConnector *retConnector = [[TMConnector alloc] init];
 	AUTORELEASE(retConnector);
 
 	retConnector->__node = aNode;
+	retConnector->__port = name;
 
 	return retConnector;
 }
 
+- (NSUInteger) count
+{
+	return _pairs_n;
+}
+
+/* connecting */
 - (void) disconnect:(TMConnector *)aPair
 {
 	int i = 0, j = 0;
@@ -78,6 +86,7 @@
 	return YES;
 }
 
+/* finishing */
 - (void) nodeFinishOrder: (NSDictionary *)opOrder
 {
 	[__node finishOrder:opOrder];
@@ -93,6 +102,7 @@
 	}
 }
 
+/* pushing */
 - (void) nodePushQueue: (NSOperationQueue *)queue
 	      forOrder: (NSDictionary *)opOrder
 {
@@ -158,13 +168,83 @@
 
 - (NSString *) description
 {
-	return [self name];
+	return [self port];
 }
 
-- (NSString *) name
+- (NSString *) port
 {
-	return [__node nameOfConnector:self];
+	return __port;
 }
+
+/* forwarder */
+/*
+- (void) nextPair
+{
+	_current_pair++;
+	if (_current_pair >= _pairs_n)
+	{
+		_current_pair = 0;
+	}
+}
+*/
+
+- (NSMethodSignature *) nodeMethodSignatureForSelector: (SEL)aSel
+{
+	return [__node methodSignatureForSelector:aSel];
+}
+
+- (NSMethodSignature *) methodSignatureForSelector: (SEL)aSel
+{
+	return [_pairs[_current_pair] nodeMethodSignatureForSelector:aSel];
+}
+
+- (void) nodeForwardInvocation: (NSInvocation *)invocation
+{
+	[invocation invokeWithTarget:__node];
+}
+
+- (void) forwardInvocation: (NSInvocation *)invocation
+{
+	/*
+	NSUInteger cp = _current_pair;
+	SEL aSel = [invocation selector]
+	NSMethodSignature * sig = [invocation methodSignature];
+	while (![[_pair[_current_pair] nodeMethodSignatureForSelector:aSel] isEqual:sig])
+	{
+		[self nextPair];
+		if (_current_pair == cp) return;
+	}
+	*/
+
+	[_pairs[_current_pair] nodeForwardInvocation:invocation];
+
+	_current_pair++;
+	if (_current_pair >= _pairs_n)
+	{
+		_current_pair = 0;
+	}
+}
+
+/*
+- (BOOL) nodeRespondsToSelector: (SEL)aSel
+{
+	return [__node respondsToSelector:aSel];
+}
+
+- (BOOL) respondsToSelector: (SEL)aSel
+{
+	int i = 0;
+	while (i < _pairs_n)
+	{
+		if ([_pairs[i] nodeRespondsToSelector:aSel])
+		{
+			return YES;
+		}
+		i++;
+	}
+	return NO;
+}
+*/
 
 @end
 

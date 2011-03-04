@@ -103,8 +103,8 @@ typedef enum _TMConnectingType
 }
 
 - (void) setOperationClass: (Class)aClass;
-- (BOOL) createImportWithName: (NSString *)importName;
-- (BOOL) createExportWithName: (NSString *)exportName;
+- (BOOL) createImport: (NSString *)importName;
+- (BOOL) createExport: (NSString *)exportName;
 - (id) initWithImports: (NSArray *)importList
 	       exports: (NSArray *)exportList;
 @end
