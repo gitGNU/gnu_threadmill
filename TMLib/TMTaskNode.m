@@ -15,6 +15,7 @@
 
 #import "TMTaskNode.h"
 #import "TMLib/TMOperation.h"
+#import "TMLib/TMConnector.h"
 
 NSString * const TMStandardInputPort = @"stdin";
 NSString * const TMStandardOutputPort = @"stdout";
@@ -22,7 +23,12 @@ NSString * const TMStandardErrorPort = @"stderr";
 
 @interface TMTaskOperation : TMOperation
 {
-	NSTask * _task;
+/* @package here */
+@public
+	NSTask *_task;
+	NSPipe *_inPipe;
+	NSPipe *_outPipe;
+	NSPipe *_errPipe;
 }
 @end
 

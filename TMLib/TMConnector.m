@@ -15,10 +15,13 @@
 
 #import "TMConnector.h"
 @interface TMConnector (Private)
+- (void) nodeFinishOrder: (NSDictionary *)opOrder;
+- (void) nodePushQueue: (NSOperationQueue *)queue
+	      forOrder: (NSDictionary *)opOrder;
 - (NSOperation *) dependencyForQueue: (NSOperationQueue *)queue
 			       order: (NSDictionary *)operationInfo;
-- (void) finishNodeForOrder: (NSDictionary *)opOrder;
-- (void) finishOrder: (NSDictionary *)opOrder;
+- (NSMethodSignature *) nodeMethodSignatureForSelector: (SEL)aSel;
+- (void) nodeForwardInvocation: (NSInvocation *)invocation;
 @end
 
 @implementation TMConnector
@@ -38,6 +41,24 @@
 - (NSUInteger) count
 {
 	return _pairs_n;
+}
+
+- (TMNode *) nextPair;
+{
+	if (_pairs_n == 0)
+	{
+		return nil;
+	}
+
+	NSUInteger retPair = _current_pair;
+
+	_current_pair++;
+	if (_current_pair >= _pairs_n)
+	{
+		_current_pair = 0;
+	}
+
+	return _pairs[retPair]->__node;
 }
 
 /* connecting */
@@ -177,16 +198,6 @@
 }
 
 /* forwarder */
-/*
-- (void) nextPair
-{
-	_current_pair++;
-	if (_current_pair >= _pairs_n)
-	{
-		_current_pair = 0;
-	}
-}
-*/
 
 - (NSMethodSignature *) nodeMethodSignatureForSelector: (SEL)aSel
 {
@@ -216,13 +227,7 @@
 	}
 	*/
 
-	[_pairs[_current_pair] nodeForwardInvocation:invocation];
-
-	_current_pair++;
-	if (_current_pair >= _pairs_n)
-	{
-		_current_pair = 0;
-	}
+	[[self nextPair] nodeForwardInvocation:invocation];
 }
 
 /*

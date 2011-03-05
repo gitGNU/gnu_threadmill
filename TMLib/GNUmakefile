@@ -29,6 +29,7 @@ libTMill_OBJC_FILES=   \
 			TMConnector.m \
 			TMOperation.m \
 			TMTaskNode.m \
+			TMTeePipe.m \
 
 HEADERS_INSTALL = $(libTMill_HEADER_FILES)
 
