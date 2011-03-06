@@ -20,12 +20,14 @@
 
 @interface TMTeePipe : NSObject
 {
-	NSMutableArray *_readPipes;
-	NSMutableArray *_writePipes;
+	NSMutableArray *_pipesToRead;
+	NSMutableArray *_pipesToWrite;
 }
 + (id) tee;
 - (NSFileHandle *) fileHandleForReading;
 - (NSFileHandle *) fileHandleForWriting;
+- (void) pipeTeeForWriting: (TMTeePipe *)tee;
+- (void) pipeTeeForReading: (TMTeePipe *)tee;
 @end
 
 #endif

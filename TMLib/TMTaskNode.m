@@ -44,10 +44,18 @@ NSString * const TMStandardErrorPort = @"stderr";
 	[super dealloc];
 }
 
+/* This op class is just a place holder, it is always finished and it won't be queued. Task-nodes are responsible for launching task */
+- (BOOL) isFinished
+{
+	return YES;
+}
+
+/*
 - (void) main
 {
-	[_task launch];
+	[_task performSelectorOnMainThread: @selector(launch) withObject: nil waitUntilDone: NO];
 }
+*/
 @end
 
 @implementation TMTaskNode
@@ -83,6 +91,17 @@ NSString * const TMStandardErrorPort = @"stderr";
 - (NSArray *) arguments
 {
 	return _arguments;
+}
+
+- (NSOperation *) operationForOrder: (NSDictionary *)order
+{
+}
+
+/* no queue, it was born finished! */
+- (void) queue: (NSOperationQueue *)queue
+     operation: (NSOperation *)op
+      forOrder: (NSDictionary *)opOrder
+{
 }
 
 /* connectors */

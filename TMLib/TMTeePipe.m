@@ -15,6 +15,11 @@
 
 #import "TMTeePipe.h"
 
+@interface TMTeePipe (Private)
+- (void) addPipeToRead: (NSPipe *)pipe;
+- (void) receivedData: (NSNotification *)not;
+@end
+
 @implementation TMTeePipe
 
 + (id) tee
@@ -25,54 +30,16 @@
 - (id) init
 {
 	[super init];
-	_readPipes = [[NSMutableArray alloc] init];
-	_writePipes = [[NSMutableArray alloc] init];
+	_pipesToRead = [[NSMutableArray alloc] init];
+	_pipesToWrite = [[NSMutableArray alloc] init];
 	return self;
 }
 
 - (void) dealloc
 {
-	DESTROY(_readPipes);
-	DESTROY(_writePipes);
+	DESTROY(_pipesToRead);
+	DESTROY(_pipesToWrite);
 	[super dealloc];
-}
-
-- (NSFileHandle *) fileHandleForReading
-{
-	NSPipe *newPipe = [NSPipe pipe];
-	[_writePipes addObject:newPipe];
-	return [newPipe fileHandleForReading];
-}
-
-- (void) receivedData: (NSNotification *)not
-{
-	NSFileHandle * handle = [not object];
-	NSData *data = [handle availableData];
-
-	if ([data length] == 0) return;
-
-	NSEnumerator *en = [_writePipes objectEnumerator];
-	NSPipe *writePipe;
-	while ((writePipe = [en nextObject]))
-	{
-		[[writePipe fileHandleForWriting] writeData:data];
-	}
-
-	[handle waitForDataInBackgroundAndNotify];
-}
-
-- (NSFileHandle *) fileHandleForWriting
-{
-	NSPipe *newPipe = [NSPipe pipe];
-	NSFileHandle * handle = [newPipe fileHandleForReading];
-	[[NSNotificationCenter defaultCenter] addObserver: self
-						 selector: @selector(receivedData:)
-						     name: NSFileHandleDataAvailableNotification
-						   object: handle];
-	[handle waitForDataInBackgroundAndNotify];
-
-	[_readPipes addObject:newPipe];
-	return [newPipe fileHandleForWriting];
 }
 
 - (BOOL) isKindOfClass:(Class)aClass
@@ -86,6 +53,100 @@
 		return YES;
 	}
 	return NO;
+}
+
+- (NSFileHandle *) fileHandleForReading
+{
+	NSPipe *pipe = [NSPipe pipe];
+	[_pipesToWrite addObject:pipe];
+	return [pipe fileHandleForReading];
+}
+
+- (NSFileHandle *) fileHandleForWriting
+{
+	NSPipe *pipe = [NSPipe pipe];
+	NSFileHandle *handle = [pipe fileHandleForWriting];
+
+	[self addPipeToRead:pipe];
+	return handle;
+}
+
+- (void) receivedData: (NSNotification *)not
+{
+	NSFileHandle * handle = [not object];
+	NSData *data = [handle availableData];
+
+
+	if ([data length] == 0)
+	{
+		/* remove the handle from listening list */
+		[[NSNotificationCenter defaultCenter] removeObserver: self
+								name: NSFileHandleDataAvailableNotification
+							      object: handle];
+
+		NSEnumerator *en = [_pipesToRead objectEnumerator];
+		NSPipe *pipe;
+		while ((pipe = [en nextObject]))
+		{
+			if (handle == [pipe fileHandleForReading])
+			{
+				break;
+			}
+		}
+		if (pipe != nil)
+		{
+			[_pipesToRead removeObject:pipe];
+
+			/* No read pipe left, just close all write */
+			if ([_pipesToRead count] == 0)
+			{
+				DESTROY(_pipesToRead);
+
+				en = [_pipesToWrite objectEnumerator];
+				while ((pipe = [en nextObject]))
+				{
+					[[pipe fileHandleForWriting] closeFile];
+				}
+				[_pipesToWrite removeAllObjects];
+			}
+		}
+		return;
+	}
+
+	NSEnumerator *en = [_pipesToWrite objectEnumerator];
+	NSPipe *pipeToWrite;
+	while ((pipeToWrite = [en nextObject]))
+	{
+		[[pipeToWrite fileHandleForWriting] writeData:data];
+
+	}
+
+
+	[handle waitForDataInBackgroundAndNotify];
+}
+
+- (void) addPipeToRead: (NSPipe *)pipe
+{
+	NSFileHandle * handle = [pipe fileHandleForReading];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+						 selector: @selector(receivedData:)
+						     name: NSFileHandleDataAvailableNotification
+						   object: handle];
+	[handle waitForDataInBackgroundAndNotify];
+
+	[_pipesToRead addObject:pipe];
+}
+
+- (void) pipeTeeForWriting: (TMTeePipe *)tee
+{
+	NSPipe *pipe = [NSPipe pipe];
+	[_pipesToWrite addObject:pipe];
+	[tee addPipeToRead:pipe];
+}
+
+- (void) pipeTeeForReading: (TMTeePipe *)tee
+{
+	[tee pipeTeeForWriting:self];
 }
 @end
 
