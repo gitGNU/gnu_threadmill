@@ -28,6 +28,9 @@
 - (NSFileHandle *) fileHandleForWriting;
 - (void) pipeTeeForWriting: (TMTeePipe *)tee;
 - (void) pipeTeeForReading: (TMTeePipe *)tee;
+- (void) addSource: (id)pipeOrHandle;
+- (void) addTarget: (id)pipeOrHandle;
+- (void) writeData: (NSData *)data;
 @end
 
 #endif
