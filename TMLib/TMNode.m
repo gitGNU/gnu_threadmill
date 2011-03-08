@@ -99,6 +99,16 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	return [self nameOfConnectors:[self allExportConnectors]];
 }
 
+- (NSString *) displayNameForImport: (NSString *)import
+{
+	return import;
+}
+
+- (NSString *) displayNameForExport: (NSString *)export
+{
+	return export;
+}
+
 /* the caller should setup KVO monitoring and such on the returned op */
 - (NSOperation *) operationForOrder: (NSDictionary *)order
 {

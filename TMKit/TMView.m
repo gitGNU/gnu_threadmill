@@ -128,9 +128,11 @@ NSImage *im;
 
 - (id) init
 {
+	[super init];
 	_nodes = [[NSMutableArray alloc] init];
 
-	return [super init];
+
+	return self;
 }
 
 - (void) dealloc

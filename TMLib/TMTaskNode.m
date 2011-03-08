@@ -17,9 +17,11 @@
 #import "TMLib/TMOperation.h"
 #import "TMLib/TMConnector.h"
 
+/*
 NSString * const TMStandardInputPort = @"stdin";
 NSString * const TMStandardOutputPort = @"stdout";
 NSString * const TMStandardErrorPort = @"stderr";
+*/
 
 @interface TMTaskOperation : TMOperation
 {
@@ -59,22 +61,67 @@ NSString * const TMStandardErrorPort = @"stderr";
 @end
 
 @implementation TMTaskNode
+
++ (id) nodeWithLaunchPath: (NSString *)launchPath
+		arguments: (NSArray *)arguments
+{
+	return AUTORELEASE([[self alloc] initWithLaunchPath:launchPath arguments:arguments]);
+}
+
 - (id) initWithLaunchPath: (NSString *)launchPath
 		arguments: (NSArray *)arguments
 {
 	[super init];
 	ASSIGN(_launchPath, launchPath);
 	ASSIGN(_arguments, arguments);
+	[self createImport:@"0"];
+	[self createImport:@"1"];
+	[self createImport:@"2"];
+	[self createExport:@"0"];
+	[self createExport:@"1"];
+	[self createExport:@"2"];
 	return self;
+}
+
+- (NSString *) displayNameForImport: (NSString *)import
+{
+	if ([import isEqualToString:@"0"])
+	{
+		return @"stdin";
+	}
+	if ([import isEqualToString:@"1"])
+	{
+		return @"stdout";
+	}
+	if ([import isEqualToString:@"2"])
+	{
+		return @"stderr";
+	}
+
+	/* FIXME, handle bad names */
+	int fd = [import intValue];
+	if (fd >= 3)
+	{
+		return [NSString stringWithFormat:@"%d", fd];
+	}
+
+	return @"unknown";
+}
+
+- (NSString *) displayNameForExport: (NSString *)export
+{
+	return [self displayNameForImport:export];
 }
 
 - (void) dealloc
 {
 	DESTROY(_launchPath);
 	DESTROY(_arguments);
+	/*
 	DESTROY(_inCon);
 	DESTROY(_outCon);
 	DESTROY(_errCon);
+	*/
 	[super dealloc];
 }
 
@@ -97,14 +144,24 @@ NSString * const TMStandardErrorPort = @"stderr";
 {
 }
 
-/* no queue, it was born finished! */
+/* FIXME This should actually queue 2 ops, one depends on another.
+ * The first one is the launching op and another is the terminator,
+ * This would allow dependant to wait for either piping data or
+ * complete file generations.
+ */
+
 - (void) queue: (NSOperationQueue *)queue
      operation: (NSOperation *)op
       forOrder: (NSDictionary *)opOrder
 {
+	/* setting up tees, on current thread */
+
+
+
 }
 
 /* connectors */
+/*
 - (TMConnector *) connectorForImport:(NSString *)importName
 {
 	if ([importName isEqualToString:TMStandardInputPort])
@@ -128,5 +185,6 @@ NSString * const TMStandardErrorPort = @"stderr";
 {
 	return [NSArray arrayWithObjects:_outCon,_errCon,nil];
 }
+*/
 @end
 

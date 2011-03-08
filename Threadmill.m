@@ -18,7 +18,7 @@
  */
 
 #import <TMKit/TMView.h>
-#import <TMLib/TMNode.h>
+#import <TMLib/TMTaskNode.h>
 
 @class TMTimeControl;
 
@@ -94,6 +94,10 @@
 					@"test \noh yeh\n my export 3",
 					nil]];
 	}
+	else if ([sender tag] == 4)
+	{
+		newNode  = [TMTaskNode nodeWithLaunchPath:@"something" arguments:nil];
+	}
 
 	TMNodeView *newNodeView = [_mainView addNode:newNode];
 
@@ -132,6 +136,17 @@
 		[newNodeView setContentView:imageView];
 	}
 	else if ([sender tag] == 3)
+	{
+		NSButton *button = AUTORELEASE([[NSButton alloc] initWithFrame:NSMakeRect(0,0,size * 2,size)]);
+		[button setImage:[NSImage imageNamed:@"Threadmill.tiff"]];
+		[button setTarget:newNodeView];
+		[button setAction:@selector(queue:)];
+
+		[newNodeView setContentView:button];
+
+		[_buttonList addObject:newNodeView];
+	}
+	else if ([sender tag] == 4)
 	{
 		NSButton *button = AUTORELEASE([[NSButton alloc] initWithFrame:NSMakeRect(0,0,size * 2,size)]);
 		[button setImage:[NSImage imageNamed:@"Threadmill.tiff"]];
