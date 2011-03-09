@@ -35,7 +35,6 @@
 
 - (NSString *) port;
 - (NSUInteger) count;
-- (TMNode *) nextPair;
 
 + (id) connectorForNode: (TMNode *)aNode
 		   port: (NSString *)name;

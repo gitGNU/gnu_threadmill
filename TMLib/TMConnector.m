@@ -22,6 +22,7 @@
 			       order: (NSDictionary *)operationInfo;
 - (NSMethodSignature *) nodeMethodSignatureForSelector: (SEL)aSel;
 - (void) nodeForwardInvocation: (NSInvocation *)invocation;
+- (TMConnector *) _nextPair;
 @end
 
 @implementation TMConnector
@@ -29,7 +30,7 @@
 + (id) connectorForNode: (TMNode *)aNode
 		   port: (NSString *)name;
 {
-	TMConnector *retConnector = [[TMConnector alloc] init];
+	TMConnector *retConnector = [[self alloc] init];
 	AUTORELEASE(retConnector);
 
 	retConnector->__node = aNode;
@@ -43,7 +44,7 @@
 	return _pairs_n;
 }
 
-- (TMNode *) nextPair;
+- (TMConnector *) _nextPair
 {
 	if (_pairs_n == 0)
 	{
@@ -58,7 +59,7 @@
 		_current_pair = 0;
 	}
 
-	return _pairs[retPair]->__node;
+	return _pairs[retPair];
 }
 
 /* connecting */
@@ -227,7 +228,7 @@
 	}
 	*/
 
-	[[self nextPair] nodeForwardInvocation:invocation];
+	[[self _nextPair] nodeForwardInvocation:invocation];
 }
 
 /*

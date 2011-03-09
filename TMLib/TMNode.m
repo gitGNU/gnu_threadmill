@@ -40,6 +40,7 @@
 @end
 
 static NSMutableDictionary	*tmDefaultOpOrder = nil;
+static Class			tmConnectorClass = Nil;
 
 @implementation TMNode
 + (void) initialize
@@ -48,7 +49,13 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 	{
 		tmDefaultOpOrder = [[NSMutableDictionary alloc] init];
 		[tmDefaultOpOrder setObject:@"TMDefaultOperationOrder" forKey:@"Name"];
+		tmConnectorClass = [TMConnector class];
 	}
+}
+
+- (Class) connectorClass
+{
+	return tmConnectorClass;
 }
 
 - (TMConnector *) connectorForImport:(NSString *)importName
@@ -398,14 +405,14 @@ static NSMutableDictionary	*tmDefaultOpOrder = nil;
 
 - (BOOL) createImport: (NSString *)importName
 {
-	[_imports setObject:[TMConnector connectorForNode:self port:importName]
+	[_imports setObject:[[self connectorClass] connectorForNode:self port:importName]
 		     forKey:importName];
 	return YES;
 }
 
 - (BOOL) createExport: (NSString *)exportName
 {
-	[_exports setObject:[TMConnector connectorForNode:self port:exportName]
+	[_exports setObject:[[self connectorClass] connectorForNode:self port:exportName]
 		     forKey:exportName];
 	return YES;
 }

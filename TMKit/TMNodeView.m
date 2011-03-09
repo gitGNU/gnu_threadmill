@@ -529,12 +529,12 @@ void __port_set_frame(TMPortCell *port, NSRect *aFrame)
 	NSRectFill(NSMakeRect(BORDER_SIZE, NSMaxY(bounds) - _titleHeight - BORDER_SIZE - BORDER_LINE_SIZE,
 				_areaWidth, BORDER_LINE_SIZE));
 
-	[[NSColor darkGrayColor] set];
+	[[NSColor blackColor] set];
 	NSRectFill(NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE,
 			       	_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
 #ifdef SUPERFLUOUS
 	/* blank space during port handle dragging FIXME should only fill the empty range */
-	TMFillPatternInRect([NSImage imageNamed:@"FiberPattern.tiff"],NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
+	TMFillPatternInRect([NSImage imageNamed:@"BackStructurePattern.tiff"],NSMakeRect(BORDER_SIZE, BORDER_SIZE + BORDER_LINE_SIZE,_areaWidth, _portHeight - BORDER_LINE_SIZE * 2));
 #endif
 
 	/* draw ports */

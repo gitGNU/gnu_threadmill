@@ -29,7 +29,7 @@ NSImage *__background_pattern;
 	ASSIGN(__background_pattern, [NSImage imageNamed:@"FiberPattern.tiff"]);
 }
 
-- (NSComparisonResult) compareHeight:(TMPortCell *)aCell
+- (NSComparisonResult) compareHeight: (TMPortCell *)aCell
 {
 	TMAxisRange r = [aCell range];
 	if (_range.location < r.location) return NSOrderedAscending;
@@ -38,7 +38,7 @@ NSImage *__background_pattern;
 
 }
 
-- (void) addConnection:(TMPortCell *)aPortCell
+- (void) addConnection: (TMPortCell *)aPortCell
 {
 	if (_pairCells == nil)
 	{
@@ -49,19 +49,19 @@ NSImage *__background_pattern;
 		[_pairCells addObject:aPortCell];
 }
 
-- (void) deleteConnection:(TMPortCell *)aPortCell
+- (void) deleteConnection: (TMPortCell *)aPortCell
 {
 	[_pairCells removeObject:aPortCell];
 }
 
 /*
-- (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
+- (void)draggedImage: (NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
 {
 	NSLog(@"end");
 }
 */
 
-- (unsigned int) draggingSourceOperationMaskForLocal:(BOOL)isLocal
+- (unsigned int) draggingSourceOperationMaskForLocal: (BOOL)isLocal
 {
 	if (isLocal)
 	{
@@ -78,7 +78,7 @@ NSImage *__background_pattern;
 	return _range;
 }
 
-- (void) setRange:(TMAxisRange)aRange;
+- (void) setRange: (TMAxisRange)aRange;
 {
 	_range = aRange;
 }
@@ -87,21 +87,32 @@ NSImage *__background_pattern;
 
 @implementation TMPortCell
 
-- (id) initWithName:(NSString *)aName
+- (id) initWithName: (NSString *)aName
 {
 	return [self initWithName:aName description:aName];
 }
 
-- (id) initWithName:(NSString *)aName
-	description:(NSString *)description
+- (id) initWithName: (NSString *)aName
+	description: (NSString *)description
 {
-	ASSIGN(_portName, aName);
 	[self initTextCell:description];
+
+	ASSIGN(_portName, aName);
 	[self setAlignment:NSCenterTextAlignment];
 	[self setHighlightColor:[NSColor whiteColor]];
 	[self setBackgroundColor:[NSColor lightGrayColor]];
 
 	_pairCells = [NSMutableArray new];
+
+	/* FIXME this should actually rely on left-right connector auto-layout */
+	if ([self isKindOfClass:[TMImportCell class]])
+	{
+		[self setAlignment:NSLeftTextAlignment];
+	}
+	else if ([self isKindOfClass:[TMExportCell class]])
+	{
+		[self setAlignment:NSRightTextAlignment];
+	}
 	return self;
 }
 
@@ -120,12 +131,12 @@ NSImage *__background_pattern;
 	[super dealloc];
 }
 
-- (void) setBorderColor:(NSColor *)aColor
+- (void) setBorderColor: (NSColor *)aColor
 {
 	ASSIGN(_borderColor, aColor);
 }
 
-- (void) setHandled:(BOOL)mode
+- (void) setHandled: (BOOL)mode
 {
 	_handleMode = mode;
 }
@@ -140,12 +151,12 @@ NSImage *__background_pattern;
 	return _backgroundColor;
 }
 
-- (void) setBackgroundColor:(NSColor *)aColor
+- (void) setBackgroundColor: (NSColor *)aColor
 {
 	ASSIGN(_backgroundColor, aColor);
 }
 
-- (void) setHighlightColor:(NSColor *)aColor
+- (void) setHighlightColor: (NSColor *)aColor
 {
 	ASSIGN(_hilightColor, aColor);
 }
@@ -159,7 +170,7 @@ NSImage *__background_pattern;
 	return [NSArray arrayWithArray:_pairCells];
 }
 
-- (void) expandConnectors:(BOOL)shouldExpand
+- (void) expandConnectors: (BOOL)shouldExpand
 {
 	_connectorsAreExpanded = shouldExpand;
 }
@@ -175,7 +186,7 @@ NSImage *__background_pattern;
 }
 
 /*
-- (void)setRepresentedObject:(id)anObject
+- (void)setRepresentedObject: (id)anObject
 {
 	[super setRepresentedObject:anObject];
 
@@ -185,8 +196,8 @@ NSImage *__background_pattern;
 */
 
 #if 0
-- (void) drawInteriorWithFrame:(NSRect)cellFrame
-                        inView:(NSView *)controlView
+- (void) drawInteriorWithFrame: (NSRect)cellFrame
+                        inView: (NSView *)controlView
 {
 	NSGraphicsContext *ctxt=GSCurrentContext();
 
@@ -228,15 +239,8 @@ NSImage *__background_pattern;
 @end
 
 @implementation TMImportCell
-- (id) initWithPortName:(NSString *)aName
-{
-	[super initWithPortName:aName];
-	[self setBackgroundColor:[NSColor orangeColor]];
 
-	return self;
-}
-
-- (CGFloat) connectionHeightForExportCell:(TMExportCell *)exportCell
+- (CGFloat) connectionHeightForExportCell: (TMExportCell *)exportCell
 {
 
 	/*
@@ -318,8 +322,8 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 }
 
-- (void) drawInteriorWithFrame:(NSRect)cellFrame
-                        inView:(NSView *)controlView
+- (void) drawInteriorWithFrame: (NSRect)cellFrame
+                        inView: (NSView *)controlView
 {
 	NSGraphicsContext *ctxt=GSCurrentContext();
 	NSRect cf = [self drawingRectForBounds: cellFrame];
@@ -582,6 +586,8 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 	} DPSgrestore(ctxt);
 
+	cellFrame.origin.x += MIN_PORT_HEIGHT;
+	cellFrame.size.width -= MIN_PORT_HEIGHT;
 	[super drawInteriorWithFrame:cellFrame
 		inView:controlView];
 
@@ -602,15 +608,9 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 @end
 
 @implementation TMExportCell
-- (id) initWithPortName:(NSString *)aName
-{
-	[super initWithPortName:aName];
-	[self setBackgroundColor:[NSColor greenColor]];
-	return self;
-}
 
-- (void) drawInteriorWithFrame:(NSRect)cellFrame
-                        inView:(NSView *)controlView
+- (void) drawInteriorWithFrame: (NSRect)cellFrame
+                        inView: (NSView *)controlView
 {
 	NSGraphicsContext *ctxt=GSCurrentContext();
 	NSRect cf = [self drawingRectForBounds: cellFrame];
@@ -702,6 +702,7 @@ void __draw_handle_line(NSGraphicsContext *ctxt, NSRect cf, NSColor *color, CGFl
 
 	} DPSgrestore(ctxt);
 
+	cellFrame.size.width -= MIN_PORT_HEIGHT/2;
 	[super drawInteriorWithFrame:cellFrame
 		inView:controlView];
 }

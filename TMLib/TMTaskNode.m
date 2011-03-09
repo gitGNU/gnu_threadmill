@@ -16,6 +16,7 @@
 #import "TMTaskNode.h"
 #import "TMLib/TMOperation.h"
 #import "TMLib/TMConnector.h"
+#import "TMLib/TMTeePipe.h"
 
 /*
 NSString * const TMStandardInputPort = @"stdin";
@@ -25,12 +26,11 @@ NSString * const TMStandardErrorPort = @"stderr";
 
 @interface TMTaskOperation : TMOperation
 {
-/* @package here */
+/* @package */
 @public
 	NSTask *_task;
-	NSPipe *_inPipe;
-	NSPipe *_outPipe;
-	NSPipe *_errPipe;
+	NSMutableDictionary *_readTees;
+	NSMutableDictionary *_outTees;
 }
 @end
 
@@ -38,6 +38,10 @@ NSString * const TMStandardErrorPort = @"stderr";
 - (id) initWithTask: (NSTask *)aTask
 {
 	ASSIGN(_task, aTask);
+	ASSIGN(_inTees, [NSMutableDictionary dictionaryWithCapacity:3]);
+	ASSIGN(_outTees, [NSMutableDictionary dictionaryWithCapacity:3]);
+
+	return self;
 }
 
 - (void) dealloc
@@ -155,7 +159,17 @@ NSString * const TMStandardErrorPort = @"stderr";
       forOrder: (NSDictionary *)opOrder
 {
 	/* setting up tees, on current thread */
+	NSEnumerator *en = [[self allImportConnectors] objectEnumerator];
+	TMConnector *conn;
+	int i;
 
+	while ((conn = [en nextObject]))
+	{
+		for (i = [conn count]; i; i--)
+		{
+
+		}
+	}
 
 
 }
