@@ -44,10 +44,10 @@
 
 - (void) setDependant: (NSOperation *)dependant
 	     forQueue: (NSOperationQueue *)queue
-		order: (NSDictionary *)opOrder;
-- (void) finishOrder: (NSDictionary *)opOrder;
+		order: (NSDictionary *)order;
+- (void) finishOrder: (NSDictionary *)order;
 - (void) pushQueue: (NSOperationQueue *) queue
-	  forOrder: (NSDictionary *)opOrder;
+	  forOrder: (NSDictionary *)order;
 @end
 
 #endif

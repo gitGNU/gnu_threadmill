@@ -15,9 +15,9 @@
 
 #import "TMConnector.h"
 @interface TMConnector (Private)
-- (void) nodeFinishOrder: (NSDictionary *)opOrder;
+- (void) nodeFinishOrder: (NSDictionary *)order;
 - (void) nodePushQueue: (NSOperationQueue *)queue
-	      forOrder: (NSDictionary *)opOrder;
+	      forOrder: (NSDictionary *)order;
 - (NSOperation *) dependencyForQueue: (NSOperationQueue *)queue
 			       order: (NSDictionary *)operationInfo;
 - (NSMethodSignature *) nodeMethodSignatureForSelector: (SEL)aSel;
@@ -116,35 +116,35 @@
 }
 
 /* finishing */
-- (void) nodeFinishOrder: (NSDictionary *)opOrder
+- (void) nodeFinishOrder: (NSDictionary *)order
 {
-	[__node finishOrder:opOrder];
+	[__node finishOrder:order];
 }
 
-- (void) finishOrder: (NSDictionary *)opOrder
+- (void) finishOrder: (NSDictionary *)order
 {
 	int i = 0;
 	while (i < _pairs_n)
 	{
-		[_pairs[i] nodeFinishOrder:opOrder];
+		[_pairs[i] nodeFinishOrder:order];
 		i++;
 	}
 }
 
 /* pushing */
 - (void) nodePushQueue: (NSOperationQueue *)queue
-	      forOrder: (NSDictionary *)opOrder
+	      forOrder: (NSDictionary *)order
 {
-	[__node pushQueue:queue forOrder:opOrder];
+	[__node pushQueue:queue forOrder:order];
 }
 
 - (void) pushQueue: (NSOperationQueue *) queue
-	  forOrder: (NSDictionary *)opOrder
+	  forOrder: (NSDictionary *)order
 {
 	int i = 0;
 	while (i < _pairs_n)
 	{
-		[_pairs[i] nodePushQueue:queue forOrder:opOrder];
+		[_pairs[i] nodePushQueue:queue forOrder:order];
 		i++;
 	}
 }
@@ -159,13 +159,13 @@
 /* for import connector only */
 - (void) setDependant: (NSOperation *)dependant
 	     forQueue: (NSOperationQueue *)queue
-		order: (NSDictionary *)opOrder
+		order: (NSDictionary *)order
 {
 	NSArray *dependencies = [dependant dependencies];
 	int i = 0;
 	while (i < _pairs_n)
 	{
-		NSOperation *exportOp = [_pairs[i] dependencyForQueue:queue order:opOrder];
+		NSOperation *exportOp = [_pairs[i] dependencyForQueue:queue order:order];
 		if (exportOp != nil && ![dependencies containsObject:exportOp])
 		{
 			[dependant addDependency:exportOp];

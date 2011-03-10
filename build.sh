@@ -18,14 +18,26 @@ debug()
 	gdb ./Threadmill.app/Threadmill
 }
 
-case "$1" in
+cmd="`basename $0`"
+
+if test "x$cmd" = xbuild.sh; then
+cmd=$1
+fi
+
+case "$cmd" in
+	dm)
+		build && gdb ./obj/tmill
+		;;
+	tm)
+		build && ./obj/tmill
+		;;
 	b)
 		build
 		;;
-	g)
+	r)
 		run
 		;;
-	bg)
+	br)
 		build && run
 		;;
 	d)
@@ -35,10 +47,9 @@ case "$1" in
 		build && debug
 		;;
 	*)
-	build
-	echo "Usage: $0 {b|g|d|bg|bd}"
-	echo "\tb = build"
-	echo "\tg = run"
-	echo "\td = debug"
-	exit 1
+		build
+		echo "Usage: $0 {b|r|d|bg|bd}"
+		echo "\tb = build"
+		echo "\tr = run"
+		echo "\td = debug"
 esac

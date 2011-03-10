@@ -124,7 +124,7 @@ static Class			tmConnectorClass = Nil;
 
 - (void) queue: (NSOperationQueue *)queue
      operation: (NSOperation *)op
-      forOrder: (NSDictionary *)opOrder
+      forOrder: (NSDictionary *)order
 {
 	if (queue != nil)
 	{
@@ -149,14 +149,12 @@ static Class			tmConnectorClass = Nil;
 /* FIXME queue:forConnector:order:*/
 - (NSOperation *) connectorDependency: (TMConnector *)exportConnector
 			     forQueue: (NSOperationQueue *)queue
-				order: (NSDictionary *)opOrder
+				order: (NSDictionary *)order
 {
-	if (opOrder == nil) opOrder = tmDefaultOpOrder;
+	if (order == nil) order = tmDefaultOpOrder;
 
-	NSOperation *op = [_orders objectForKey:opOrder];
+	NSOperation *op = [_opOrders objectForKey:order];
 
-	/* Block cyclic dependency, if an op is being prepared,
-	   just don't return it. */
 	/* TODO Design specific APIs for this preparation methods.
 
 		   - (void) togglePreparationStateOfOperation:(NSOperation *)op;
@@ -164,13 +162,20 @@ static Class			tmConnectorClass = Nil;
 
 	   may be superclass AbstractNode later. */
 
+	/* FIXME one node should be able to prepare many operations at once */
+
 	if (op != nil)
 	{
-	       	if ([_preps containsObject:op])
+		/* Block cyclic dependency, don't return any operation that is being prepared */
+		if ([_preps containsObject:op])
 			return nil;
-
-		op = [self createOperationForOrder:opOrder];
+		return op;
 	}
+
+
+	/* create & register new operation for order */
+	op = [self createOperationForOrder:order];
+	[_opOrders setObject:op forKey:order];
 
 	/* preparing */
 	[_preps addObject:op];
@@ -184,13 +189,15 @@ static Class			tmConnectorClass = Nil;
 		{
 			[conn setDependant:op
 				  forQueue:queue
-				     order:opOrder];
+				     order:order];
 		}
 
-		[self queue:queue operation:op forOrder:opOrder];
 	}
 	[_preps removeObject:op];
-	/* end preparation */
+
+
+	/* queue */
+	[self queue:queue operation:op forOrder:order];
 
 	return op;
 }
@@ -207,13 +214,13 @@ static Class			tmConnectorClass = Nil;
 + (void) setDependant: (NSOperation *)operation
 	     forNodes: (NSArray *)nodeList
 	        queue: (NSOperationQueue *)queue
-	        order: (NSDictionary *)opOrder
+	        order: (NSDictionary *)order
 {
 	NSEnumerator *en = [nodeList objectEnumerator];
 	TMNode *node;
 	while ((node = [en nextObject]))
 	{
-		NSOperation *nodeOp = [node connectorDependency:nil forQueue:queue order:opOrder];
+		NSOperation *nodeOp = [node connectorDependency:nil forQueue:queue order:order];
 
 		if (nodeOp != nil) [operation addDependency:nodeOp];
 	}
@@ -226,15 +233,15 @@ static Class			tmConnectorClass = Nil;
 }
 #endif
 
-- (void) finishOrder: (NSDictionary *)opOrder
+- (void) finishOrder: (NSDictionary *)order
 {
-	if (opOrder == nil) opOrder = tmDefaultOpOrder;
+	if (order == nil) order = tmDefaultOpOrder;
 
-	NSOperation *op = [_orders objectForKey:opOrder];
+	NSOperation *op = [_opOrders objectForKey:order];
 
 	if (op != nil)
 	{
-		[_orders removeObjectForKey:opOrder];
+		[_opOrders removeObjectForKey:order];
 
 		TMConnector *con;
 		NSEnumerator *en;
@@ -242,20 +249,20 @@ static Class			tmConnectorClass = Nil;
 		en = [[self allImportConnectors] objectEnumerator];
 		while ((con = [en nextObject]))
 		{
-			[con finishOrder:opOrder];
+			[con finishOrder:order];
 		}
 
 		en = [[self allExportConnectors] objectEnumerator];
 		while ((con = [en nextObject]))
 		{
-			[con finishOrder:opOrder];
+			[con finishOrder:order];
 		}
 	}
 }
 
 
 - (void) pushQueue: (NSOperationQueue *)queue
-	  forOrder: (NSDictionary *)opOrder
+	  forOrder: (NSDictionary *)order
 {
 	NSEnumerator *en = [[self allExportConnectors] objectEnumerator];
 	TMConnector *export;
@@ -264,23 +271,23 @@ static Class			tmConnectorClass = Nil;
 	do {
 		[self connectorDependency:export
 				 forQueue:queue
-				    order:opOrder];
+				    order:order];
 		if (export != nil)
 			[export pushQueue:queue
-				 forOrder:opOrder];
+				 forOrder:order];
 	} while ((export = [en nextObject]));
 }
 
 - (id) init
 {
-	_orders = [[NSMutableDictionary alloc] init];
+	_opOrders = [[NSMutableDictionary alloc] init];
 	_preps = [[NSMutableSet alloc] init];
 	return self;
 }
 
 - (void) dealloc
 {
-	DESTROY(_orders);
+	DESTROY(_opOrders);
 	DESTROY(_preps);
 	[super dealloc];
 }

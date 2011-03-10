@@ -55,7 +55,7 @@ typedef enum _TMConnectingType
 @interface TMNode : NSObject
 {
 	NSMutableSet *_preps;
-	NSMutableDictionary *_orders;
+	NSMutableDictionary *_opOrders;
 }
 + (id) nodeWithImports: (NSArray *)importList
 	       exports: (NSArray *)exportList;
@@ -64,7 +64,7 @@ typedef enum _TMConnectingType
 + (void) setDependant: (NSOperation *)operation
 	     forNodes: (NSArray *)nodeList
 	        queue: (NSOperationQueue *)queue
-	        order: (NSDictionary *)opOrder;
+	        order: (NSDictionary *)order;
 		*/
 
 - (NSString *) name;
@@ -95,12 +95,12 @@ typedef enum _TMConnectingType
 		       try: (BOOL)try;
 
 - (void) pushQueue: (NSOperationQueue *)queue
-	  forOrder: (NSDictionary *)opOrder;
-- (void) finishOrder: (NSDictionary *)opOrder;
+	  forOrder: (NSDictionary *)order;
+- (void) finishOrder: (NSDictionary *)order;
 /* TODO implement the higher level -pushOrder: which will create
    and maintain a stack of orders (fifo dependency) and finish
    them and use a default queue for the linking group. */
-//- (void) pushOrder: (NSDictionary *)opOrder;
+//- (void) pushOrder: (NSDictionary *)order;
 
 @end
 

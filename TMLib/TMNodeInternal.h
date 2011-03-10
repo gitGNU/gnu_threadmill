@@ -22,14 +22,14 @@
 
 @interface TMNode (Internal)
 
-- (NSOperation *) operationForOrder: (NSDictionary *)order;
+- (NSOperation *) createOperationForOrder: (NSDictionary *)order;
 - (void) queue: (NSOperationQueue *)queue
      operation: (NSOperation *)op
-      forOrder: (NSDictionary *)opOrder;
+      forOrder: (NSDictionary *)order;
 
 - (NSOperation *) connectorDependency: (TMConnector *)exportConnector
 			     forQueue: (NSOperationQueue *)queue
-				order: (NSDictionary *)opOrder;
+				order: (NSDictionary *)order;
 
 - (NSString *) nameOfConnector:(TMConnector *)aConnector;
 - (TMConnector *) connectorForImport:(NSString *)importName;

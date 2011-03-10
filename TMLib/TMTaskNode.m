@@ -38,7 +38,7 @@ NSString * const TMStandardErrorPort = @"stderr";
 
 - (id) initWithTask: (NSTask *)task
 {
-	[super init]
+	[super init];
 	ASSIGN(_task, task);
 	ASSIGN(_readTees, [NSMutableDictionary dictionaryWithCapacity:3]);
 	ASSIGN(_writeTees, [NSMutableDictionary dictionaryWithCapacity:3]);
@@ -96,9 +96,7 @@ NSString * const TMStandardErrorPort = @"stderr";
 	ASSIGN(_launchPath, launchPath);
 	ASSIGN(_arguments, arguments);
 	[self createImport:@"0"];
-	[self createImport:@"1"];
-	[self createImport:@"2"];
-	[self createExport:@"0"];
+
 	[self createExport:@"1"];
 	[self createExport:@"2"];
 	return self;
@@ -110,28 +108,26 @@ NSString * const TMStandardErrorPort = @"stderr";
 	{
 		return @"stdin";
 	}
-	if ([import isEqualToString:@"1"])
+
+	/* FIXME, handle bad names */
+	int fd = [import intValue];
+	return [NSString stringWithFormat:@"unknown %d", fd]; //Unknown for now
+}
+
+- (NSString *) displayNameForExport: (NSString *)export
+{
+	if ([export isEqualToString:@"1"])
 	{
 		return @"stdout";
 	}
-	if ([import isEqualToString:@"2"])
+	if ([export isEqualToString:@"2"])
 	{
 		return @"stderr";
 	}
 
 	/* FIXME, handle bad names */
-	int fd = [import intValue];
-	if (fd >= 3)
-	{
-		return [NSString stringWithFormat:@"%d", fd];
-	}
-
-	return @"unknown";
-}
-
-- (NSString *) displayNameForExport: (NSString *)export
-{
-	return [self displayNameForImport:export];
+	int fd = [export intValue];
+	return [NSString stringWithFormat:@"unknown %d", fd];
 }
 
 - (void) dealloc
@@ -146,9 +142,14 @@ NSString * const TMStandardErrorPort = @"stderr";
 	[super dealloc];
 }
 
+- (NSString *) description
+{
+	return [self name];
+}
+
 - (NSString *) name
 {
-	return [NSString stringWithFormat:@"Task node (%x)", self];
+	return [NSString stringWithFormat:@"Task \"%@ %@\" (0x%x)",_launchPath,_arguments, self];
 }
 
 - (NSString *) launchPath
@@ -161,37 +162,34 @@ NSString * const TMStandardErrorPort = @"stderr";
 	return _arguments;
 }
 
-- (void) pipeTeeForWriting: (TMTeePipe *)remoteTee
-		    byPort: (NSString *)port
-		  forOrder: (NSDictionary *)order
-{
-	TMTaskOperation *taskOp = (TMTaskOperation *)[self operationForOrder:order];
-	TMTeePipe *localTee = [taskOp->_writeTees objectForKey:port];
-
-	[localTee pipeTeeForWriting:remoteTee];
-}
-
 - (NSOperation *) createOperationForOrder: (NSDictionary *)order
 {
-	TMTaskOperation *taskOp = [[TMTaskOperation alloc] initWithTask:[[NSTask alloc] initWithLaunchPath:_launchPath arguments:_arguments]];
+	NSTask * task = [[NSTask alloc] init];
+	TMTaskOperation *taskOp = [[TMTaskOperation alloc] initWithTask:task];
+	id tee;
 
 	NSEnumerator *en = [[self allImportConnectors] objectEnumerator];
 	TMConnector *conn;
 	while ((conn = [en nextObject]))
 	{
 		NSString *port = [conn port];
-		TMTeePipe *tee = [taskOp->_readTees objectForKey:port];
-		if (tee == nil)
+		if ([[conn allPairs] count] == 0)
+		{
+			/* plug */
+			tee = [NSFileHandle fileHandleWithNullDevice];
+		}
+		else
 		{
 			tee = [TMTeePipe tee];
 			[taskOp->_readTees setObject:tee forKey:port];
+		}
 
-			NSEnumerator *portEn = [[conn allPairs] objectEnumerator];
-			TMConnector *pair;
-			while ((pair = [portEn nextObject]))
-			{
-				[(TMTaskNode *)[pair node] pipeTeeForWriting:tee byPort:[pair port] forOrder:order];
-			}
+		/* FIXME GNUstep doesn't want to leave fd more than 2 on open */
+		if ([port isEqualToString:@"0"])
+		{
+			NSDebugLLog(@"TMTaskNode", @"stdin %@",tee);
+			[task setStandardInput:tee];
+
 		}
 	}
 
@@ -199,16 +197,51 @@ NSString * const TMStandardErrorPort = @"stderr";
 	while ((conn = [en nextObject]))
 	{
 		NSString *port = [conn port];
-		TMTeePipe *tee = [taskOp->_writeTees objectForKey:port];
-		if (tee == nil)
+		if ([[conn allPairs] count] == 0)
+		{
+			/* plug */
+			tee = [NSFileHandle fileHandleWithNullDevice];
+		}
+		else
 		{
 			tee = [TMTeePipe tee];
 			[taskOp->_writeTees setObject:tee forKey:port];
 		}
+
+		if ([port isEqualToString:@"1"])
+		{
+			NSDebugLLog(@"TMTaskNode", @"stdout %@",tee);
+			[task setStandardOutput:tee];
+
+		}
+		else if ([port isEqualToString:@"2"])
+		{
+			NSDebugLLog(@"TMTaskNode", @"stderr %@",tee);
+			[task setStandardError:tee];
+
+		}
 	}
 
-	return taskOp;
+	[task setLaunchPath:_launchPath]; //FIXME should copy launch path and arguments
+	[task setArguments:_arguments];
+	NSDebugLLog(@"TMTaskNode", @"launch %@ %@", _launchPath, _arguments);
+	[task launch];
+//	[task performSelectorOnMainThread: @selector(launch) withObject: nil waitUntilDone: NO];
+
+	return AUTORELEASE(taskOp);
 }
+
+- (void) pipeTeeForWriting: (TMTeePipe *)remoteTee
+		    byPort: (NSString *)port
+		  forOrder: (NSDictionary *)order
+{
+	TMTaskOperation *taskOp = [_opOrders objectForKey:order];
+	TMTeePipe *localTee = [taskOp->_writeTees objectForKey:port];
+
+	NSDebugLLog(@"TMTaskNode", @"%@ piping tee %@..", self,port);
+	[localTee pipeTeeForWriting:remoteTee];
+}
+
 
 /* FIXME This should actually queue 2 ops, one depends on another.
  * The first one is the launching op and another is the terminator,
@@ -216,14 +249,32 @@ NSString * const TMStandardErrorPort = @"stderr";
  * complete file generations.
  */
 
-#if 0
 - (void) queue: (NSOperationQueue *)queue
      operation: (NSOperation *)op
-      forOrder: (NSDictionary *)opOrder
+      forOrder: (NSDictionary *)order
 {
+	NSDebugLLog(@"TMTaskNode", @"   in %@ , queue %@",self,op);
 	/* setting up tees, on current thread */
+	NSEnumerator *en = [[self allImportConnectors] objectEnumerator];
+	TMConnector *conn;
+	while ((conn = [en nextObject]))
+	{
+		NSString *port = [conn port];
+		TMTeePipe *tee = [((TMTaskOperation *)op)->_readTees objectForKey:port];
+
+		if (tee == nil) continue;
+
+		NSEnumerator *portEn = [[conn allPairs] objectEnumerator];
+		TMConnector *pair;
+		while ((pair = [portEn nextObject]))
+		{
+			[(TMTaskNode *)[pair node] pipeTeeForWriting:tee byPort:[pair port] forOrder:order];
+			NSDebugLLog(@"TMTaskNode", @"...to %@ on %@",port,self);
+		}
+	}
+
+	[super queue:queue operation:op forOrder:order];
 }
-#endif
 
 /* connectors */
 /*
