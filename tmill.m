@@ -38,12 +38,23 @@ int main(int argc, char *argv[])
 
 	TMTaskNode * listA = [TMTaskNode nodeWithLaunchPath:@"/bin/ls" arguments:pathsA];
 	TMTaskNode * listB = [TMTaskNode nodeWithLaunchPath:@"/bin/ls" arguments:pathsB];
-	TMTaskNode * sort = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/sort" arguments:[NSArray array]];
+	TMTaskNode * sort = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/sort" arguments:[NSArray arrayWithObject:@"-r"]];
 	TMTaskNode * tee = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/tee" arguments:[NSArray arrayWithObjects:@"-a",@"logfile.txt",nil]];
 
+	/*
+	   (listA:ls /)-----.
+	                     \
+	                      >--->(sort:sort -r)--->(tee:tee -a logfile.txt)
+	                     /
+	   (listB:ls /home)-'
+	 */
+
+	/* ports are file descriptors, eg. @"1" means stdout */
 	[listA setExport:@"1" forImport:@"0" onNode:sort];
 	[listB setExport:@"1" forImport:@"0" onNode:sort];
 	[sort setExport:@"1" forImport:@"0" onNode:tee];
+
+	/* execute the graph */
 
 	[listA pushQueue:opQueue forOrder:nil];
 	[listA finishOrder:nil];
