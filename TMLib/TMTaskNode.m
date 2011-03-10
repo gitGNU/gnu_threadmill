@@ -35,12 +35,13 @@ NSString * const TMStandardErrorPort = @"stderr";
 @end
 
 @implementation TMTaskOperation
-- (id) initWithTask: (NSTask *)aTask
+
+- (id) initWithTask: (NSTask *)task
 {
-	ASSIGN(_task, aTask);
+	[super init]
+	ASSIGN(_task, task);
 	ASSIGN(_readTees, [NSMutableDictionary dictionaryWithCapacity:3]);
 	ASSIGN(_writeTees, [NSMutableDictionary dictionaryWithCapacity:3]);
-
 	return self;
 }
 
@@ -53,6 +54,7 @@ NSString * const TMStandardErrorPort = @"stderr";
 }
 
 /* This op class is just a place holder, it is always finished and it won't be queued. Task-nodes are responsible for launching task */
+/* FIXME There should be 2 ops, the launcher and the finisher so the dependants can choose the kind of dependency */ 
 - (BOOL) isFinished
 {
 	return YES;
@@ -169,17 +171,9 @@ NSString * const TMStandardErrorPort = @"stderr";
 	[localTee pipeTeeForWriting:remoteTee];
 }
 
-- (Class) operationClass
+- (NSOperation *) createOperationForOrder: (NSDictionary *)order
 {
-	return [TMTaskOperation class];
-}
-
-- (NSOperation *) operationForOrder: (NSDictionary *)order
-{
-	TMTaskOperation *taskOp = (TMTaskOperation *)[super operationForOrder:order];
-
-	//FIXME rmme
-	NSAssert([taskOp isKindOfClass:[TMTaskOperation class]], @"doh");
+	TMTaskOperation *taskOp = [[TMTaskOperation alloc] initWithTask:[[NSTask alloc] initWithLaunchPath:_launchPath arguments:_arguments]];
 
 	NSEnumerator *en = [[self allImportConnectors] objectEnumerator];
 	TMConnector *conn;

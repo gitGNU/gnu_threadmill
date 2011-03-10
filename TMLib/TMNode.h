@@ -68,7 +68,6 @@ typedef enum _TMConnectingType
 		*/
 
 - (NSString *) name;
-- (Class) operationClass;
 
 /* array of name strings */
 - (NSArray *) allImports;
@@ -107,12 +106,10 @@ typedef enum _TMConnectingType
 
 @interface TMGenericNode : TMNode
 {
-	Class _opClass;
 	NSMutableDictionary *_imports;
 	NSMutableDictionary *_exports;
 }
 
-- (void) setOperationClass: (Class)aClass;
 - (BOOL) createImport: (NSString *)importName;
 - (BOOL) createExport: (NSString *)exportName;
 - (id) initWithImports: (NSArray *)importList

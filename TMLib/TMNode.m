@@ -117,26 +117,9 @@ static Class			tmConnectorClass = Nil;
 }
 
 /* the caller should setup KVO monitoring and such on the returned op */
-- (NSOperation *) operationForOrder: (NSDictionary *)order
+- (NSOperation *) createOperationForOrder: (NSDictionary *)order
 {
-	NSOperation *retOp = [_orders objectForKey:order];
-	if (retOp == nil)
-	{
-
-		Class opClass = [self operationClass];
-		retOp = [opClass alloc];
-
-		if ([retOp isKindOfClass:[TMOperation class]])
-		{
-			[(TMOperation *)retOp initForNode:self order:order];
-		}
-		else [retOp init];
-		AUTORELEASE(retOp);
-
-		[_orders setObject:retOp forKey:order];
-	}
-
-	return retOp;
+	return AUTORELEASE([[NSOperation alloc] init]);
 }
 
 - (void) queue: (NSOperationQueue *)queue
@@ -170,7 +153,7 @@ static Class			tmConnectorClass = Nil;
 {
 	if (opOrder == nil) opOrder = tmDefaultOpOrder;
 
-	NSOperation *op = [self operationForOrder:opOrder];
+	NSOperation *op = [_orders objectForKey:opOrder];
 
 	/* Block cyclic dependency, if an op is being prepared,
 	   just don't return it. */
@@ -181,12 +164,16 @@ static Class			tmConnectorClass = Nil;
 
 	   may be superclass AbstractNode later. */
 
-	if ([_preps containsObject:op])
+	if (op != nil)
 	{
-		return nil;
+	       	if ([_preps containsObject:op])
+			return nil;
+
+		op = [self createOperationForOrder:opOrder];
 	}
 
 	/* preparing */
+	[_preps addObject:op];
 	{
 		/* FIXME synchronize a current search with operation order */
 		TMConnector *conn;
@@ -303,11 +290,6 @@ static Class			tmConnectorClass = Nil;
 	return [NSString stringWithFormat:@"Abstract node (%x)", self];
 }
 
-- (Class) operationClass
-{
-	return [TMOperation class];
-}
-
 - (NSArray *) setExport: (NSString *)exportName
 	      forImport: (NSString *)importName
 	         onNode: (TMNode *)aNode;
@@ -365,7 +347,6 @@ static Class			tmConnectorClass = Nil;
 	[super init];
 	_imports = [[NSMutableDictionary alloc] init];
 	_exports = [[NSMutableDictionary alloc] init];
-	_opClass = [super operationClass];
 
 	return self;
 }
@@ -399,16 +380,6 @@ static Class			tmConnectorClass = Nil;
 	DESTROY(_exports);
 
 	[super dealloc];
-}
-
-- (void) setOperationClass: (Class)aClass
-{
-	_opClass = aClass;
-}
-
-- (Class) operationClass
-{
-	return _opClass;
 }
 
 - (NSString *) name
