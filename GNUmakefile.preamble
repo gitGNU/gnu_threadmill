@@ -1,3 +1,7 @@
+ADDITIONAL_TOOL_LIBS += \
+		-lTMill \
+
+
 ADDITIONAL_GUI_LIBS += \
 		-lTMill \
 		-lTMillGUI \

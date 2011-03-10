@@ -33,7 +33,11 @@ Threadmill_HEADERS =
 Threadmill_OBJC_FILES = main.m \
 			Threadmill.m \
 
+TOOL_NAME = tmill
+tmill_OBJC_FILES = tmill.m
+
 -include GNUmakefile.preamble
 
 include $(GNUSTEP_MAKEFILES)/aggregate.make
 include $(GNUSTEP_MAKEFILES)/application.make
+include $(GNUSTEP_MAKEFILES)/tool.make

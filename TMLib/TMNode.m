@@ -119,16 +119,24 @@ static Class			tmConnectorClass = Nil;
 /* the caller should setup KVO monitoring and such on the returned op */
 - (NSOperation *) operationForOrder: (NSDictionary *)order
 {
-	Class opClass = [self operationClass];
-	TMOperation *retOp = [opClass alloc];
-	
-	if ([retOp isKindOfClass:[TMOperation class]])
+	NSOperation *retOp = [_orders objectForKey:order];
+	if (retOp == nil)
 	{
-		[retOp initForNode:self order:order];
-	}
-	else [retOp init];
 
-	return [retOp autorelease];
+		Class opClass = [self operationClass];
+		retOp = [opClass alloc];
+
+		if ([retOp isKindOfClass:[TMOperation class]])
+		{
+			[(TMOperation *)retOp initForNode:self order:order];
+		}
+		else [retOp init];
+		AUTORELEASE(retOp);
+
+		[_orders setObject:retOp forKey:order];
+	}
+
+	return retOp;
 }
 
 - (void) queue: (NSOperationQueue *)queue
@@ -162,35 +170,7 @@ static Class			tmConnectorClass = Nil;
 {
 	if (opOrder == nil) opOrder = tmDefaultOpOrder;
 
-	//NSOperation *op = [_orders objectForKey:opOrder];
-	NSOperation *op = [_orders objectForKey:opOrder];
-
-	/* no op is being prepared, so create one */
-	if (op  == nil)
-	{
-		op = [self operationForOrder:opOrder];
-
-		[_preps addObject:op];
-		[_orders setObject:op forKey:opOrder];
-
-			/* FIXME synchronize a current search with operation order */
-			TMConnector *conn;
-			NSEnumerator *en;
-
-			en = [[self allImportConnectors] objectEnumerator];
-			while ((conn = [en nextObject]))
-			{
-				[conn setDependant:op
-					  forQueue:queue
-					     order:opOrder];
-			}
-
-		[_preps removeObject:op];
-
-		[self queue:queue operation:op forOrder:opOrder];
-
-
-	}
+	NSOperation *op = [self operationForOrder:opOrder];
 
 	/* Block cyclic dependency, if an op is being prepared,
 	   just don't return it. */
@@ -205,6 +185,25 @@ static Class			tmConnectorClass = Nil;
 	{
 		return nil;
 	}
+
+	/* preparing */
+	{
+		/* FIXME synchronize a current search with operation order */
+		TMConnector *conn;
+		NSEnumerator *en;
+
+		en = [[self allImportConnectors] objectEnumerator];
+		while ((conn = [en nextObject]))
+		{
+			[conn setDependant:op
+				  forQueue:queue
+				     order:opOrder];
+		}
+
+		[self queue:queue operation:op forOrder:opOrder];
+	}
+	[_preps removeObject:op];
+	/* end preparation */
 
 	return op;
 }
@@ -307,6 +306,20 @@ static Class			tmConnectorClass = Nil;
 - (Class) operationClass
 {
 	return [TMOperation class];
+}
+
+- (NSArray *) setExport: (NSString *)exportName
+	      forImport: (NSString *)importName
+	         onNode: (TMNode *)aNode;
+{
+	return [self setExport:exportName forImport:importName onNode:aNode try:NO];
+}
+
+- (NSArray *) removeExport: (NSString *)exportName
+		 forImport: (NSString *)importName
+		    onNode: (TMNode *)aNode;
+{
+	return [self removeExport:exportName forImport:importName onNode:aNode try:NO];
 }
 
 - (NSArray *) setExport: (NSString *)exportName

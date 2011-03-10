@@ -79,6 +79,14 @@ typedef enum _TMConnectingType
 /* return series of TMConnecting */
 - (NSArray *) setExport: (NSString *)exportName
 	      forImport: (NSString *)importName
+	         onNode: (TMNode *)aNode;
+
+- (NSArray *) removeExport: (NSString *)exportName
+		 forImport: (NSString *)importName
+		    onNode: (TMNode *)aNode;
+
+- (NSArray *) setExport: (NSString *)exportName
+	      forImport: (NSString *)importName
 	         onNode: (TMNode *)aNode
 	            try: (BOOL)try;
 

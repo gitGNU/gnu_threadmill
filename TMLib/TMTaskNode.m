@@ -30,7 +30,7 @@ NSString * const TMStandardErrorPort = @"stderr";
 @public
 	NSTask *_task;
 	NSMutableDictionary *_readTees;
-	NSMutableDictionary *_outTees;
+	NSMutableDictionary *_writeTees;
 }
 @end
 
@@ -38,8 +38,8 @@ NSString * const TMStandardErrorPort = @"stderr";
 - (id) initWithTask: (NSTask *)aTask
 {
 	ASSIGN(_task, aTask);
-	ASSIGN(_inTees, [NSMutableDictionary dictionaryWithCapacity:3]);
-	ASSIGN(_outTees, [NSMutableDictionary dictionaryWithCapacity:3]);
+	ASSIGN(_readTees, [NSMutableDictionary dictionaryWithCapacity:3]);
+	ASSIGN(_writeTees, [NSMutableDictionary dictionaryWithCapacity:3]);
 
 	return self;
 }
@@ -47,6 +47,8 @@ NSString * const TMStandardErrorPort = @"stderr";
 - (void) dealloc
 {
 	DESTROY(_task);
+	DESTROY(_readTees);
+	DESTROY(_writeTees);
 	[super dealloc];
 }
 
@@ -64,7 +66,20 @@ NSString * const TMStandardErrorPort = @"stderr";
 */
 @end
 
+/*
+@interface TMTaskConnector : TMConnector
+@end
+*/
+
+
 @implementation TMTaskNode
+
+/*
+- (Class) connectorClass
+{
+	return [TMTaskConnector class];
+}
+*/
 
 + (id) nodeWithLaunchPath: (NSString *)launchPath
 		arguments: (NSArray *)arguments
@@ -144,8 +159,61 @@ NSString * const TMStandardErrorPort = @"stderr";
 	return _arguments;
 }
 
+- (void) pipeTeeForWriting: (TMTeePipe *)remoteTee
+		    byPort: (NSString *)port
+		  forOrder: (NSDictionary *)order
+{
+	TMTaskOperation *taskOp = (TMTaskOperation *)[self operationForOrder:order];
+	TMTeePipe *localTee = [taskOp->_writeTees objectForKey:port];
+
+	[localTee pipeTeeForWriting:remoteTee];
+}
+
+- (Class) operationClass
+{
+	return [TMTaskOperation class];
+}
+
 - (NSOperation *) operationForOrder: (NSDictionary *)order
 {
+	TMTaskOperation *taskOp = (TMTaskOperation *)[super operationForOrder:order];
+
+	//FIXME rmme
+	NSAssert([taskOp isKindOfClass:[TMTaskOperation class]], @"doh");
+
+	NSEnumerator *en = [[self allImportConnectors] objectEnumerator];
+	TMConnector *conn;
+	while ((conn = [en nextObject]))
+	{
+		NSString *port = [conn port];
+		TMTeePipe *tee = [taskOp->_readTees objectForKey:port];
+		if (tee == nil)
+		{
+			tee = [TMTeePipe tee];
+			[taskOp->_readTees setObject:tee forKey:port];
+
+			NSEnumerator *portEn = [[conn allPairs] objectEnumerator];
+			TMConnector *pair;
+			while ((pair = [portEn nextObject]))
+			{
+				[(TMTaskNode *)[pair node] pipeTeeForWriting:tee byPort:[pair port] forOrder:order];
+			}
+		}
+	}
+
+	en = [[self allExportConnectors] objectEnumerator];
+	while ((conn = [en nextObject]))
+	{
+		NSString *port = [conn port];
+		TMTeePipe *tee = [taskOp->_writeTees objectForKey:port];
+		if (tee == nil)
+		{
+			tee = [TMTeePipe tee];
+			[taskOp->_writeTees setObject:tee forKey:port];
+		}
+	}
+
+	return taskOp;
 }
 
 /* FIXME This should actually queue 2 ops, one depends on another.
@@ -154,25 +222,14 @@ NSString * const TMStandardErrorPort = @"stderr";
  * complete file generations.
  */
 
+#if 0
 - (void) queue: (NSOperationQueue *)queue
      operation: (NSOperation *)op
       forOrder: (NSDictionary *)opOrder
 {
 	/* setting up tees, on current thread */
-	NSEnumerator *en = [[self allImportConnectors] objectEnumerator];
-	TMConnector *conn;
-	int i;
-
-	while ((conn = [en nextObject]))
-	{
-		for (i = [conn count]; i; i--)
-		{
-
-		}
-	}
-
-
 }
+#endif
 
 /* connectors */
 /*

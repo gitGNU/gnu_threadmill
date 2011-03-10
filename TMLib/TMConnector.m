@@ -22,7 +22,7 @@
 			       order: (NSDictionary *)operationInfo;
 - (NSMethodSignature *) nodeMethodSignatureForSelector: (SEL)aSel;
 - (void) nodeForwardInvocation: (NSInvocation *)invocation;
-- (TMConnector *) _nextPair;
+//- (TMConnector *) _nextPair;
 @end
 
 @implementation TMConnector
@@ -39,11 +39,17 @@
 	return retConnector;
 }
 
-- (NSUInteger) count
+- (TMNode *) node
 {
-	return _pairs_n;
+	return __node;
 }
 
+- (NSArray *) allPairs
+{
+	return [NSArray arrayWithObjects:_pairs count:_pairs_n];
+}
+
+/*
 - (TMConnector *) _nextPair
 {
 	if (_pairs_n == 0)
@@ -61,6 +67,7 @@
 
 	return _pairs[retPair];
 }
+*/
 
 /* connecting */
 - (void) disconnect:(TMConnector *)aPair
@@ -207,7 +214,7 @@
 
 - (NSMethodSignature *) methodSignatureForSelector: (SEL)aSel
 {
-	return [_pairs[_current_pair] nodeMethodSignatureForSelector:aSel];
+	return [_pairs[0] nodeMethodSignatureForSelector:aSel];
 }
 
 - (void) nodeForwardInvocation: (NSInvocation *)invocation
@@ -228,7 +235,20 @@
 	}
 	*/
 
-	[[self _nextPair] nodeForwardInvocation:invocation];
+/* NOTE, this is a bad idea, should just use something fast enumeration */
+/* FIXME, make sure the return size are equal */
+	int i = 1;
+	while (i < _pairs_n)
+	{
+/*
+		SEL aSel = [invocation selector];
+		NSMethodSignature *sig = [_pair[i] nodeMethodSignatureForSelector:aSel];
+		NSInvocation *inv_copy = [[NSInvocation alloc] initWithMethodSignature:sig];
+*/
+		
+		[_pairs[i] nodeForwardInvocation:invocation];
+		i++;
+	}
 }
 
 /*
