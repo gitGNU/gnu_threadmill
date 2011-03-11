@@ -28,7 +28,7 @@ NSString * const TMStandardErrorPort = @"stderr";
 {
 /* @package */
 @public
-	NSTask *_task;
+//	NSTask *_task;
 	NSMutableDictionary *_readTees;
 	NSMutableDictionary *_writeTees;
 }
@@ -36,10 +36,9 @@ NSString * const TMStandardErrorPort = @"stderr";
 
 @implementation TMTaskOperation
 
-- (id) initWithTask: (NSTask *)task
+- (id) init
 {
 	[super init];
-	ASSIGN(_task, task);
 	ASSIGN(_readTees, [NSMutableDictionary dictionaryWithCapacity:3]);
 	ASSIGN(_writeTees, [NSMutableDictionary dictionaryWithCapacity:3]);
 	return self;
@@ -47,7 +46,6 @@ NSString * const TMStandardErrorPort = @"stderr";
 
 - (void) dealloc
 {
-	DESTROY(_task);
 	DESTROY(_readTees);
 	DESTROY(_writeTees);
 	[super dealloc];
@@ -66,6 +64,15 @@ NSString * const TMStandardErrorPort = @"stderr";
 	[_task performSelectorOnMainThread: @selector(launch) withObject: nil waitUntilDone: NO];
 }
 */
+
+- (void) taskDidTerminate: (NSNotification *)notification
+{
+	NSTask *task = [notification object];
+	[[NSNotificationCenter defaultCenter]
+			removeObserver:taskOp
+				  name:NSTaskDidTerminateNotification
+				object:task];
+}
 @end
 
 /*
@@ -164,8 +171,8 @@ NSString * const TMStandardErrorPort = @"stderr";
 
 - (NSOperation *) createOperationForOrder: (NSDictionary *)order
 {
-	NSTask * task = [[NSTask alloc] init];
-	TMTaskOperation *taskOp = [[TMTaskOperation alloc] initWithTask:task];
+	NSTask * task = AUTORELEASE([[NSTask alloc] init]);
+	TMTaskOperation *taskOp = [TMTaskOperation operationForNode:self order:order];
 	id tee;
 
 	NSEnumerator *en = [[self allImportConnectors] objectEnumerator];
@@ -212,25 +219,30 @@ NSString * const TMStandardErrorPort = @"stderr";
 		{
 			NSDebugLLog(@"TMTaskNode", @"stdout %@",tee);
 			[task setStandardOutput:tee];
-
 		}
 		else if ([port isEqualToString:@"2"])
 		{
 			NSDebugLLog(@"TMTaskNode", @"stderr %@",tee);
 			[task setStandardError:tee];
-
 		}
 	}
 
-	[task setLaunchPath:_launchPath]; //FIXME should copy launch path and arguments
+	[task setLaunchPath:_launchPath];
 	[task setArguments:_arguments];
+
+	[[NSNotificationCenter defaultCenter]
+			addObserver:taskOp
+			   selector:@selector(taskDidTerminate:)
+			       name:NSTaskDidTerminateNotification
+			     object:task];
 	NSDebugLLog(@"TMTaskNode", @"launch %@ %@", _launchPath, _arguments);
+
 	[task launch];
-//	[task performSelectorOnMainThread: @selector(launch) withObject: nil waitUntilDone: NO];
 
 	return AUTORELEASE(taskOp);
 }
 
+/* called by remote node */
 - (void) pipeTeeForWriting: (TMTeePipe *)remoteTee
 		    byPort: (NSString *)port
 		  forOrder: (NSDictionary *)order

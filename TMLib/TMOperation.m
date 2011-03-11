@@ -19,19 +19,10 @@
 + (id) operationForNode: (TMNode *)node
 		  order: (NSDictionary *)order
 {
-	TMOperation *op = [[self alloc] initForNode:node order:order];
-	[op autorelease];
-	return op;
-}
-
-- (id) initForNode: (TMNode *)node
-	     order: (NSDictionary *)order
-{
-	[self init];
+	TMOperation *op = [[self alloc] init];
 	__node = node;
 	__order = order;
-
-	return self;
+	return AUTORELEASE(op);
 }
 
 - (void) main

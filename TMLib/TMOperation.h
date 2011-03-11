@@ -27,8 +27,6 @@
 }
 + (id) operationForNode: (TMNode *)node
 		  order: (NSDictionary *)order;
-- (id) initForNode: (TMNode *)node
-	     order: (NSDictionary *)order;
 @end
 
 #endif
