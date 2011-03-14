@@ -24,10 +24,12 @@
 	NSMutableArray *_pipesToWrite;
 }
 + (id) tee;
-- (NSFileHandle *) fileHandleForReading;
-- (NSFileHandle *) fileHandleForWriting;
-- (void) pipeTeeForWriting: (TMTeePipe *)tee;
-- (void) pipeTeeForReading: (TMTeePipe *)tee;
+- (NSPipe *) pipeForReading;
+- (NSPipe *) pipeForWriting;
+/*
+- (void) connectTeeForWriting: (TMTeePipe *)tee;
+- (void) connectTeeForReading: (TMTeePipe *)tee;
+*/
 - (void) addSource: (id)pipeOrHandle;
 - (void) addTarget: (id)pipeOrHandle;
 - (void) writeData: (NSData *)data;

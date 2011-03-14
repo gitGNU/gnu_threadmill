@@ -20,14 +20,15 @@
 		  order: (NSDictionary *)order
 {
 	TMOperation *op = [[self alloc] init];
-	__node = node;
-	__order = order;
+	op->__node = node;
+	op->__order = order;
+
 	return AUTORELEASE(op);
 }
 
 - (void) main
 {
-	NSLog(@"main %@ %@ %@",self, __node, __order);
+//	NSLog(@"main %@ %@ %@",self, __node, __order);
 }
 
 - (void) dealloc

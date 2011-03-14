@@ -272,6 +272,7 @@ static Class			tmConnectorClass = Nil;
 		[self connectorDependency:export
 				 forQueue:queue
 				    order:order];
+//FIXME this probably break cyclic
 		if (export != nil)
 			[export pushQueue:queue
 				 forOrder:order];

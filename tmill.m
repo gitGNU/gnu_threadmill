@@ -22,13 +22,14 @@ int main(int argc, char *argv[])
 	CREATE_AUTORELEASE_POOL(p);
 	NSOperationQueue * opQueue = [NSOperationQueue mainQueue];
 
-        /* FIXME the order should be associated with something like the NSEvent that caused it */
 	NSArray *pathsA = [NSArray arrayWithObject:@"/"];
 	NSArray *pathsB = [NSArray arrayWithObject:@"/home"];
 
 
 	NSArray *args = [[NSProcessInfo processInfo] arguments];
-	[[[NSProcessInfo processInfo] debugSet] addObject:@"TMTaskNode"];
+//	[[[NSProcessInfo processInfo] debugSet] addObject:@"TMTaskNode"];
+//	[[[NSProcessInfo processInfo] debugSet] addObject:@"TMTeePipe"];
+//	[[[NSProcessInfo processInfo] debugSet] addObject:@"TMTaskOperation"];
 
 	if ([args count] == 3)
 	{
@@ -36,10 +37,10 @@ int main(int argc, char *argv[])
 		pathsB = [NSArray arrayWithObject:[args objectAtIndex:2]];
 	}
 
-	TMTaskNode * listA = [TMTaskNode nodeWithLaunchPath:@"/bin/ls" arguments:pathsA];
-	TMTaskNode * listB = [TMTaskNode nodeWithLaunchPath:@"/bin/ls" arguments:pathsB];
-	TMTaskNode * sort = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/sort" arguments:[NSArray arrayWithObject:@"-r"]];
-	TMTaskNode * tee = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/tee" arguments:[NSArray arrayWithObjects:@"-a",@"logfile.txt",nil]];
+	TMTaskNode *listA = [TMTaskNode nodeWithLaunchPath:@"/bin/ls" arguments:pathsA];
+	TMTaskNode *tee = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/tee" arguments:[NSArray arrayWithObjects:@"-a",@"logfile.txt",nil]];
+	TMTaskNode *listB = [TMTaskNode nodeWithLaunchPath:@"/bin/ls" arguments:pathsB];
+	TMTaskNode *sort = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/sort" arguments:[NSArray arrayWithObject:@"-r"]];
 
 	/*
 	   (listA:ls /)-----.
@@ -59,15 +60,18 @@ int main(int argc, char *argv[])
 	[listA pushQueue:opQueue forOrder:nil];
 	[listA finishOrder:nil];
 
+	/* FIXME Don't do this, as this will block notification that task operations need to be set finished */
+	//[opQueue waitUntilAllOperationsAreFinished];
 
-	/*
-	TMTaskNode * catA = [TMTaskNode nodeWithLaunchPath:@"/bin/cat" arguments:[NSArray arrayWithObject:[args objectAtIndex:1]]];
-	TMTaskNode * catB = [TMTaskNode nodeWithLaunchPath:@"/bin/cat" arguments:[NSArray arrayWithObject:[args objectAtIndex:2]]];
-	TMTaskNode * convertAppend;
-	TMTaskNode * display;
-	*/
 
-	[NSTimer scheduledTimerWithTimeInterval:2000.
+/*
+	TMTaskNode *catA = [TMTaskNode nodeWithLaunchPath:@"/bin/cat" arguments:[NSArray arrayWithObject:@"TMKit/Plug.tiff"]];
+	TMTaskNode *catB = [TMTaskNode nodeWithLaunchPath:@"/bin/cat" arguments:[NSArray arrayWithObject:@"TMKit/FiberPattern.tiff"]];
+	TMTaskNode *convertAppend = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/convert" arguments:[NSArray arrayWithObjects:@"fd:0",@"fd:1",@"-append",nil]];
+	TMTaskNode *display = [TMTaskNode nodeWithLaunchPath:@"/usr/bin/display" arguments:[NSArray arrayWithObjects:@"fd:0",nil]];
+*/
+
+	[NSTimer scheduledTimerWithTimeInterval:5.
 		target:nil
 		selector:NULL
 		userInfo:nil
@@ -75,5 +79,6 @@ int main(int argc, char *argv[])
 
 	[[NSRunLoop currentRunLoop] run];
 	RELEASE(p);
+
 	return 0;
 }
