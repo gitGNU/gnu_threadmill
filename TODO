@@ -1,6 +1,7 @@
 == TODOs ==
 
 # means deciding
+* Merge Kit and Lib and add configure to decide to build both or not.
 
 === TMKit ===
 * Content view scaler

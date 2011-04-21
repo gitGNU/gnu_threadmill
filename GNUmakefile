@@ -36,8 +36,17 @@ Threadmill_OBJC_FILES = main.m \
 TOOL_NAME = tmill
 tmill_OBJC_FILES = tmill.m
 
+
 -include GNUmakefile.preamble
 
 include $(GNUSTEP_MAKEFILES)/aggregate.make
 include $(GNUSTEP_MAKEFILES)/application.make
 include $(GNUSTEP_MAKEFILES)/tool.make
+
+before-all::
+		mkdir -p Threadmill
+		(cd Threadmill; ln -sf ../TMLib/*.h ../TMKit/*.h ../TMPaletteKit/*.h .)
+
+after-clean::
+		rm Threadmill/*.h
+		rmdir Threadmill

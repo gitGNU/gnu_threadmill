@@ -4,13 +4,17 @@ export LD_LIBRARY_PATH=TMLib/obj:TMKit/obj:TMPaletteKit/obj:$LD_LIBRARY_PATH
 
 build()
 {
-	(mkdir Threadmill 2>/dev/null; cd Threadmill; ln -sf ../TMLib/*.h ../TMKit/*.h ../TMPaletteKit/*.h .)
 	make -j 8
 }
 
 run()
 {
 	./Threadmill.app/Threadmill
+}
+
+valgrind()
+{
+	valgrind --tool=memcheck ./Threadmill.app/Threadmill
 }
 
 debug()
@@ -42,6 +46,9 @@ case "$cmd" in
 		;;
 	d)
 		debug
+		;;
+	v)
+		valgrind
 		;;
 	bd)
 		build && debug

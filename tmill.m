@@ -20,6 +20,9 @@ int main(int argc, char *argv[])
 {
 
 	CREATE_AUTORELEASE_POOL(p);
+
+
+
 	NSOperationQueue * opQueue = [NSOperationQueue mainQueue];
 
 	NSArray *pathsA = [NSArray arrayWithObject:@"/"];
